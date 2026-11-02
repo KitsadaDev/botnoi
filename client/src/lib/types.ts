@@ -87,9 +87,9 @@ export const STATUS_LABELS: Record<TicketStatus, string> = {
 }
 
 export const STATUS_COLORS: Record<TicketStatus, string> = {
-  SUBMITTED: 'bg-slate-100 text-slate-700',
-  RECEIVED: 'bg-blue-100 text-blue-700',
-  IN_PROGRESS: 'bg-amber-100 text-amber-700',
-  COMPLETED: 'bg-green-100 text-green-700',
-  CANCELLED: 'bg-red-100 text-red-700',
+  SUBMITTED: 'bg-zinc-100 text-zinc-700 ring-1 ring-inset ring-zinc-300/80',
+  RECEIVED: 'bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-500/30',
+  IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-500/30',
+  COMPLETED: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-500/30',
+  CANCELLED: 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-500/30',
 }

@@ -2,26 +2,21 @@ import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Wrench,
   Search,
-  Filter,
   CheckCircle2,
   Clock,
-  AlertCircle,
   UserCheck,
   Send,
   MessageSquare,
   X,
-  MapPin,
-  Calendar,
-  ExternalLink,
-  ChevronRight,
-  ShieldCheck,
   RefreshCw,
+  LayoutDashboard,
+  Inbox,
+  Activity,
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import type { ApiResponse, Ticket, Technician, Message, TicketStatus, ServiceType } from '../lib/types'
+import type { ApiResponse, Ticket, Technician, Message, TicketStatus } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
 
 export const AdminDashboardPage: React.FC = () => {
@@ -32,13 +27,11 @@ export const AdminDashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
 
-  // Status update form inside modal
   const [newStatus, setNewStatus] = useState<TicketStatus>('RECEIVED')
   const [statusNote, setStatusNote] = useState('')
   const [assignedTechId, setAssignedTechId] = useState<string>('')
   const [staffMessageText, setStaffMessageText] = useState('')
 
-  // 1. Fetch tickets with filters
   const {
     data: tickets = [],
     isLoading: isTicketsLoading,
@@ -56,7 +49,6 @@ export const AdminDashboardPage: React.FC = () => {
     refetchInterval: 6000,
   })
 
-  // 2. Fetch technicians list for assignment
   const { data: technicians = [] } = useQuery<Technician[]>({
     queryKey: ['technicians'],
     queryFn: async () => {
@@ -66,12 +58,7 @@ export const AdminDashboardPage: React.FC = () => {
     enabled: isStaff,
   })
 
-  // 3. Fetch specific ticket for modal
-  const {
-    data: activeTicket,
-    isLoading: isActiveTicketLoading,
-    refetch: refetchActiveTicket,
-  } = useQuery<Ticket>({
+  const { data: activeTicket } = useQuery<Ticket>({
     queryKey: ['adminTicketDetail', selectedTicketId],
     queryFn: async () => {
       if (!selectedTicketId) throw new Error('No ID')
@@ -81,8 +68,7 @@ export const AdminDashboardPage: React.FC = () => {
     enabled: Boolean(selectedTicketId),
   })
 
-  // 4. Fetch messages for active ticket modal with polling
-  const { data: activeMessages = [], refetch: refetchActiveMessages } = useQuery<Message[]>({
+  const { data: activeMessages = [] } = useQuery<Message[]>({
     queryKey: ['adminMessages', activeTicket?.trackingCode],
     queryFn: async () => {
       if (!activeTicket?.trackingCode) return []
@@ -93,7 +79,6 @@ export const AdminDashboardPage: React.FC = () => {
     refetchInterval: 3000,
   })
 
-  // 5. Update Ticket mutation (status / technician / note)
   const updateTicketMutation = useMutation({
     mutationFn: async () => {
       if (!selectedTicketId) return
@@ -119,7 +104,6 @@ export const AdminDashboardPage: React.FC = () => {
     },
   })
 
-  // 6. Send staff message mutation
   const sendStaffMessageMutation = useMutation({
     mutationFn: async (text: string) => {
       if (!selectedTicketId) return
@@ -141,8 +125,8 @@ export const AdminDashboardPage: React.FC = () => {
   if (isAuthLoading) {
     return (
       <div className="py-24 text-center">
-        <RefreshCw className="w-8 h-8 text-[#003882] animate-spin mx-auto mb-2" />
-        <p className="text-slate-500 text-sm">กำลังตรวจสอบสิทธิ์...</p>
+        <RefreshCw className="w-8 h-8 text-sky-600 animate-spin mx-auto mb-2" />
+        <p className="text-zinc-500 text-sm">กำลังตรวจสอบสิทธิ์...</p>
       </div>
     )
   }
@@ -151,7 +135,6 @@ export const AdminDashboardPage: React.FC = () => {
     return <Navigate to="/login" replace />
   }
 
-  // Calculate summary counts
   const countTotal = tickets.length
   const countSubmitted = tickets.filter((t) => t.status === 'SUBMITTED').length
   const countInProgress = tickets.filter((t) => t.status === 'RECEIVED' || t.status === 'IN_PROGRESS').length
@@ -171,183 +154,179 @@ export const AdminDashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+    <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+      {/* Top Console Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-950 text-white p-6 sm:p-8 rounded-3xl border border-zinc-800 shadow-xl">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">ศูนย์ควบคุมงานซ่อม (Staff Portal)</h1>
-            <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold uppercase">
-              {user.role}
+          <div className="flex items-center gap-2.5 mb-1">
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-bold">
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              {user.role} CONSOLE
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            ยินดีต้อนรับคุณ <span className="font-semibold text-slate-700">{user.name}</span> | ติดตามและจ่ายงานช่างเทคนิค
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            ศูนย์ควบคุมและจ่ายงานซ่อม (Staff Portal)
+          </h1>
+          <p className="text-xs text-zinc-400 mt-1">
+            ผู้ปฏิบัติงาน: <span className="font-semibold text-white">{user.name}</span> • ระบบซิงค์รายการอัตโนมัติ
           </p>
         </div>
 
         <button
           onClick={() => refetchTickets()}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-xs"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-sm cursor-pointer self-start sm:self-auto"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>รีเฟรชข้อมูล</span>
+          <span>รีเฟรชรายการ</span>
         </button>
       </div>
 
-      {/* Stats Summary Cards */}
+      {/* 21st.dev Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <p className="text-xs text-slate-500 font-medium">เคสทั้งหมด</p>
-          <p className="text-2xl font-black text-slate-900 mt-1">{countTotal}</p>
+        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-400 font-semibold">เคสทั้งหมด</p>
+            <p className="text-3xl font-black text-zinc-950 mt-1">{countTotal}</p>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center">
+            <Inbox className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <p className="text-xs text-slate-500 font-medium">รอรับเรื่อง (Submitted)</p>
-          <p className="text-2xl font-black text-blue-600 mt-1">{countSubmitted}</p>
+        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-400 font-semibold">รอรับเรื่อง (Submitted)</p>
+            <p className="text-3xl font-black text-sky-600 mt-1">{countSubmitted}</p>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+            <Clock className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <p className="text-xs text-slate-500 font-medium">กำลังดำเนินการ (In Progress)</p>
-          <p className="text-2xl font-black text-amber-600 mt-1">{countInProgress}</p>
+        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-400 font-semibold">กำลังดำเนินการ</p>
+            <p className="text-3xl font-black text-amber-600 mt-1">{countInProgress}</p>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+            <Activity className="w-5 h-5" />
+          </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <p className="text-xs text-slate-500 font-medium">เสร็จสิ้นแล้ว (Completed)</p>
-          <p className="text-2xl font-black text-emerald-600 mt-1">{countCompleted}</p>
+        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-400 font-semibold">เสร็จสิ้นแล้ว</p>
+            <p className="text-3xl font-black text-emerald-600 mt-1">{countCompleted}</p>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row gap-4 justify-between items-center">
-        {/* Status filter tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-          <button
-            onClick={() => setSelectedStatus('')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              selectedStatus === '' ? 'bg-[#003882] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            ทั้งหมด
-          </button>
-          <button
-            onClick={() => setSelectedStatus('SUBMITTED')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              selectedStatus === 'SUBMITTED' ? 'bg-[#003882] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            รอรับเรื่อง
-          </button>
-          <button
-            onClick={() => setSelectedStatus('RECEIVED')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              selectedStatus === 'RECEIVED' ? 'bg-[#003882] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            รับเรื่องแล้ว
-          </button>
-          <button
-            onClick={() => setSelectedStatus('IN_PROGRESS')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              selectedStatus === 'IN_PROGRESS' ? 'bg-[#003882] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            ช่างกำลังซ่อม
-          </button>
-          <button
-            onClick={() => setSelectedStatus('COMPLETED')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-              selectedStatus === 'COMPLETED' ? 'bg-[#003882] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            เสร็จสิ้น
-          </button>
+      {/* Filters & Search Bar */}
+      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-zinc-200/90 shadow-xs flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto p-1 bg-zinc-100 rounded-2xl">
+          {[
+            { value: '', label: 'ทั้งหมด' },
+            { value: 'SUBMITTED', label: 'รอรับเรื่อง' },
+            { value: 'RECEIVED', label: 'รับเรื่องแล้ว' },
+            { value: 'IN_PROGRESS', label: 'กำลังซ่อม' },
+            { value: 'COMPLETED', label: 'เสร็จสิ้น' },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setSelectedStatus(tab.value)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                selectedStatus === tab.value
+                  ? 'bg-zinc-950 text-white shadow-2xs'
+                  : 'text-zinc-600 hover:text-zinc-950'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ค้นหารหัส, ชื่อลูกค้า, เบอร์โทร..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] outline-hidden"
+            placeholder="ค้นหารหัสงาน, ชื่อลูกค้า, เบอร์โทร..."
+            className="w-full pl-10 pr-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
           />
         </div>
       </div>
 
       {/* Tickets Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+          <table className="w-full text-left text-xs text-zinc-600">
+            <thead className="bg-zinc-50/80 text-zinc-500 font-mono text-[11px] uppercase tracking-wider border-b border-zinc-200/80">
               <tr>
-                <th className="px-5 py-3.5">รหัสติดตาม</th>
-                <th className="px-5 py-3.5">ผู้ติดต่อ / เบอร์</th>
-                <th className="px-5 py-3.5">บริการ & แบรนด์</th>
-                <th className="px-5 py-3.5">วันนัดหมาย</th>
-                <th className="px-5 py-3.5">ช่างผู้รับผิดชอบ</th>
-                <th className="px-5 py-3.5">สถานะ</th>
-                <th className="px-5 py-3.5 text-right">การจัดการ</th>
+                <th className="px-6 py-4">Tracking ID</th>
+                <th className="px-6 py-4">ลูกค้า / เบอร์ติดต่อ</th>
+                <th className="px-6 py-4">บริการ & ยี่ห้อ</th>
+                <th className="px-6 py-4">วันนัดหมาย</th>
+                <th className="px-6 py-4">ช่างผู้รับผิดชอบ</th>
+                <th className="px-6 py-4">สถานะ</th>
+                <th className="px-6 py-4 text-right">การจัดการ</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-zinc-100">
               {isTicketsLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12">
-                    <RefreshCw className="w-6 h-6 text-[#003882] animate-spin mx-auto mb-2" />
-                    <span>กำลังโหลดข้อมูลเคส...</span>
+                  <td colSpan={7} className="text-center py-14">
+                    <RefreshCw className="w-6 h-6 text-sky-600 animate-spin mx-auto mb-2" />
+                    <span>กำลังโหลดรายการงานซ่อม...</span>
                   </td>
                 </tr>
               ) : tickets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-400">
+                  <td colSpan={7} className="text-center py-14 text-zinc-400">
                     ไม่พบรายการงานซ่อมตามเงื่อนไขที่เลือก
                   </td>
                 </tr>
               ) : (
                 tickets.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-5 py-4 font-mono font-bold text-[#003882]">
-                      {t.trackingCode}
+                  <tr key={t.id} className="hover:bg-zinc-50/80 transition-colors">
+                    <td className="px-6 py-4 font-mono font-bold text-zinc-950">{t.trackingCode}</td>
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-zinc-900">{t.customerName}</p>
+                      <p className="text-[11px] font-mono text-zinc-400">{t.customerPhone}</p>
                     </td>
-                    <td className="px-5 py-4">
-                      <p className="font-bold text-slate-800">{t.customerName}</p>
-                      <p className="text-[11px] text-slate-400">{t.customerPhone}</p>
+                    <td className="px-6 py-4">
+                      <span className="font-bold text-zinc-900">{SERVICE_LABELS[t.service] || t.service}</span>
+                      <p className="text-[11px] text-zinc-500">{t.brand}</p>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className="font-semibold text-slate-800">
-                        {SERVICE_LABELS[t.service] || t.service}
-                      </span>
-                      <p className="text-[11px] text-slate-500">{t.brand}</p>
-                    </td>
-                    <td className="px-5 py-4 font-medium text-slate-700">
-                      {t.preferredDate}
-                    </td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-4 font-mono font-medium text-zinc-700">{t.preferredDate}</td>
+                    <td className="px-6 py-4">
                       {t.technician ? (
                         <div>
-                          <p className="font-bold text-slate-800">{t.technician.name}</p>
-                          <p className="text-[11px] text-slate-400">{t.technician.area}</p>
+                          <p className="font-bold text-zinc-900">{t.technician.name}</p>
+                          <p className="text-[11px] text-zinc-400">{t.technician.area}</p>
                         </div>
                       ) : (
-                        <span className="text-amber-600 font-medium">ยังไม่ระบุช่าง</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-semibold text-[11px]">
+                          ยังไม่ระบุช่าง
+                        </span>
                       )}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-6 py-4">
                       <span
-                        className={`inline-block px-2.5 py-1 rounded-full font-bold text-[11px] ${
-                          STATUS_COLORS[t.status] || 'bg-slate-100 text-slate-700'
+                        className={`inline-block px-3 py-1 rounded-full font-bold text-[11px] ${
+                          STATUS_COLORS[t.status] || 'bg-zinc-100 text-zinc-700'
                         }`}
                       >
                         {STATUS_LABELS[t.status] || t.status}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => openTicketModal(t)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#003882] bg-blue-50 hover:bg-[#003882] hover:text-white transition shadow-xs"
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-zinc-950 hover:bg-sky-600 transition shadow-2xs cursor-pointer"
                       >
                         จัดการเคส
                       </button>
@@ -360,18 +339,17 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal: Ticket Management Drawer / Dialog */}
+      {/* Modal: Ticket Management */}
       {selectedTicketId && activeTicket && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-zinc-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-zinc-200">
+            <div className="p-6 border-b border-zinc-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10">
               <div className="flex items-center gap-3">
-                <span className="font-mono text-xl font-black text-[#003882]">
+                <span className="font-mono text-xl font-black text-zinc-950">
                   {activeTicket.trackingCode}
                 </span>
                 <span
-                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                  className={`text-xs font-bold px-3 py-1 rounded-full ${
                     STATUS_COLORS[activeTicket.status]
                   }`}
                 >
@@ -380,57 +358,55 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedTicketId(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                className="p-2 rounded-xl text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6 space-y-6">
-              {/* Top: Customer & Equipment Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
+              {/* Customer & Equipment Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-zinc-50 p-5 rounded-2xl border border-zinc-200/80 text-xs">
                 <div>
-                  <p className="text-slate-400 mb-0.5">ผู้ติดต่อ</p>
-                  <p className="font-bold text-slate-800 text-sm">
+                  <p className="text-zinc-400 font-semibold mb-1">ข้อมูลลูกค้า</p>
+                  <p className="font-extrabold text-zinc-950 text-sm">
                     {activeTicket.customerName} ({activeTicket.customerPhone})
                   </p>
-                  <p className="text-slate-500 mt-2">
-                    <span className="font-semibold">สถานที่:</span> {activeTicket.address}
+                  <p className="text-zinc-600 mt-2 leading-relaxed">
+                    <span className="font-bold text-zinc-800">ที่อยู่:</span> {activeTicket.address}
                   </p>
                   {activeTicket.lat && activeTicket.lng && (
-                    <p className="text-[11px] text-blue-600 mt-0.5">
+                    <p className="text-[11px] font-mono text-sky-600 mt-1">
                       GPS: {activeTicket.lat}, {activeTicket.lng}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <p className="text-slate-400 mb-0.5">บริการ & นัดหมาย</p>
-                  <p className="font-bold text-slate-800 text-sm">
-                    {SERVICE_LABELS[activeTicket.service]} - แอร์ {activeTicket.brand}
+                  <p className="text-zinc-400 font-semibold mb-1">บริการ & อาการ</p>
+                  <p className="font-extrabold text-zinc-950 text-sm">
+                    {SERVICE_LABELS[activeTicket.service]} • {activeTicket.brand}
                   </p>
-                  <p className="text-slate-500 mt-2">
-                    <span className="font-semibold">วันนัดหมาย:</span> {activeTicket.preferredDate}
+                  <p className="text-zinc-600 mt-2">
+                    <span className="font-bold text-zinc-800">วันนัดหมาย:</span> {activeTicket.preferredDate}
                   </p>
-                  <p className="text-slate-500 mt-1">
-                    <span className="font-semibold">อาการ:</span> {activeTicket.symptom}
+                  <p className="text-zinc-600 mt-1">
+                    <span className="font-bold text-zinc-800">อาการ:</span> {activeTicket.symptom}
                   </p>
                 </div>
               </div>
 
-              {/* Photos if any */}
               {activeTicket.images && activeTicket.images.length > 0 && (
                 <div>
-                  <p className="text-xs font-bold text-slate-700 mb-2">รูปภาพที่ลูกค้าแนบ:</p>
-                  <div className="grid grid-cols-4 gap-2">
+                  <p className="text-xs font-bold text-zinc-700 mb-2">รูปภาพหน้างานที่แนบ:</p>
+                  <div className="grid grid-cols-4 gap-2.5">
                     {activeTicket.images.map((img) => (
                       <a
                         key={img.id}
                         href={img.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="aspect-square rounded-xl overflow-hidden border border-slate-200 block"
+                        className="aspect-square rounded-2xl overflow-hidden border border-zinc-200 block"
                       >
                         <img src={img.url} alt="ticket" className="w-full h-full object-cover" />
                       </a>
@@ -439,21 +415,20 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Update Status & Assign Technician Form */}
-              <div className="bg-blue-50/60 p-5 rounded-2xl border border-blue-200/60 space-y-4">
-                <h3 className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-[#003882]" />
-                  <span>อัปเดตสถานะและมอบหมายช่าง</span>
+              {/* Update Status & Technician Form */}
+              <div className="bg-zinc-950 text-white p-6 rounded-3xl border border-zinc-800 space-y-4">
+                <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                  <UserCheck className="w-4 h-4 text-sky-400" />
+                  <span>อัปเดตสถานะและมอบหมายช่างเทคนิค</span>
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  {/* Status Dropdown */}
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">ปรับสถานะงาน</label>
+                    <label className="block font-semibold text-zinc-300 mb-1.5">ปรับสถานะงาน</label>
                     <select
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value as TicketStatus)}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-[#003882]"
+                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="SUBMITTED">ส่งเรื่องแล้ว (SUBMITTED)</option>
                       <option value="RECEIVED">รับเรื่องแล้ว (RECEIVED)</option>
@@ -463,13 +438,12 @@ export const AdminDashboardPage: React.FC = () => {
                     </select>
                   </div>
 
-                  {/* Technician Dropdown */}
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">มอบหมายช่างเทคนิค</label>
+                    <label className="block font-semibold text-zinc-300 mb-1.5">มอบหมายช่างเทคนิค</label>
                     <select
                       value={assignedTechId}
                       onChange={(e) => setAssignedTechId(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-[#003882]"
+                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="">-- ไม่ระบุช่าง --</option>
                       {technicians.map((t) => (
@@ -480,17 +454,16 @@ export const AdminDashboardPage: React.FC = () => {
                     </select>
                   </div>
 
-                  {/* Status Note */}
                   <div className="sm:col-span-2">
-                    <label className="block font-bold text-slate-700 mb-1">
-                      บันทึกข้อความสถานะ (Status Note) - แสดงให้ลูกค้าเห็นใน Timeline
+                    <label className="block font-semibold text-zinc-300 mb-1.5">
+                      บันทึกข้อความสถานะ (แสดงใน Timeline ของลูกค้า)
                     </label>
                     <input
                       type="text"
                       value={statusNote}
                       onChange={(e) => setStatusNote(e.target.value)}
-                      placeholder="เช่น เจ้าหน้าที่ตรวจสอบคิวช่างแล้ว ช่างสมชายจะเดินทางเข้าตรวจเวลา 10:00 น."
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl outline-hidden focus:ring-2 focus:ring-[#003882]"
+                      placeholder="เช่น มอบหมายช่างสมชายเข้าตรวจสอบหน้างานเวลา 10:00 น."
+                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-500 rounded-xl outline-hidden focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
@@ -500,43 +473,40 @@ export const AdminDashboardPage: React.FC = () => {
                     type="button"
                     onClick={() => updateTicketMutation.mutate()}
                     disabled={updateTicketMutation.isPending}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#003882] hover:bg-[#002866] text-white shadow-sm disabled:opacity-50 transition"
+                    className="px-6 py-2.5 rounded-xl text-xs font-bold bg-sky-400 hover:bg-sky-300 text-zinc-950 shadow-sm disabled:opacity-50 transition cursor-pointer"
                   >
                     {updateTicketMutation.isPending ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
                   </button>
                 </div>
               </div>
 
-              {/* Chat with Customer Tab */}
-              <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                  <span className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-[#003882]" />
+              {/* Live Chat with Customer */}
+              <div className="border border-zinc-200 rounded-3xl overflow-hidden">
+                <div className="bg-zinc-50 px-5 py-3.5 border-b border-zinc-200 flex items-center justify-between">
+                  <span className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-sky-600" />
                     <span>แชทสนทนากับลูกค้า (Live Chat)</span>
                   </span>
-                  <span className="text-[11px] text-slate-500">
-                    ข้อความจะส่งตรงถึงหน้าจอของลูกค้าทันที
-                  </span>
+                  <span className="text-[11px] text-zinc-400">ซิงค์ข้อความแบบเรียลไทม์</span>
                 </div>
 
-                {/* Messages feed */}
                 <div className="p-4 max-h-56 overflow-y-auto space-y-3 bg-white">
                   {activeMessages.length === 0 ? (
-                    <p className="text-center text-xs text-slate-400 py-6">ยังไม่มีข้อความสนทนาในเคสนี้</p>
+                    <p className="text-center text-xs text-zinc-400 py-6">ยังไม่มีข้อความสนทนาในเคสนี้</p>
                   ) : (
                     activeMessages.map((m) => (
                       <div
                         key={m.id}
                         className={`flex flex-col ${m.fromStaff ? 'items-end' : 'items-start'}`}
                       >
-                        <span className="text-[10px] text-slate-400 mb-0.5 px-1">
+                        <span className="text-[10px] text-zinc-400 mb-0.5 px-1">
                           {m.fromStaff ? `เจ้าหน้าที่ (${m.user?.name || 'Staff'})` : activeTicket.customerName}
                         </span>
                         <div
-                          className={`max-w-[80%] rounded-2xl px-3 py-1.5 text-xs ${
+                          className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-xs ${
                             m.fromStaff
-                              ? 'bg-[#003882] text-white rounded-tr-xs'
-                              : 'bg-slate-100 text-slate-800 rounded-tl-xs'
+                              ? 'bg-zinc-950 text-white rounded-tr-xs'
+                              : 'bg-zinc-100 text-zinc-800 rounded-tl-xs'
                           }`}
                         >
                           {m.text}
@@ -546,22 +516,21 @@ export const AdminDashboardPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Send reply */}
-                <form onSubmit={handleSendStaffMessage} className="p-3 bg-slate-50 border-t border-slate-200 flex gap-2">
+                <form onSubmit={handleSendStaffMessage} className="p-3 bg-zinc-50 border-t border-zinc-200 flex gap-2">
                   <input
                     type="text"
                     value={staffMessageText}
                     onChange={(e) => setStaffMessageText(e.target.value)}
                     placeholder="พิมพ์ตอบกลับลูกค้า..."
-                    className="flex-1 px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl outline-hidden focus:ring-2 focus:ring-[#003882]"
+                    className="flex-1 px-4 py-2 text-xs bg-white border border-zinc-200 rounded-xl outline-hidden focus:ring-2 focus:ring-sky-500"
                   />
                   <button
                     type="submit"
                     disabled={sendStaffMessageMutation.isPending || !staffMessageText.trim()}
-                    className="px-4 py-2 bg-[#003882] hover:bg-[#002866] text-white text-xs font-bold rounded-xl disabled:opacity-40 transition flex items-center gap-1"
+                    className="px-4 py-2 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl disabled:opacity-40 transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>ส่ง</span>
+                    <span>ส่งข้อความ</span>
                   </button>
                 </form>
               </div>

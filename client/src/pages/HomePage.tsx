@@ -5,18 +5,63 @@ import {
   Search,
   CheckCircle2,
   ShieldCheck,
-  Clock,
   Award,
   Sparkles,
   ArrowRight,
-  PhoneCall,
   CalendarCheck,
   PenTool,
   Wind,
+  Zap,
+  MessageSquare,
+  MapPin,
+  ArrowUpRight,
+  Activity,
+  ChevronDown,
+  HelpCircle,
+  Sliders,
 } from 'lucide-react'
+import { ScrollReveal, Tilt3DCard, MagneticButton, NumberTicker } from '../components/InteractiveUI'
+
+const SUPPORTED_BRANDS = [
+  'CARRIER',
+  'DAIKIN',
+  'MITSUBISHI ELECTRIC',
+  'PANASONIC',
+  'HAIER',
+  'TOSHIBA',
+  'LG INVERTER',
+  'SAMSUNG',
+  'CENTRAL AIR',
+  'YORK',
+  'TRANE',
+]
+
+const FAQ_ITEMS = [
+  {
+    q: 'ใช้เวลานานแค่ไหนหลังจากกดแจ้งซ่อมบนเว็บไซต์?',
+    a: 'เจ้าหน้าที่ศูนย์ควบคุมจะตรวจสอบและระบุช่างเทคนิคในพื้นที่ของคุณภายใน 15–30 นาที พร้อมอัปเดตสถานะแบบเรียลไทม์ผ่านรหัส Tracking Code',
+  },
+  {
+    q: 'การรับประกันงานซ่อม 90 วันครอบคลุมอะไรบ้าง?',
+    a: 'ครอบคลุมทั้งค่าแรงช่างและอะไหล่แท้ที่เปลี่ยนใหม่ หากพบอาการเดิมซ้ำภายใน 90 วัน ทีมช่างจะเข้าแก้ไขให้ฟรีโดยไม่มีค่าใช้จ่ายเพิ่มเติม',
+  },
+  {
+    q: 'หากช่างตรวจเช็คแล้วไม่ประสงค์ซ่อม มีค่าใช้จ่ายหรือไม่?',
+    a: 'เรามีการแจ้งประเมินราคาก่อนซ่อมทุกครั้ง หากลูกค้ายังไม่สะดวกซ่อม จะมีเพียงค่าบริการตรวจเช็คหน้างานเริ่มต้น 400 บาทเท่านั้น',
+  },
+  {
+    q: 'สามารถเลื่อนนัดหรือพูดคุยกับช่างโดยตรงได้อย่างไร?',
+    a: 'คุณสามารถนำรหัส Tracking Code ไปกรอกในหน้า "ติดตามสถานะ" เพื่อพิมพ์แชทสดกับเจ้าหน้าที่ หรือกดปุ่มโทรหาช่างผู้รับผิดชอบได้ทันที',
+  },
+]
 
 export const HomePage: React.FC = () => {
   const [quickCode, setQuickCode] = useState('')
+  // Interactive Price Estimator Tabs & BTU Selector
+  const [activeCalcTab, setActiveCalcTab] = useState<'CLEANING' | 'REPAIR' | 'INSTALLATION'>('CLEANING')
+  const [unitCount, setUnitCount] = useState<number>(1)
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
+
   const navigate = useNavigate()
 
   const handleQuickTrack = (e: React.FormEvent) => {
@@ -25,414 +70,704 @@ export const HomePage: React.FC = () => {
     navigate(`/track/${encodeURIComponent(quickCode.trim().toUpperCase())}`)
   }
 
+  const basePrice = activeCalcTab === 'CLEANING' ? 590 : activeCalcTab === 'REPAIR' ? 400 : 2500
+  const estimatedTotal =
+    activeCalcTab === 'CLEANING' && unitCount >= 2
+      ? unitCount * 500 // multi-unit discount
+      : unitCount * basePrice
+
   return (
-    <div className="space-y-16 pb-16">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#00224d] via-[#003882] to-[#005bb5] text-white overflow-hidden py-16 sm:py-24">
-        {/* Decorative background circles */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-sky-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-400/10 blur-2xl pointer-events-none" />
+    <div className="space-y-24 pb-24 overflow-x-hidden">
+      {/* 1. 21st.dev Aurora + Grid Dark Hero Section */}
+      <section className="relative bg-zinc-950 text-white overflow-hidden pt-14 pb-20 sm:py-24 border-b border-zinc-800">
+        <div className="absolute inset-0 bg-grid-dark opacity-70 pointer-events-none" />
+        <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full bg-sky-500/20 blur-[130px] pointer-events-none animate-pulse-slow" />
+        <div className="absolute bottom-0 right-1/4 w-[450px] h-[450px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/30 to-zinc-950 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Hero Content */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-sky-200 text-xs font-semibold backdrop-blur-md">
-                <Sparkles className="w-4 h-4 text-sky-300" />
-                <span>บริการแอร์ระดับมืออาชีพ มาตรฐานสากล Carrier Style</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+            {/* Left Hero Content (7 cols) */}
+            <ScrollReveal direction="up" className="lg:col-span-7 space-y-7">
+              <div className="inline-flex items-center gap-2 pl-2 pr-3.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-200 text-xs font-medium shadow-lg backdrop-blur-md hover:border-sky-500/50 transition-colors cursor-default">
+                <span className="px-2 py-0.5 rounded-full bg-sky-500 text-zinc-950 font-bold text-[10px] uppercase tracking-wider">
+                  21st UI
+                </span>
+                <span className="text-zinc-300">ระบบแจ้งซ่อมแอร์อัจฉริยะ มาตรฐาน Carrier Style</span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-sky-400" />
               </div>
 
-              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-white">
-                บริการล้าง ซ่อม ติดตั้งแอร์ <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-cyan-200">
-                  รวดเร็ว ปลอดภัย ไร้กังวล
+              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.12] text-white">
+                ดูแลเครื่องปรับอากาศ <br />
+                ด้วยทีมช่างระดับ{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400">
+                  Professional
                 </span>
               </h1>
 
-              <p className="text-slate-200 text-base sm:text-lg max-w-2xl leading-relaxed">
-                ดูแลโดยทีมช่างผู้ชำนาญการผ่านการอบรมมาตรฐาน อะไหล่แท้ 100% พร้อมรับประกันงานซ่อม 90 วัน
-                นัดหมายวันเวลาได้ตามสะดวก และติดตามสถานะแบบเรียลไทม์ได้ทันที
+              <p className="text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed font-normal">
+                บริการล้าง ซ่อม และติดตั้งแอร์ครบวงจร โดยทีมวิศวกรและช่างเทคนิคผ่านการรับรอง
+                ใช้อะไหล่แท้ 100% พร้อมระบบติดตามสถานะงานซ่อมและแชทกับช่างแบบ Real-time
               </p>
 
-              {/* Fast Actions */}
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link
-                  to="/book"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-sky-400 hover:bg-sky-300 text-slate-900 shadow-lg shadow-sky-500/25 transition-all transform hover:-translate-y-0.5"
+              {/* Magnetic & Ripple CTA Buttons */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-2">
+                <MagneticButton
+                  type="button"
+                  onClick={() => navigate('/book')}
+                  className="btn-shimmer px-7 py-4 rounded-2xl font-bold text-sm text-white shadow-xl shadow-sky-500/20 hover:shadow-sky-500/40"
                 >
                   <Wrench className="w-4 h-4" />
-                  แจ้งซ่อม / นัดหมายทันที
-                </Link>
+                  <span>แจ้งซ่อม / นัดหมายทันที</span>
+                  <ArrowRight className="w-4 h-4" />
+                </MagneticButton>
+
                 <a
-                  href="#services"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all"
+                  href="#estimator"
+                  className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-sm bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 hover:border-zinc-700 transition-all"
                 >
-                  ดูบริการทั้งหมด
+                  <Sliders className="w-4 h-4 text-sky-400" />
+                  <span>คำนวณค่าบริการเบื้องต้น</span>
                 </a>
               </div>
 
-              {/* Trust Badges */}
-              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/15">
-                <div>
-                  <p className="text-2xl font-black text-white">90 วัน</p>
-                  <p className="text-xs text-sky-200">รับประกันผลงาน</p>
+              {/* Animated NumberTicker Metric Pills */}
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-zinc-800/80 max-w-lg">
+                <div className="bg-zinc-900/50 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-sky-500/40 rounded-2xl p-3.5 backdrop-blur-xs transition-all duration-300">
+                  <div className="flex items-center gap-1.5 text-sky-400 text-xs font-mono mb-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>WARRANTY</span>
+                  </div>
+                  <p className="text-2xl font-black text-white tracking-tight">
+                    <NumberTicker value={90} suffix=" วัน" />
+                  </p>
+                  <p className="text-[11px] text-zinc-400">รับประกันงานซ่อม</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-black text-white">100%</p>
-                  <p className="text-xs text-sky-200">อะไหล่แท้ตรงรุ่น</p>
+
+                <div className="bg-zinc-900/50 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-emerald-500/40 rounded-2xl p-3.5 backdrop-blur-xs transition-all duration-300">
+                  <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-mono mb-0.5">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>GENUINE</span>
+                  </div>
+                  <p className="text-2xl font-black text-white tracking-tight">
+                    <NumberTicker value={100} suffix="%" />
+                  </p>
+                  <p className="text-[11px] text-zinc-400">อะไหล่แท้ตรงรุ่น</p>
                 </div>
-                <div>
-                  <p className="text-2xl font-black text-white">24/7</p>
-                  <p className="text-xs text-sky-200">เช็คสถานะออนไลน์</p>
+
+                <div className="bg-zinc-900/50 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-amber-500/40 rounded-2xl p-3.5 backdrop-blur-xs transition-all duration-300">
+                  <div className="flex items-center gap-1.5 text-amber-400 text-xs font-mono mb-0.5">
+                    <Activity className="w-4 h-4" />
+                    <span>JOBS DONE</span>
+                  </div>
+                  <p className="text-2xl font-black text-white tracking-tight">
+                    <NumberTicker value={12500} suffix="+" />
+                  </p>
+                  <p className="text-[11px] text-zinc-400">เคสดูแลสำเร็จ</p>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
-            {/* Right: Quick Tracking Widget */}
-            <div className="lg:col-span-5">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 text-slate-800 shadow-2xl border border-slate-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-2 bg-blue-50 text-[#003882] rounded-lg">
-                    <Search className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900 leading-tight">ตรวจสอบสถานะงานซ่อม</h2>
-                    <p className="text-xs text-slate-500">ติดตามขั้นตอนและตำแหน่งช่างแบบเรียลไทม์</p>
-                  </div>
-                </div>
+            {/* Right: 3D Tilt Interactive Live Tracking Command Card (5 cols) */}
+            <ScrollReveal direction="scale" delay={150} className="lg:col-span-5">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 via-blue-500/20 to-cyan-400/30 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-500" />
 
-                <form onSubmit={handleQuickTrack} className="mt-5 space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                      กรอกรหัสติดตามงาน (Tracking Code)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={quickCode}
-                        onChange={(e) => setQuickCode(e.target.value)}
-                        placeholder="เช่น TK-ABC12345"
-                        className="w-full px-4 py-3 text-sm font-mono tracking-wider uppercase bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden transition"
-                        required
-                      />
+                <Tilt3DCard
+                  maxTilt={5}
+                  spotlightColor="rgba(56, 189, 248, 0.22)"
+                  className="bg-zinc-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 text-white border border-zinc-800 shadow-2xl"
+                >
+                  <div className="flex items-center justify-between pb-5 mb-6 border-b border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+                        <Search className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-white leading-tight">Live Ticket Tracker</h2>
+                        <p className="text-xs text-zinc-400">ขยับเมาส์หรือกดรหัสเพื่อทดสอบระบบติดตาม</p>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      ONLINE
+                    </span>
+                  </div>
+
+                  <form onSubmit={handleQuickTrack} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-300 mb-2">
+                        หมายเลขติดตามงานซ่อม (Tracking Code)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={quickCode}
+                          onChange={(e) => setQuickCode(e.target.value)}
+                          placeholder="เช่น TK-SEED001"
+                          className="w-full pl-4 pr-12 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-950/90 border border-zinc-700/80 text-white placeholder:text-zinc-600 rounded-2xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                          required
+                        />
+                        <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
+                          ID
+                        </span>
+                      </div>
+                    </div>
+
+                    <MagneticButton
+                      type="submit"
+                      className="w-full py-3.5 px-4 rounded-2xl text-sm font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-lg shadow-sky-500/20"
+                    >
+                      <Search className="w-4 h-4" />
+                      <span>ค้นหาสถานะงานซ่อม</span>
+                    </MagneticButton>
+                  </form>
+
+                  <div className="mt-5 pt-5 border-t border-zinc-800/90">
+                    <p className="text-[11px] text-zinc-400 mb-2.5 font-medium">
+                      คลิกเพื่อทดสอบรหัสตัวอย่างทันที:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {['TK-SEED001', 'TK-SEED002'].map((sample) => (
+                        <button
+                          key={sample}
+                          type="button"
+                          onClick={() => navigate(`/track/${sample}`)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-sky-500/20 text-zinc-300 hover:text-sky-300 border border-zinc-800 hover:border-sky-500/40 text-xs font-mono transition-all cursor-pointer"
+                        >
+                          <span>{sample}</span>
+                          <ArrowUpRight className="w-3 h-3 text-sky-400" />
+                        </button>
+                      ))}
                     </div>
                   </div>
-
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold text-white bg-[#003882] hover:bg-[#002866] transition shadow-md shadow-blue-900/10"
-                  >
-                    <Search className="w-4 h-4" />
-                    <span>ค้นหาข้อมูลสถานะ</span>
-                  </button>
-
-                  <div className="pt-2 text-center">
-                    <p className="text-xs text-slate-400">
-                      ตัวอย่างรหัสทดสอบ: <span className="font-mono text-slate-600 font-semibold">TK-SEED001</span> หรือ <span className="font-mono text-slate-600 font-semibold">TK-SEED002</span>
-                    </p>
-                  </div>
-                </form>
-
-                <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> อัปเดตสถานะทันที
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> แชทกับช่างได้ตลอด
-                  </span>
-                </div>
+                </Tilt3DCard>
               </div>
+            </ScrollReveal>
+          </div>
+        </div>
+
+        {/* 21st.dev Infinite Marquee Ticker for Supported AC Brands */}
+        <div className="mt-16 pt-8 border-t border-zinc-900 relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 mb-3 flex items-center justify-between text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
+            <span>SUPPORTED AIR CONDITIONING BRANDS</span>
+            <span>CERTIFIED PARTS & TOOLS</span>
+          </div>
+          <div className="relative flex overflow-x-hidden">
+            <div className="flex animate-marquee hover-pause whitespace-nowrap gap-4 py-2">
+              {[...SUPPORTED_BRANDS, ...SUPPORTED_BRANDS].map((brand, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800/90 text-xs font-mono font-bold text-zinc-300 hover:text-sky-400 hover:border-sky-500/40 transition-colors cursor-default"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                  {brand}
+                </span>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* 2. Services Section with 3D Tilt Interactive Cards */}
       <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#003882] text-xs font-semibold mb-3">
-            <Award className="w-3.5 h-3.5" />
-            <span>มาตรฐานบริการคุณภาพ</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">บริการยอดนิยมจาก CoolCare Pro</h2>
-          <p className="text-slate-600 text-sm mt-2">
-            เลือกแพ็กเกจบริการที่ตอบโจทย์คุณ พร้อมรับประกันคุณภาพและราคามาตรฐานโปร่งใส
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1: Cleaning */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 p-7 flex flex-col justify-between group">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Wind className="w-6 h-6" />
-              </div>
-              <div className="flex items-baseline justify-between mb-2">
-                <h3 className="text-xl font-bold text-slate-900">ล้างแอร์มาตรฐาน</h3>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">ยอดนิยม</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-4">
-                ล้างทำความสะอาดแอร์อย่างล้ำลึก ฆ่าเชื้อราและแบคทีเรีย ประหยัดไฟ เย็นฉ่ำ
-              </p>
-              <div className="mb-6">
-                <span className="text-2xl font-black text-[#003882]">฿590</span>
-                <span className="text-xs text-slate-400"> / เครื่อง</span>
-              </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-600 mb-6">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
-                  <span>ล้างฟิลเตอร์และคอยล์เย็นด้วยน้ำยาฆ่าเชื้อ</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
-                  <span>เป่าท่อน้ำทิ้ง ป้องกันน้ำล้นหยด</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
-                  <span>ตรวจเช็คกระแสไฟและน้ำยาแอร์ฟรี</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
-                  <span>รับประกันน้ำรั่วนาน 30 วัน</span>
-                </li>
-              </ul>
+        <ScrollReveal className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-700 border border-sky-500/20 text-xs font-bold mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+              <span>3D INTERACTIVE PACKAGES</span>
             </div>
-
-            <Link
-              to="/book?service=CLEANING"
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-[#003882] bg-blue-50 hover:bg-[#003882] hover:text-white transition-colors"
-            >
-              จองบริการล้างแอร์
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
+              แพ็กเกจบริการมาตรฐานโปร่งใส
+            </h2>
           </div>
+          <p className="text-zinc-500 text-sm max-w-md">
+            ลองเลื่อนเมาส์สำรวจการ์ดบริการแต่ละแบบ หรือกดปุ่มเพื่อเลือกแพ็กเกจและนัดหมายวันเวลาได้ทันที
+          </p>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-7">
+          {/* Card 1: Cleaning */}
+          <ScrollReveal delay={50}>
+            <Tilt3DCard
+              spotlightColor="rgba(14, 165, 233, 0.14)"
+              className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-2xl hover:border-sky-300 p-8 h-full"
+            >
+              <div className="flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center">
+                      <Wind className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500/20">
+                      ยอดนิยม
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-extrabold text-zinc-950 mb-1.5">ล้างแอร์ระบบปลอดเชื้อ</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed mb-6">
+                    ล้างใหญ่ด้วยปั๊มแรงดันสูง ฆ่าเชื้อราและแบคทีเรีย ช่วยให้แอร์เย็นฉ่ำและประหยัดค่าไฟ
+                  </p>
+
+                  <div className="flex items-baseline gap-1.5 pb-6 mb-6 border-b border-zinc-100">
+                    <span className="text-3xl font-black text-zinc-950 tracking-tight">฿590</span>
+                    <span className="text-xs text-zinc-400 font-medium">/ เครื่อง</span>
+                  </div>
+
+                  <ul className="space-y-3 text-xs text-zinc-600 mb-8">
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span>ฉีดล้างคอยล์เย็นและคอยล์ร้อนด้วยน้ำยาเฉพาะ</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span>เป่าไล่ท่อน้ำทิ้ง ป้องกันปัญหาน้ำหยด</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span>ตรวจเช็คแรงดันน้ำยาแอร์และกระแสไฟฟรี</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <span>รับประกันอาการน้ำรั่วซึม 30 วัน</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/book?service=CLEANING"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-bold text-zinc-900 bg-zinc-100 hover:bg-zinc-950 hover:text-white transition-all"
+                >
+                  <span>จองบริการล้างแอร์</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </Tilt3DCard>
+          </ScrollReveal>
 
           {/* Card 2: Repair */}
-          <div className="bg-white rounded-2xl border-2 border-[#003882] shadow-md hover:shadow-xl transition-all duration-300 p-7 flex flex-col justify-between relative group">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#003882] text-white text-[11px] font-bold px-3 py-0.5 rounded-full uppercase tracking-wider">
-              บริการแนะนำเร่งด่วน
-            </div>
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#003882] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Wrench className="w-6 h-6" />
-              </div>
-              <div className="flex items-baseline justify-between mb-2">
-                <h3 className="text-xl font-bold text-slate-900">ตรวจเช็คและซ่อมแอร์</h3>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#003882]">รวดเร็ว</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-4">
-                แก้ปัญหาแอร์ไม่เย็น มีเสียงดัง น้ำหยด รั่วซึม หรือเปิดไม่ติด โดยช่างชำนาญการ
-              </p>
-              <div className="mb-6">
-                <span className="text-2xl font-black text-[#003882]">฿400</span>
-                <span className="text-xs text-slate-400"> (ค่าตรวจเช็คเบื้องต้น)</span>
-              </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-600 mb-6">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>ตรวจเช็คอาการด้วยเครื่องมือวัดมาตรฐาน</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>แจ้งราคาค่าอะไหล่ประเมินก่อนลงมือซ่อม</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>ใช้อะไหล่แท้ตรงรุ่น 100%</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>รับประกันงานซ่อมและอะไหล่ 90 วัน</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              to="/book?service=REPAIR"
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-[#003882] hover:bg-[#00265c] transition-colors shadow-sm"
+          <ScrollReveal delay={150}>
+            <Tilt3DCard
+              spotlightColor="rgba(56, 189, 248, 0.22)"
+              className="bg-zinc-950 text-white rounded-3xl border border-zinc-800 shadow-2xl p-8 relative h-full"
             >
-              แจ้งซ่อมแอร์ทันที
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+              <div className="flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+                      <Wrench className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm">
+                      บริการด่วนแนะนำ
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-extrabold text-white mb-1.5">ตรวจเช็คและซ่อมแอร์</h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed mb-6">
+                    แก้ปัญหาแอร์ไม่เย็น มีแต่ลมร้อน น้ำหยด เสียงดัง หรือไฟกระพริบ วิเคราะห์ตรงจุด
+                  </p>
+
+                  <div className="flex items-baseline gap-1.5 pb-6 mb-6 border-b border-zinc-800">
+                    <span className="text-3xl font-black text-white tracking-tight">฿400</span>
+                    <span className="text-xs text-zinc-400 font-medium">(ค่าตรวจเช็คเบื้องต้น)</span>
+                  </div>
+
+                  <ul className="space-y-3 text-xs text-zinc-300 mb-8">
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <span>วิเคราะห์อาการเสียด้วยเครื่องมือดิจิทัล</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <span>เสนอราคาค่าซ่อมชัดเจนก่อนเริ่มงานเสมอ</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <span>อะไหล่แท้จากโรงงานผู้ผลิต 100%</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <span>รับประกันงานซ่อมและอะไหล่สูงสุด 90 วัน</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/book?service=REPAIR"
+                  className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-bold text-white shadow-lg shadow-sky-500/20 transition-all"
+                >
+                  <span>แจ้งซ่อมแอร์ด่วน</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </Tilt3DCard>
+          </ScrollReveal>
 
           {/* Card 3: Installation */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 p-7 flex flex-col justify-between group">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <PenTool className="w-6 h-6" />
-              </div>
-              <div className="flex items-baseline justify-between mb-2">
-                <h3 className="text-xl font-bold text-slate-900">ติดตั้งและย้ายแอร์</h3>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">มาตรฐาน</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-4">
-                ติดตั้งแอร์เครื่องใหม่ หรือถอดย้ายตำแหน่ง เดินท่อสวยงาม เรียบร้อย ปลอดภัย
-              </p>
-              <div className="mb-6">
-                <span className="text-2xl font-black text-[#003882]">฿2,500</span>
-                <span className="text-xs text-slate-400"> / ชุด</span>
-              </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-600 mb-6">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <span>ฟรีท่อน้ำยาแอร์ทองแดงหนา 4 เมตร</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <span>ฟรีรางครอบท่อและขาแขวนคอมเพรสเซอร์</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <span>ทดสอบระบบสุญญากาศ (Vacuum) และวัดแรงดัน</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <span>รับประกันการติดตั้ง 180 วัน</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              to="/book?service=INSTALLATION"
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-[#003882] bg-blue-50 hover:bg-[#003882] hover:text-white transition-colors"
+          <ScrollReveal delay={250}>
+            <Tilt3DCard
+              spotlightColor="rgba(99, 102, 241, 0.14)"
+              className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-2xl hover:border-indigo-300 p-8 h-full"
             >
-              จองบริการติดตั้ง/ย้าย
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+              <div className="flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
+                      <PenTool className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-700">
+                      มาตรฐานวิศวกรรม
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-extrabold text-zinc-950 mb-1.5">ติดตั้งและย้ายแอร์</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed mb-6">
+                    บริการติดตั้งแอร์ใหม่หรือย้ายจุดติดตั้ง เดินท่อสวยงาม ปลอดภัยตามหลักวิศวกรรม
+                  </p>
+
+                  <div className="flex items-baseline gap-1.5 pb-6 mb-6 border-b border-zinc-100">
+                    <span className="text-3xl font-black text-zinc-950 tracking-tight">฿2,500</span>
+                    <span className="text-xs text-zinc-400 font-medium">/ ชุด</span>
+                  </div>
+
+                  <ul className="space-y-3 text-xs text-zinc-600 mb-8">
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span>แถมท่อทองแดงมาตรฐานหนาพิเศษ 4 เมตร</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span>ฟรีรางครอบท่อ เบรกเกอร์ และขาแขวนคอยล์ร้อน</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span>แวคคั่มระบบสุญญากาศทุกครั้งก่อนปล่อยน้ำยา</span>
+                    </li>
+                    <li className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <span>รับประกันงานติดตั้งนานถึง 180 วัน</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/book?service=INSTALLATION"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-bold text-zinc-900 bg-zinc-100 hover:bg-zinc-950 hover:text-white transition-all"
+                >
+                  <span>จองคิวติดตั้ง/ย้ายแอร์</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </Tilt3DCard>
+          </ScrollReveal>
         </div>
       </section>
 
-      {/* 4 Steps Workflow */}
-      <section className="bg-slate-100/70 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">ขั้นตอนการให้บริการที่สะดวกและโปร่งใส</h2>
-            <p className="text-slate-600 text-sm mt-2">แจ้งซ่อมง่ายใน 4 ขั้นตอน ตรวจสอบได้ทุกระยะ</p>
+      {/* 3. Interactive Price Estimator Widget (กดเลือกแท็บและปรับจำนวนเครื่องได้สดๆ) */}
+      <section id="estimator" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal>
+          <div className="bg-zinc-950 text-white rounded-3xl p-7 sm:p-10 border border-zinc-800 shadow-2xl relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-sky-500/15 blur-3xl pointer-events-none" />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+              <div className="lg:col-span-7 space-y-5">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/25 text-xs font-mono font-bold">
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>INTERACTIVE ESTIMATOR</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  ลองคำนวณค่าบริการเบื้องต้น
+                </h3>
+                <p className="text-zinc-400 text-xs sm:text-sm">
+                  คลิกเลือกประเภทบริการและปรับจำนวนเครื่องเพื่อดูราคาประเมินทันที (ล้างแอร์ 2 เครื่องขึ้นไปรับส่วนลดพิเศษเหลือเครื่องละ 500 บาท)
+                </p>
+
+                {/* Interactive Segmented Control */}
+                <div className="grid grid-cols-3 gap-2 p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800">
+                  {[
+                    { id: 'CLEANING', label: 'ล้างแอร์', icon: Wind },
+                    { id: 'REPAIR', label: 'ซ่อมแอร์', icon: Wrench },
+                    { id: 'INSTALLATION', label: 'ติดตั้ง/ย้าย', icon: PenTool },
+                  ].map((tab) => {
+                    const Icon = tab.icon
+                    const isSelected = activeCalcTab === tab.id
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveCalcTab(tab.id as any)}
+                        className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-sky-400 text-zinc-950 shadow-md scale-[1.02]'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        <span>{tab.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Unit Counter Pills */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-300 font-semibold">จำนวนเครื่องปรับอากาศ:</span>
+                    <span className="font-mono font-bold text-sky-400">{unitCount} เครื่อง</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setUnitCount(num)}
+                        className={`flex-1 py-2.5 rounded-xl font-mono text-xs font-bold border transition-all cursor-pointer ${
+                          unitCount === num
+                            ? 'bg-white text-zinc-950 border-white shadow-md scale-105'
+                            : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                        }`}
+                      >
+                        {num} เครื่อง
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Live Output Box */}
+              <div className="lg:col-span-5 bg-zinc-900/90 border border-zinc-800 rounded-3xl p-6 text-center space-y-4">
+                <p className="text-xs font-mono uppercase tracking-widest text-zinc-400">
+                  ESTIMATED COST
+                </p>
+                <div className="py-2">
+                  <span className="text-4xl sm:text-5xl font-black text-sky-400 tracking-tight tabular-nums">
+                    ฿{estimatedTotal.toLocaleString()}
+                  </span>
+                  {activeCalcTab === 'CLEANING' && unitCount >= 2 && (
+                    <span className="block text-[11px] text-emerald-400 font-semibold mt-1">
+                      🎉 ได้รับส่วนลดแพ็กคู่ เหลือเครื่องละ ฿500!
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  รวมค่าเดินทางในเขตกรุงเทพฯ และปริมณฑล พร้อมรับประกันงานบริการ
+                </p>
+                <MagneticButton
+                  type="button"
+                  onClick={() => navigate(`/book?service=${activeCalcTab}`)}
+                  className="btn-shimmer w-full py-3.5 px-5 rounded-2xl font-bold text-xs text-white shadow-lg"
+                >
+                  <span>จองบริการนี้เลย ({unitCount} เครื่อง)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </MagneticButton>
+              </div>
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs relative">
-              <span className="w-8 h-8 rounded-full bg-[#003882] text-white font-bold text-sm flex items-center justify-center mb-4">
-                1
-              </span>
-              <h3 className="font-bold text-base text-slate-800 mb-1">แจ้งซ่อมออนไลน์</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                กรอกข้อมูลอาการ วันเวลาที่สะดวก และอัปโหลดรูปภาพผ่านเว็บแอปพลิเคชัน
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs relative">
-              <span className="w-8 h-8 rounded-full bg-sky-600 text-white font-bold text-sm flex items-center justify-center mb-4">
-                2
-              </span>
-              <h3 className="font-bold text-base text-slate-800 mb-1">ระบบรับเรื่อง & จ่ายงาน</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                เจ้าหน้าที่ตรวจสอบข้อมูล มอบหมายช่างผู้เชี่ยวชาญในพื้นที่ของคุณ
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs relative">
-              <span className="w-8 h-8 rounded-full bg-amber-500 text-white font-bold text-sm flex items-center justify-center mb-4">
-                3
-              </span>
-              <h3 className="font-bold text-base text-slate-800 mb-1">ช่างเข้าบริการตรงเวลา</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                ช่างผู้ผ่านการรับรองเข้าดำเนินการตรวจเช็ค ซ่อมแซม หรือล้างแอร์ตามนัด
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs relative">
-              <span className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center mb-4">
-                4
-              </span>
-              <h3 className="font-bold text-base text-slate-800 mb-1">เสร็จสิ้น & รับประกัน</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                ตรวจรับงาน ชำระเงินตามจริง พร้อมใบรับประกันงานซ่อมสูงสุด 90 วัน
-              </p>
-            </div>
-          </div>
-        </div>
+        </ScrollReveal>
       </section>
 
-      {/* Why Choose Us */}
+      {/* 4. 21st.dev Bento Grid Feature Showcase with ScrollReveal */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-[#002f6c] to-[#004f9f] rounded-3xl p-8 sm:p-12 text-white shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-semibold mb-3">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>มาตรฐานความไว้วางใจ</span>
+        <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-200/70 text-zinc-800 text-xs font-bold mb-3">
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span>WHY COOLCARE PRO</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
+            ยกระดับประสบการณ์ซ่อมแอร์ยุคดิจิทัล
+          </h2>
+          <p className="text-zinc-500 text-sm mt-2">
+            หมดปัญหาช่างทิ้งงานหรือคิดราคาเกินจริง ด้วยระบบบริหารงานซ่อมที่โปร่งใสตรวจสอบได้ทุกขั้นตอน
+          </p>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+          {/* Bento 1 */}
+          <ScrollReveal delay={50} className="md:col-span-7">
+            <Tilt3DCard maxTilt={3} className="bg-white rounded-3xl p-8 border border-zinc-200/90 shadow-xs flex flex-col justify-between h-full">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-bold mb-4">
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>Real-time Status Pipeline</span>
+                </div>
+                <h3 className="text-2xl font-extrabold text-zinc-950 mb-2">
+                  ติดตามสถานะได้เหมือนสั่งอาหารเดลิเวอรี่
+                </h3>
+                <p className="text-zinc-500 text-xs sm:text-sm max-w-xl leading-relaxed">
+                  รู้ทันทีว่าเรื่องของคุณอยู่ในขั้นตอนไหน ใครเป็นช่างผู้รับผิดชอบ พร้อมเบอร์ติดต่อและไทม์ไลน์อัปเดตสดจากหน้างาน
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold leading-snug">
-                มั่นใจทุกงานซ่อมกับ CoolCare Pro
-              </h2>
-              <p className="text-slate-200 text-sm mt-3 leading-relaxed">
-                เรายึดมั่นในคุณภาพและการบริการที่โปร่งใส ช่างทุกคนผ่านการตรวจประวัติและสอบวัดระดับฝีมือ
-                พร้อมดูแลเครื่องปรับอากาศของคุณให้กลับมาเย็นฉ่ำ สบายใจไร้กังวล
-              </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 text-sky-300 shrink-0">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">ช่างฝีมือรับรอง</h4>
-                    <p className="text-xs text-slate-300">ผ่านการฝึกอบรมมาตรฐานแบรนด์ชั้นนำ</p>
+              <div className="mt-8 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 grid grid-cols-4 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-white border border-zinc-200/80 shadow-2xs hover:scale-105 transition-transform">
+                  <span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5">
+                    ✓
+                  </span>
+                  <p className="text-[11px] font-bold text-zinc-800">ส่งเรื่องแล้ว</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white border border-zinc-200/80 shadow-2xs hover:scale-105 transition-transform">
+                  <span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5">
+                    ✓
+                  </span>
+                  <p className="text-[11px] font-bold text-zinc-800">จัดช่างแล้ว</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-sky-50/80 border border-sky-300 shadow-xs hover:scale-105 transition-transform">
+                  <span className="w-6 h-6 rounded-full bg-sky-600 text-white text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5 animate-pulse">
+                    3
+                  </span>
+                  <p className="text-[11px] font-bold text-sky-900">กำลังเข้าซ่อม</p>
+                </div>
+                <div className="p-2.5 rounded-xl bg-zinc-100/70 border border-zinc-200/50 opacity-60">
+                  <span className="w-6 h-6 rounded-full bg-zinc-300 text-zinc-600 text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5">
+                    4
+                  </span>
+                  <p className="text-[11px] font-bold text-zinc-500">เสร็จสมบูรณ์</p>
+                </div>
+              </div>
+            </Tilt3DCard>
+          </ScrollReveal>
+
+          {/* Bento 2 */}
+          <ScrollReveal delay={120} className="md:col-span-5">
+            <Tilt3DCard maxTilt={4} className="bg-zinc-950 text-white rounded-3xl p-8 border border-zinc-800 shadow-xl flex flex-col justify-between h-full">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/20 text-xs font-bold mb-4">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Direct Technician Chat</span>
+                </div>
+                <h3 className="text-2xl font-extrabold text-white mb-2">
+                  แชทคุยกับเจ้าหน้าที่ได้โดยตรง
+                </h3>
+                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                  ไม่ต้องรอสาย Call Center นาน พิมพ์สอบถามอาการเพิ่มเติมหรือนัดหมายเวลากับทีมงานผ่านหน้าเว็บได้ทันที
+                </p>
+              </div>
+
+              <div className="mt-6 space-y-2.5 bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 text-xs">
+                <div className="flex flex-col items-start">
+                  <span className="text-[10px] text-zinc-500 mb-1">ช่างสมชาย (CoolCare Pro)</span>
+                  <div className="bg-zinc-800 text-zinc-200 px-3.5 py-2 rounded-2xl rounded-tl-xs">
+                    กำลังเดินทางเข้าไปครับ ถึงประมาณ 10:30 น. ครับผม
                   </div>
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 text-sky-300 shrink-0">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">ตรงต่อเวลา</h4>
-                    <p className="text-xs text-slate-300">นัดหมายแม่นยำ พร้อมแจ้งก่อนเข้าถึง</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 text-sky-300 shrink-0">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">รับประกัน 90 วัน</h4>
-                    <p className="text-xs text-slate-300">ซ้ำอาการเดิม ดูแลให้ฟรีไม่มีค่าใช้จ่าย</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 text-sky-300 shrink-0">
-                    <PhoneCall className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">บริการหลังการขาย</h4>
-                    <p className="text-xs text-slate-300">มี Call Center และระบบแชทซัพพอร์ต</p>
+                <div className="flex flex-col items-end">
+                  <div className="bg-sky-500 text-zinc-950 font-semibold px-3.5 py-2 rounded-2xl rounded-tr-xs">
+                    รับทราบครับ แจ้งรปภ.หน้าหมู่บ้านได้เลยครับ
                   </div>
                 </div>
               </div>
-            </div>
+            </Tilt3DCard>
+          </ScrollReveal>
 
-            <div className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 text-center">
-              <CalendarCheck className="w-12 h-12 text-sky-300 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">พร้อมรับบริการแล้วใช่ไหม?</h3>
-              <p className="text-xs text-slate-200 mb-6 max-w-xs">
-                ใช้เวลาไม่ถึง 2 นาทีในการกรอกข้อมูล เจ้าหน้าที่จะประสานงานช่างทันที
+          {/* Bento 3 */}
+          <ScrollReveal delay={180} className="md:col-span-4">
+            <Tilt3DCard maxTilt={5} className="bg-white rounded-3xl p-7 border border-zinc-200/90 shadow-xs h-full">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-extrabold text-zinc-950 mb-1.5">ปักหมุดพิกัด GPS แม่นยำ</h3>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                รองรับการดึงพิกัด GPS ปัจจุบันและแนบรูปถ่ายหน้างานสูงสุด 5 รูป เพื่อให้ช่างเตรียมอะไหล่และเดินทางไปถึงได้รวดเร็วที่สุด
               </p>
+            </Tilt3DCard>
+          </ScrollReveal>
+
+          {/* Bento 4 */}
+          <ScrollReveal delay={240} className="md:col-span-4">
+            <Tilt3DCard maxTilt={5} className="bg-white rounded-3xl p-7 border border-zinc-200/90 shadow-xs h-full">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                <Award className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-extrabold text-zinc-950 mb-1.5">ช่างผ่านการรับรองฝีมือ</h3>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                ทีมช่างทุกคนผ่านการตรวจสอบประวัติอาชญากรรม และผ่านการอบรมมาตรฐานเครื่องปรับอากาศชั้นนำระดับสากล
+              </p>
+            </Tilt3DCard>
+          </ScrollReveal>
+
+          {/* Bento 5 */}
+          <ScrollReveal delay={300} className="md:col-span-4">
+            <div className="bg-gradient-to-br from-sky-500 to-blue-700 text-white rounded-3xl p-7 shadow-lg flex flex-col justify-between h-full">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <CalendarCheck className="w-8 h-8 text-sky-100" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-white/20 text-white font-bold">
+                    FAST BOOKING
+                  </span>
+                </div>
+                <h3 className="text-xl font-extrabold mb-1">แอร์มีปัญหาใช่ไหม?</h3>
+                <p className="text-xs text-sky-100 leading-relaxed mb-6">
+                  กรอกฟอร์มใช้เวลาไม่ถึง 2 นาที รับรหัสติดตามงานซ่อมได้ทันทีไม่ต้องสมัครสมาชิก
+                </p>
+              </div>
               <Link
                 to="/book"
-                className="w-full sm:w-auto px-8 py-3 rounded-xl bg-white text-[#003882] font-bold text-sm hover:bg-sky-50 shadow-md transition-all"
+                className="w-full py-3 px-4 rounded-2xl bg-white text-zinc-950 hover:bg-sky-50 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition"
               >
-                เริ่มแจ้งซ่อมตอนนี้
+                <span>เริ่มแจ้งซ่อมตอนนี้</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* 5. 21st.dev Interactive Accordion FAQ Section (กดพับ/กางดูคำตอบได้ลื่นไหล) */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="text-center mb-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-bold mb-3">
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>FREQUENTLY ASKED QUESTIONS</span>
           </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-950 tracking-tight">
+            คำถามที่พบบ่อย
+          </h2>
+          <p className="text-zinc-500 text-xs sm:text-sm mt-1">
+            คลิกที่หัวข้อคำถามเพื่อดูรายละเอียดการให้บริการและการรับประกัน
+          </p>
+        </ScrollReveal>
+
+        <div className="space-y-3">
+          {FAQ_ITEMS.map((item, idx) => {
+            const isOpen = openFaqIndex === idx
+            return (
+              <ScrollReveal key={idx} delay={idx * 60}>
+                <div
+                  className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                    isOpen
+                      ? 'bg-zinc-950 text-white border-zinc-950 shadow-lg'
+                      : 'bg-white text-zinc-900 border-zinc-200/90 hover:border-zinc-300'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                    className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 cursor-pointer"
+                  >
+                    <span className="font-bold text-sm">{item.q}</span>
+                    <span
+                      className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${
+                        isOpen ? 'bg-sky-500 text-zinc-950 rotate-180' : 'bg-zinc-100 text-zinc-600'
+                      }`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </span>
+                  </button>
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      isOpen ? 'grid-rows-[1fr] opacity-100 pb-5 px-6' : 'grid-rows-[0fr] opacity-0 px-6'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <p className={`text-xs leading-relaxed ${isOpen ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                        {item.a}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            )
+          })}
         </div>
       </section>
     </div>

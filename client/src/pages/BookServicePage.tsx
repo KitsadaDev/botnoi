@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,7 +11,6 @@ import {
   MapPin,
   User,
   Phone,
-  Image as ImageIcon,
   X,
   UploadCloud,
   CheckCircle2,
@@ -20,11 +19,14 @@ import {
   AlertCircle,
   Loader2,
   Navigation,
+  Sparkles,
+  ShieldCheck,
+  Wand2,
 } from 'lucide-react'
 import api from '../lib/api'
 import type { ApiResponse, Ticket, ServiceType } from '../lib/types'
+import { ScrollReveal, Tilt3DCard, MagneticButton } from '../components/InteractiveUI'
 
-// Validation Schema
 const bookingSchema = z.object({
   service: z.enum(['CLEANING', 'REPAIR', 'INSTALLATION'], {
     errorMap: () => ({ message: 'กรุณาเลือกประเภทบริการ' }),
@@ -59,9 +61,27 @@ const BRAND_OPTIONS = [
   'อื่นๆ (Other)',
 ]
 
+const QUICK_SYMPTOMS: Record<ServiceType, string[]> = {
+  CLEANING: [
+    'ล้างแอร์ประจำปี 1 เครื่อง มีฝุ่นสะสมและกลิ่นอับ',
+    'ล้างใหญ่แอร์ติดผนัง 2 เครื่อง ลมออกเบา',
+    'ล้างแอร์และตรวจเช็คน้ำยาแอร์ มีน้ำหยดเล็กน้อย',
+  ],
+  REPAIR: [
+    'แอร์เปิดติดแต่ไม่เย็น มีแต่ลมธรรมดาออกมา',
+    'มีน้ำหยดไหลลงมาจากตัวเครื่องคอยล์เย็น',
+    'แอร์มีเสียงดังผิดปกติและไฟกระพริบที่หน้าเครื่อง',
+    'คอมเพรสเซอร์ด้านนอกไม่ทำงาน แอร์ตัดบ่อย',
+  ],
+  INSTALLATION: [
+    'ติดตั้งแอร์ใหม่ขนาด 12,000 BTU พร้อมเดินท่อ',
+    'รื้อถอนแอร์เดิมและย้ายจุดติดตั้งไปห้องใหม่',
+    'ติดตั้งแอร์ใหม่แทนเครื่องเก่าในตำแหน่งเดิม',
+  ],
+}
+
 export const BookServicePage: React.FC = () => {
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -95,10 +115,10 @@ export const BookServicePage: React.FC = () => {
   })
 
   const selectedService = watch('service')
+  const currentSymptom = watch('symptom')
   const currentLat = watch('lat')
   const currentLng = watch('lng')
 
-  // Set default minimum date to tomorrow
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const minDateString = tomorrow.toISOString().split('T')[0]
@@ -114,7 +134,6 @@ export const BookServicePage: React.FC = () => {
     const newFiles = [...images, ...files].slice(0, 5)
     setImages(newFiles)
 
-    // Generate previews
     const newPreviews = newFiles.map((file) => URL.createObjectURL(file))
     setImagePreviews(newPreviews)
   }
@@ -140,7 +159,6 @@ export const BookServicePage: React.FC = () => {
       },
       (err) => {
         console.warn('Geolocation error:', err)
-        // Fallback Bangkok center coords for demonstration
         setValue('lat', 13.7563)
         setValue('lng', 100.5018)
         setIsGettingLocation(false)
@@ -173,7 +191,6 @@ export const BookServicePage: React.FC = () => {
         formData.append('note', data.note)
       }
 
-      // Attach image files
       images.forEach((file) => {
         formData.append('images', file)
       })
@@ -204,125 +221,129 @@ export const BookServicePage: React.FC = () => {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // If successfully created, display Success Confirmation screen
+  // Success Confirmation Screen
   if (createdTicket) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16">
-        <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-100 text-center">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
+        <ScrollReveal direction="scale">
+          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-zinc-200/90 text-center relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-emerald-500" />
 
-          <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold mb-2">
-            บันทึกการแจ้งซ่อมเรียบร้อยแล้ว
-          </span>
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm animate-bounce">
+              <CheckCircle2 className="w-9 h-9" />
+            </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
-            ขอบคุณที่ไว้วางใจ CoolCare Pro
-          </h1>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500/20 text-xs font-bold mb-3">
+              บันทึกคำขอแจ้งซ่อมสำเร็จ
+            </span>
 
-          <p className="text-slate-600 text-sm max-w-md mx-auto mb-8">
-            ระบบได้รับข้อมูลการแจ้งซ่อมของคุณแล้ว เจ้าหน้าที่จะตรวจสอบและประสานงานช่างในพื้นที่ให้เร็วที่สุด
-          </p>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-950 mb-2 tracking-tight">
+              ขอบคุณที่ไว้วางใจ CoolCare Pro
+            </h1>
 
-          {/* Tracking Code Box */}
-          <div className="bg-blue-50/80 border-2 border-dashed border-[#003882]/40 rounded-2xl p-6 max-w-md mx-auto mb-8">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-              รหัสติดตามงานซ่อมของคุณ (Tracking Code)
+            <p className="text-zinc-500 text-sm max-w-md mx-auto mb-8">
+              ระบบได้ออกรหัสติดตามงานซ่อมให้คุณเรียบร้อยแล้ว สามารถใช้รหัสนี้เพื่อเช็คสถานะและแชทกับเจ้าหน้าที่ได้ทันที
             </p>
-            <div className="flex items-center justify-center gap-3">
-              <span className="font-mono text-3xl font-black text-[#003882] tracking-wider">
-                {createdTicket.trackingCode}
-              </span>
-              <button
-                type="button"
-                onClick={copyTrackingCode}
-                className="p-2 rounded-lg bg-white text-[#003882] hover:bg-blue-100 border border-blue-200 transition-colors shadow-xs"
-                title="คัดลอกรหัส"
+
+            {/* Tracking Code Command Box */}
+            <Tilt3DCard maxTilt={4} className="bg-zinc-950 text-white rounded-3xl p-6 max-w-md mx-auto mb-8 border border-zinc-800 shadow-lg">
+              <p className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 mb-2">
+                YOUR TRACKING CODE
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <span className="font-mono text-3xl font-black text-sky-400 tracking-wider">
+                  {createdTicket.trackingCode}
+                </span>
+                <button
+                  type="button"
+                  onClick={copyTrackingCode}
+                  className="p-2.5 rounded-xl bg-zinc-900 text-zinc-200 hover:text-white hover:bg-zinc-800 border border-zinc-700 transition-colors cursor-pointer"
+                  title="คัดลอกรหัส"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+              </div>
+              {copied && (
+                <p className="text-xs text-emerald-400 font-medium mt-2">✓ คัดลอกรหัสลงคลิปบอร์ดแล้ว</p>
+              )}
+            </Tilt3DCard>
+
+            {/* Summary Details */}
+            <div className="bg-zinc-50 rounded-2xl p-5 max-w-md mx-auto text-left text-xs space-y-2.5 mb-8 border border-zinc-200/80">
+              <div className="flex justify-between py-1 border-b border-zinc-200/70">
+                <span className="text-zinc-500">ประเภทบริการ:</span>
+                <span className="font-bold text-zinc-900">
+                  {createdTicket.service === 'CLEANING'
+                    ? 'ล้างแอร์'
+                    : createdTicket.service === 'REPAIR'
+                    ? 'ซ่อมแอร์'
+                    : 'ติดตั้ง/ย้ายแอร์'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-zinc-200/70">
+                <span className="text-zinc-500">ยี่ห้อแอร์:</span>
+                <span className="font-semibold text-zinc-900">{createdTicket.brand}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-zinc-200/70">
+                <span className="text-zinc-500">วันนัดหมาย:</span>
+                <span className="font-semibold text-zinc-900">{createdTicket.preferredDate}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-zinc-200/70">
+                <span className="text-zinc-500">ผู้ติดต่อ:</span>
+                <span className="font-semibold text-zinc-900">
+                  {createdTicket.customerName} ({createdTicket.customerPhone})
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-zinc-500">สถานที่:</span>
+                <span className="font-semibold text-zinc-900 text-right truncate max-w-[220px]">
+                  {createdTicket.address}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+              <Link
+                to={`/track/${createdTicket.trackingCode}`}
+                className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-sm text-white shadow-lg shadow-sky-500/20 transition-all"
               >
-                <Copy className="w-5 h-5" />
+                <span>ติดตามสถานะงานซ่อม</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <button
+                onClick={() => {
+                  setCreatedTicket(null)
+                  setImages([])
+                  setImagePreviews([])
+                }}
+                className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer"
+              >
+                แจ้งซ่อมรายการใหม่
               </button>
             </div>
-            {copied && <p className="text-xs text-emerald-600 font-medium mt-2">✓ คัดลอกรหัสเรียบร้อยแล้ว</p>}
           </div>
-
-          {/* Summary Details */}
-          <div className="bg-slate-50 rounded-2xl p-5 max-w-md mx-auto text-left text-xs space-y-2 mb-8 border border-slate-200">
-            <div className="flex justify-between py-1 border-b border-slate-200">
-              <span className="text-slate-500">บริการ:</span>
-              <span className="font-bold text-slate-800">
-                {createdTicket.service === 'CLEANING'
-                  ? 'ล้างแอร์'
-                  : createdTicket.service === 'REPAIR'
-                  ? 'ซ่อมแอร์'
-                  : 'ติดตั้ง/ย้ายแอร์'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-slate-200">
-              <span className="text-slate-500">ยี่ห้อแอร์:</span>
-              <span className="font-semibold text-slate-800">{createdTicket.brand}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-slate-200">
-              <span className="text-slate-500">วันนัดหมาย:</span>
-              <span className="font-semibold text-slate-800">{createdTicket.preferredDate}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-slate-200">
-              <span className="text-slate-500">ผู้ติดต่อ:</span>
-              <span className="font-semibold text-slate-800">
-                {createdTicket.customerName} ({createdTicket.customerPhone})
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-slate-500">สถานที่:</span>
-              <span className="font-semibold text-slate-800 text-right truncate max-w-[200px]">
-                {createdTicket.address}
-              </span>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-            <Link
-              to={`/track/${createdTicket.trackingCode}`}
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-sm bg-[#003882] hover:bg-[#002866] text-white shadow-md transition-all"
-            >
-              <span>ไปที่หน้าติดตามสถานะ</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <button
-              onClick={() => {
-                setCreatedTicket(null)
-                setImages([])
-                setImagePreviews([])
-              }}
-              className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-            >
-              แจ้งซ่อมเครื่องอื่นเพิ่ม
-            </button>
-          </div>
-        </div>
+        </ScrollReveal>
       </div>
     )
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      {/* Page Header */}
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#003882] text-xs font-semibold mb-3">
-          <Wrench className="w-3.5 h-3.5" />
-          <span>นัดหมายบริการมาตรฐาน Carrier Style</span>
+      <ScrollReveal className="text-center mb-10">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-700 border border-sky-500/20 text-xs font-bold mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+          <span>INTERACTIVE BOOKING FORM</span>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          แบบฟอร์มแจ้งซ่อมและนัดหมายบริการ
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
+          แจ้งซ่อมและนัดหมายช่างแอร์
         </h1>
-        <p className="text-slate-500 text-sm mt-2 max-w-lg mx-auto">
-          กรุณากรอกข้อมูลเกี่ยวกับเครื่องปรับอากาศและอาการที่พบ เพื่อให้เจ้าหน้าที่จัดเตรียมอะไหล่และส่งช่างได้ตรงจุด
+        <p className="text-zinc-500 text-sm mt-2 max-w-lg mx-auto">
+          คลิกเลือกการ์ดประเภทบริการ หรือกดปุ่มลัดอาการเสียเพื่อให้กรอกข้อมูลได้สะดวกรวดเร็วขึ้น
         </p>
-      </div>
+      </ScrollReveal>
 
       {submitError && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3">
+        <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold">เกิดข้อผิดพลาด</p>
@@ -331,324 +352,365 @@ export const BookServicePage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Section 1: Service Type Selection */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-slate-100">
-            <span className="w-7 h-7 rounded-full bg-[#003882] text-white text-xs font-bold flex items-center justify-center">
-              1
-            </span>
-            <h2 className="text-lg font-bold text-slate-900">เลือกประเภทบริการที่ต้องการ</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Service: Cleaning */}
-            <label
-              className={`relative flex flex-col p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                selectedService === 'CLEANING'
-                  ? 'border-[#003882] bg-blue-50/60 shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
-            >
-              <input type="radio" value="CLEANING" {...register('service')} className="sr-only" />
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2.5 rounded-xl ${selectedService === 'CLEANING' ? 'bg-[#003882] text-white' : 'bg-sky-50 text-sky-600'}`}>
-                  <Wind className="w-5 h-5" />
-                </div>
-                {selectedService === 'CLEANING' && (
-                  <CheckCircle2 className="w-5 h-5 text-[#003882]" />
-                )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Section 1: 3D Tilt Service Type Selection */}
+        <ScrollReveal delay={50}>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/90 shadow-xs">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-100">
+              <span className="w-7 h-7 rounded-xl bg-zinc-950 text-white text-xs font-mono font-bold flex items-center justify-center">
+                01
+              </span>
+              <div>
+                <h2 className="text-base font-extrabold text-zinc-950">เลือกประเภทบริการที่ต้องการ</h2>
+                <p className="text-xs text-zinc-400">คลิกเลือกรูปแบบบริการที่คุณต้องการนัดหมาย</p>
               </div>
-              <h3 className="font-bold text-slate-900 text-base">ล้างแอร์</h3>
-              <p className="text-xs text-slate-500 mt-1">ล้างทำความสะอาด เติมน้ำยา ฆ่าเชื้อโรค</p>
-              <p className="text-xs font-bold text-[#003882] mt-3">เริ่มต้น ฿590</p>
-            </label>
-
-            {/* Service: Repair */}
-            <label
-              className={`relative flex flex-col p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                selectedService === 'REPAIR'
-                  ? 'border-[#003882] bg-blue-50/60 shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
-            >
-              <input type="radio" value="REPAIR" {...register('service')} className="sr-only" />
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2.5 rounded-xl ${selectedService === 'REPAIR' ? 'bg-[#003882] text-white' : 'bg-blue-50 text-[#003882]'}`}>
-                  <Wrench className="w-5 h-5" />
-                </div>
-                {selectedService === 'REPAIR' && (
-                  <CheckCircle2 className="w-5 h-5 text-[#003882]" />
-                )}
-              </div>
-              <h3 className="font-bold text-slate-900 text-base">ซ่อมแอร์</h3>
-              <p className="text-xs text-slate-500 mt-1">แอร์ไม่เย็น น้ำหยด มีเสียงดัง เปิดไม่ติด</p>
-              <p className="text-xs font-bold text-[#003882] mt-3">ตรวจเช็คเริ่มต้น ฿400</p>
-            </label>
-
-            {/* Service: Installation */}
-            <label
-              className={`relative flex flex-col p-5 rounded-2xl border-2 cursor-pointer transition-all ${
-                selectedService === 'INSTALLATION'
-                  ? 'border-[#003882] bg-blue-50/60 shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
-            >
-              <input type="radio" value="INSTALLATION" {...register('service')} className="sr-only" />
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2.5 rounded-xl ${selectedService === 'INSTALLATION' ? 'bg-[#003882] text-white' : 'bg-indigo-50 text-indigo-600'}`}>
-                  <PenTool className="w-5 h-5" />
-                </div>
-                {selectedService === 'INSTALLATION' && (
-                  <CheckCircle2 className="w-5 h-5 text-[#003882]" />
-                )}
-              </div>
-              <h3 className="font-bold text-slate-900 text-base">ติดตั้ง / ย้ายแอร์</h3>
-              <p className="text-xs text-slate-500 mt-1">ติดตั้งเครื่องใหม่ รื้อถอน ย้ายตำแหน่ง</p>
-              <p className="text-xs font-bold text-[#003882] mt-3">เริ่มต้น ฿2,500</p>
-            </label>
-          </div>
-          {errors.service && <p className="text-xs text-red-600 mt-2">{errors.service.message}</p>}
-        </div>
-
-        {/* Section 2: Air Condition Info & Symptom */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-slate-100">
-            <span className="w-7 h-7 rounded-full bg-[#003882] text-white text-xs font-bold flex items-center justify-center">
-              2
-            </span>
-            <h2 className="text-lg font-bold text-slate-900">ข้อมูลเครื่องปรับอากาศและอาการ</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Brand */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                ยี่ห้อเครื่องปรับอากาศ <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('brand')}
-                className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-              >
-                {BRAND_OPTIONS.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
-              {errors.brand && <p className="text-xs text-red-600 mt-1">{errors.brand.message}</p>}
             </div>
 
-            {/* Preferred Date */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <span>วันที่ต้องการรับบริการ <span className="text-red-500">*</span></span>
-              </label>
-              <input
-                type="date"
-                min={minDateString}
-                {...register('preferredDate')}
-                className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-              />
-              {errors.preferredDate && (
-                <p className="text-xs text-red-600 mt-1">{errors.preferredDate.message}</p>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  id: 'CLEANING',
+                  title: 'ล้างแอร์',
+                  desc: 'ล้างใหญ่ ฆ่าเชื้อโรค ลดกลิ่นอับ',
+                  price: 'เริ่มต้น ฿590 / เครื่อง',
+                  icon: Wind,
+                },
+                {
+                  id: 'REPAIR',
+                  title: 'ซ่อมแอร์',
+                  desc: 'แอร์ไม่เย็น น้ำหยด มีเสียงดัง',
+                  price: 'ตรวจเช็คเริ่มต้น ฿400',
+                  icon: Wrench,
+                },
+                {
+                  id: 'INSTALLATION',
+                  title: 'ติดตั้ง / ย้ายแอร์',
+                  desc: 'ติดตั้งแอร์ใหม่ รื้อถอน ย้ายจุด',
+                  price: 'เริ่มต้น ฿2,500 / ชุด',
+                  icon: PenTool,
+                },
+              ].map((item) => {
+                const Icon = item.icon
+                const isSelected = selectedService === item.id
+                return (
+                  <Tilt3DCard
+                    key={item.id}
+                    maxTilt={6}
+                    onClick={() => setValue('service', item.id as ServiceType)}
+                    className={`rounded-2xl border-2 cursor-pointer transition-all p-5 ${
+                      isSelected
+                        ? 'border-zinc-950 bg-zinc-950 text-white shadow-xl'
+                        : 'border-zinc-200 hover:border-zinc-300 bg-zinc-50/50 text-zinc-900'
+                    }`}
+                  >
+                    <input type="radio" value={item.id} {...register('service')} className="sr-only" />
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className={`p-2.5 rounded-xl transition-colors ${
+                          isSelected ? 'bg-sky-400 text-zinc-950' : 'bg-sky-100/80 text-sky-600'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {isSelected && <CheckCircle2 className="w-5 h-5 text-sky-400" />}
+                    </div>
+                    <h3 className="font-bold text-base">{item.title}</h3>
+                    <p className={`text-xs mt-1 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      {item.desc}
+                    </p>
+                    <p
+                      className={`text-xs font-mono font-bold mt-4 ${
+                        isSelected ? 'text-sky-400' : 'text-zinc-900'
+                      }`}
+                    >
+                      {item.price}
+                    </p>
+                  </Tilt3DCard>
+                )
+              })}
+            </div>
+            {errors.service && <p className="text-xs text-rose-600 mt-2">{errors.service.message}</p>}
+          </div>
+        </ScrollReveal>
+
+        {/* Section 2: Air Condition Info & Quick Symptom Chips */}
+        <ScrollReveal delay={100}>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/90 shadow-xs">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-100">
+              <span className="w-7 h-7 rounded-xl bg-zinc-950 text-white text-xs font-mono font-bold flex items-center justify-center">
+                02
+              </span>
+              <div>
+                <h2 className="text-base font-extrabold text-zinc-950">ข้อมูลเครื่องปรับอากาศและอาการ</h2>
+                <p className="text-xs text-zinc-400">ระบุยี่ห้อแอร์ หรือกดปุ่มลัดเพื่อกรอกอาการอัตโนมัติ</p>
+              </div>
             </div>
 
-            {/* Symptom Description */}
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                อาการที่พบ หรือรายละเอียดงาน <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                rows={3}
-                placeholder="เช่น แอร์ไม่เย็น มีแต่ลมร้อนออกมา มีเสียงดังผิดปกติ หรือต้องการล้างใหญ่ 2 เครื่อง..."
-                {...register('symptom')}
-                className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-              />
-              {errors.symptom && <p className="text-xs text-red-600 mt-1">{errors.symptom.message}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1.5">
+                  ยี่ห้อเครื่องปรับอากาศ <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  {...register('brand')}
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                >
+                  {BRAND_OPTIONS.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+                {errors.brand && <p className="text-xs text-rose-600 mt-1">{errors.brand.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>
+                    วันที่ต้องการรับบริการ <span className="text-rose-500">*</span>
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  min={minDateString}
+                  {...register('preferredDate')}
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                />
+                {errors.preferredDate && (
+                  <p className="text-xs text-rose-600 mt-1">{errors.preferredDate.message}</p>
+                )}
+              </div>
+
+              <div className="sm:col-span-2 space-y-2.5">
+                <label className="block text-xs font-bold text-zinc-700">
+                  อาการที่พบ หรือรายละเอียดงาน <span className="text-rose-500">*</span>
+                </label>
+
+                {/* Interactive Quick-Fill Symptom Chips */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 mr-1">
+                    <Wand2 className="w-3 h-3" />
+                    กดเลือกอาการด่วน:
+                  </span>
+                  {QUICK_SYMPTOMS[selectedService]?.map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => setValue('symptom', chip, { shouldValidate: true })}
+                      className={`text-[11px] px-3 py-1 rounded-full border transition-all cursor-pointer ${
+                        currentSymptom === chip
+                          ? 'bg-zinc-950 text-white border-zinc-950 font-semibold'
+                          : 'bg-zinc-50 hover:bg-sky-50 text-zinc-600 hover:text-sky-700 border-zinc-200 hover:border-sky-300'
+                      }`}
+                    >
+                      + {chip}
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  rows={3}
+                  placeholder="เช่น แอร์ไม่เย็น มีแต่ลมธรรมดาออกมา มีน้ำหยดตรงคอยล์เย็น หรือต้องการล้างแอร์ 2 เครื่อง..."
+                  {...register('symptom')}
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                />
+                {errors.symptom && <p className="text-xs text-rose-600 mt-1">{errors.symptom.message}</p>}
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Section 3: Customer Info & Address */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-slate-100">
-            <span className="w-7 h-7 rounded-full bg-[#003882] text-white text-xs font-bold flex items-center justify-center">
-              3
-            </span>
-            <h2 className="text-lg font-bold text-slate-900">ข้อมูลผู้ติดต่อและสถานที่</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-            {/* Customer Name */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-slate-500" />
-                <span>ชื่อ - นามสกุล ผู้ติดต่อ <span className="text-red-500">*</span></span>
-              </label>
-              <input
-                type="text"
-                placeholder="เช่น สมชาย ใจดี"
-                {...register('customerName')}
-                className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-              />
-              {errors.customerName && (
-                <p className="text-xs text-red-600 mt-1">{errors.customerName.message}</p>
-              )}
+        <ScrollReveal delay={150}>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/90 shadow-xs">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-100">
+              <span className="w-7 h-7 rounded-xl bg-zinc-950 text-white text-xs font-mono font-bold flex items-center justify-center">
+                03
+              </span>
+              <div>
+                <h2 className="text-base font-extrabold text-zinc-950">ข้อมูลผู้ติดต่อและสถานที่</h2>
+                <p className="text-xs text-zinc-400">ระบุชื่อ เบอร์โทร และพิกัดหน้างานเพื่อให้ช่างเดินทางได้แม่นยำ</p>
+              </div>
             </div>
 
-            {/* Customer Phone */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-slate-500" />
-                <span>เบอร์โทรศัพท์ติดต่อ <span className="text-red-500">*</span></span>
-              </label>
-              <input
-                type="tel"
-                placeholder="เช่น 0812345678"
-                {...register('customerPhone')}
-                className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-              />
-              {errors.customerPhone && (
-                <p className="text-xs text-red-600 mt-1">{errors.customerPhone.message}</p>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>
+                    ชื่อ - นามสกุล ผู้ติดต่อ <span className="text-rose-500">*</span>
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="เช่น สมชาย ใจดี"
+                  {...register('customerName')}
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                />
+                {errors.customerName && (
+                  <p className="text-xs text-rose-600 mt-1">{errors.customerName.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 mb-1.5 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>
+                    เบอร์โทรศัพท์ติดต่อ <span className="text-rose-500">*</span>
+                  </span>
+                </label>
+                <input
+                  type="tel"
+                  placeholder="เช่น 0812345678"
+                  {...register('customerPhone')}
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                />
+                {errors.customerPhone && (
+                  <p className="text-xs text-rose-600 mt-1">{errors.customerPhone.message}</p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Address & GPS */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-slate-500" />
-                <span>ที่อยู่สถานที่ติดตั้ง/หน้างาน <span className="text-red-500">*</span></span>
-              </label>
-              <button
-                type="button"
-                onClick={handleGetLocation}
-                disabled={isGettingLocation}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#003882] hover:underline"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-                <span>{isGettingLocation ? 'กำลังระบุพิกัด...' : 'ดึงพิกัดปัจจุบัน (GPS)'}</span>
-              </button>
-            </div>
-
-            <textarea
-              rows={3}
-              placeholder="บ้านเลขที่, ชื่อหมู่บ้าน/คอนโด, ซอย, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด..."
-              {...register('address')}
-              className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-            />
-            {errors.address && <p className="text-xs text-red-600 mt-1">{errors.address.message}</p>}
-
-            {currentLat && currentLng && (
-              <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between">
-                <span>📍 บันทึกพิกัด GPS: {currentLat.toFixed(5)}, {currentLng.toFixed(5)}</span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-zinc-700 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>
+                    ที่อยู่สถานที่ติดตั้ง/หน้างาน <span className="text-rose-500">*</span>
+                  </span>
+                </label>
                 <button
                   type="button"
-                  onClick={() => {
-                    setValue('lat', null)
-                    setValue('lng', null)
-                  }}
-                  className="text-slate-400 hover:text-red-500 text-xs font-semibold"
+                  onClick={handleGetLocation}
+                  disabled={isGettingLocation}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 hover:bg-sky-100 text-xs font-bold transition cursor-pointer"
                 >
-                  ลบพิกัด
+                  <Navigation className="w-3 h-3" />
+                  <span>{isGettingLocation ? 'กำลังระบุพิกัด...' : 'ดึงพิกัดปัจจุบัน (GPS)'}</span>
                 </button>
               </div>
-            )}
+
+              <textarea
+                rows={3}
+                placeholder="บ้านเลขที่, ชื่อหมู่บ้าน/คอนโด, ซอย, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด..."
+                {...register('address')}
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+              />
+              {errors.address && <p className="text-xs text-rose-600 mt-1">{errors.address.message}</p>}
+
+              {currentLat && currentLng && (
+                <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between">
+                  <span className="font-mono font-medium">
+                    📍 GPS: {currentLat.toFixed(5)}, {currentLng.toFixed(5)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValue('lat', null)
+                      setValue('lng', null)
+                    }}
+                    className="text-zinc-500 hover:text-rose-600 text-xs font-bold"
+                  >
+                    ลบพิกัด
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Section 4: Upload Photos & Note */}
-        <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-xs">
-          <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-slate-100">
-            <span className="w-7 h-7 rounded-full bg-[#003882] text-white text-xs font-bold flex items-center justify-center">
-              4
-            </span>
-            <h2 className="text-lg font-bold text-slate-900">แนบรูปภาพและหมายเหตุเพิ่มเติม</h2>
-          </div>
-
-          {/* Upload Area */}
-          <div className="mb-6">
-            <label className="block text-xs font-bold text-slate-700 mb-2">
-              รูปภาพจุดที่ติดตั้งหรืออาการเสีย (สูงสุด 5 รูป)
-            </label>
-
-            <div className="border-2 border-dashed border-slate-300 hover:border-[#003882] rounded-2xl p-6 text-center transition-colors cursor-pointer bg-slate-50/60 relative">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                disabled={images.length >= 5}
-              />
-              <UploadCloud className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-slate-700">
-                คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่
-              </p>
-              <p className="text-xs text-slate-400 mt-1">รองรับ JPG, PNG, WEBP (สูงสุด 5 รูป รูปละไม่เกิน 5MB)</p>
+        <ScrollReveal delay={200}>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-zinc-200/90 shadow-xs">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-100">
+              <span className="w-7 h-7 rounded-xl bg-zinc-950 text-white text-xs font-mono font-bold flex items-center justify-center">
+                04
+              </span>
+              <div>
+                <h2 className="text-base font-extrabold text-zinc-950">แนบรูปภาพและหมายเหตุเพิ่มเติม</h2>
+                <p className="text-xs text-zinc-400">อัปโหลดรูปแอร์หรือจุดติดตั้ง (สูงสุด 5 รูป)</p>
+              </div>
             </div>
 
-            {/* Image Previews */}
-            {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
-                {imagePreviews.map((preview, idx) => (
-                  <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square">
-                    <img src={preview} alt={`preview ${idx}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 p-1 bg-red-600/80 text-white rounded-full hover:bg-red-700 transition"
-                      title="ลบรูป"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
+            <div className="mb-6">
+              <div className="border-2 border-dashed border-zinc-200 hover:border-sky-500 rounded-2xl p-7 text-center transition-colors cursor-pointer bg-zinc-50/70 relative group">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={images.length >= 5}
+                />
+                <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center mx-auto mb-3 text-zinc-500 group-hover:text-sky-600 group-hover:scale-110 transition">
+                  <UploadCloud className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-zinc-800">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</p>
+                <p className="text-xs text-zinc-400 mt-1">รองรับ JPG, PNG, WEBP (สูงสุด 5 รูป รูปละไม่เกิน 5MB)</p>
               </div>
-            )}
+
+              {imagePreviews.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
+                  {imagePreviews.map((preview, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-2xl overflow-hidden border border-zinc-200 aspect-square shadow-2xs"
+                    >
+                      <img src={preview} alt={`preview ${idx}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1.5 right-1.5 p-1.5 bg-zinc-950/80 text-white rounded-full hover:bg-rose-600 transition"
+                        title="ลบรูป"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-700 mb-1.5">หมายเหตุเพิ่มเติมถึงช่าง (ถ้ามี)</label>
+              <input
+                type="text"
+                placeholder="เช่น สะดวกช่วงเช้า, ต้องแลกบัตรนิติบุคคลก่อนขึ้นอาคาร"
+                {...register('note')}
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+              />
+            </div>
           </div>
+        </ScrollReveal>
 
-          {/* Additional Note */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
-            <input
-              type="text"
-              placeholder="เช่น สะดวกช่วงเช้า, ห้ามส่งเสียงดังหลัง 16:00 น."
-              {...register('note')}
-              className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-[#003882] focus:border-[#003882] outline-hidden"
-            />
+        {/* Submit Bar with Magnetic Ripple Button */}
+        <ScrollReveal delay={250}>
+          <div className="bg-zinc-950 text-white rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3 text-xs text-zinc-300">
+              <ShieldCheck className="w-5 h-5 text-sky-400 shrink-0" />
+              <span>รับประกันงานซ่อม 90 วัน • ประเมินราคาก่อนซ่อมทุกครั้ง</span>
+            </div>
+
+            <MagneticButton
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-shimmer w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white shadow-lg shadow-sky-500/20 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>กำลังบันทึกข้อมูล...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>ยืนยันการแจ้งซ่อม</span>
+                </>
+              )}
+            </MagneticButton>
           </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-          <p className="text-xs text-slate-500 text-center sm:text-left">
-            * การกดปุ่มยืนยันแสดงว่าคุณยอมรับเงื่อนไขการบริการและการติดต่อจากเจ้าหน้าที่
-          </p>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-sm text-white bg-[#003882] hover:bg-[#002866] shadow-lg shadow-blue-900/20 disabled:opacity-50 transition-all cursor-pointer"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>กำลังส่งข้อมูล...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>ยืนยันการแจ้งซ่อม</span>
-              </>
-            )}
-          </button>
-        </div>
+        </ScrollReveal>
       </form>
     </div>
   )
