@@ -1,0 +1,22 @@
+{
+  "name": "coolcare-pro",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\" \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
+    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "prisma@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.2": true
+  }
+}

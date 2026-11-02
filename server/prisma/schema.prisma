@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===========================
+// Enums
+// ===========================
+
+enum TicketStatus {
+  SUBMITTED   // ส่งเรื่องแล้ว
+  RECEIVED    // รับเรื่องแล้ว
+  IN_PROGRESS // ช่างกำลังเข้าซ่อม
+  COMPLETED   // เสร็จสิ้น
+  CANCELLED   // ยกเลิก
+}
+
+enum ServiceType {
+  CLEANING     // ล้างแอร์
+  REPAIR       // ซ่อมแอร์
+  INSTALLATION // ติดตั้ง/ย้ายแอร์
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+// ===========================
+// Models
+// ===========================
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  phone        String    @unique
+  passwordHash String
+  role         Role      @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+
+  tickets  Ticket[]
+  messages Message[]
+}
+
+model Technician {
+  id      String   @id @default(cuid())
+  name    String
+  phone   String
+  area    String   // พื้นที่รับผิดชอบ
+
+  tickets Ticket[]
+}
+
+model Ticket {
+  id            String      @id @default(cuid())
+  trackingCode  String      @unique  // รหัสติดตาม รูปแบบ CC-YYYYMMDD-XXXX
+  service       ServiceType
+  brand         String      // ยี่ห้อแอร์
+  symptom       String      // อาการเสีย
+  address       String      // ที่อยู่
+  lat           Float?      // พิกัด latitude (optional)
+  lng           Float?      // พิกัด longitude (optional)
+  preferredDate DateTime    // วัน-เวลาที่สะดวก
+  note          String?     // หมายเหตุ
+  status        TicketStatus @default(SUBMITTED)
+
+  // ข้อมูลผู้แจ้ง (ลูกค้าอาจไม่ได้ล็อกอิน)
+  customerName  String
+  customerPhone String
+
+  // ความสัมพันธ์ optional
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  technicianId  String?
+  technician    Technician?  @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // ตารางลูก
+  images        TicketImage[]
+  statusLogs    StatusLog[]
+  messages      Message[]
+
+  // Index สำหรับ query ที่ใช้บ่อย
+  @@index([customerPhone])
+  @@index([status])
+}
+
+model TicketImage {
+  id       String @id @default(cuid())
+  url      String // path ของรูป เช่น /uploads/xxx.jpg
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId String
+}
+
+model StatusLog {
+  id        String       @id @default(cuid())
+  status    TicketStatus // สถานะ ณ ตอนนั้น
+  note      String?      // หมายเหตุเพิ่มเติม
+  ticket    Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String
+  createdAt DateTime     @default(now())
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  text      String
+  fromStaff Boolean  @default(false) // true = เจ้าหน้าที่, false = ลูกค้า
+
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String
+
+  // ผู้ส่งอาจเป็น User ในระบบหรือไม่ก็ได้
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+}
