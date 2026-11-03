@@ -32,3 +32,11 @@ export function formatDate(value: string | null | undefined): string {
   })
 }
 
+/**
+ * ตัดอักขระที่ไม่ใช่ตัวเลขออก และจำกัดความยาวไม่เกิน 10 ตัวอักษร
+ */
+export function sanitizePhoneInput(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 10)
+}
+
+

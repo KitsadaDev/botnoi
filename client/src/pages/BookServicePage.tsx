@@ -25,7 +25,7 @@ import {
 } from 'lucide-react'
 import api from '../lib/api'
 import type { ApiResponse, Ticket, ServiceType } from '../lib/types'
-import { formatDate, getMinBookingDate } from '../lib/format'
+import { formatDate, getMinBookingDate, sanitizePhoneInput } from '../lib/format'
 import { MAX_IMAGES, selectValidImages } from '../lib/images'
 import { ScrollReveal, Tilt3DCard, MagneticButton } from '../components/InteractiveUI'
 
@@ -578,9 +578,17 @@ export const BookServicePage: React.FC = () => {
                 </label>
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   placeholder="เช่น 0812345678"
-                  {...register('customerPhone')}
-                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                  {...register('customerPhone', {
+                    onChange: (e) => {
+                      const digits = sanitizePhoneInput(e.target.value)
+                      e.target.value = digits
+                      setValue('customerPhone', digits, { shouldValidate: true })
+                    },
+                  })}
+                  className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
                 />
                 {errors.customerPhone && (
                   <p className="text-xs text-rose-600 mt-1">{errors.customerPhone.message}</p>

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { formatDate, getMinBookingDate, toLocalDateInputValue } from '../src/lib/format.ts'
+import { formatDate, getMinBookingDate, toLocalDateInputValue, sanitizePhoneInput } from '../src/lib/format.ts'
 import { selectValidImages, MAX_IMAGES, MAX_IMAGE_BYTES } from '../src/lib/images.ts'
 
 test('formatDate: ไม่แสดง ISO ดิบ และไม่เลื่อนวัน', () => {
@@ -52,4 +52,13 @@ test('selectValidImages: ไม่เกินโควตา MAX_IMAGES (นั
   assert.equal(errors.length, 1)
   assert.equal(selectValidImages(MAX_IMAGES, [img('z.jpg')]).accepted.length, 0)
 })
+
+test('sanitizePhoneInput: กรองเฉพาะตัวเลขและจำกัดไม่เกิน 10 หลัก', () => {
+  assert.equal(sanitizePhoneInput('0812345678'), '0812345678')
+  assert.equal(sanitizePhoneInput('081234567899999'), '0812345678', 'ต้องตัดให้เหลือไม่เกิน 10 ตัวอักษร')
+  assert.equal(sanitizePhoneInput('081-234-5678'), '0812345678', 'ต้องตัดขีดและอักขระพิเศษออก')
+  assert.equal(sanitizePhoneInput('abc081def2345678'), '0812345678', 'ต้องตัดตัวอักษรออก')
+  assert.equal(sanitizePhoneInput(''), '')
+})
+
 

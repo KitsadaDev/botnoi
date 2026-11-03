@@ -4,6 +4,7 @@ import { LogIn, UserPlus, Phone, User as UserIcon, AlertCircle, Loader2, KeyRoun
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import type { ApiResponse, User } from '../lib/types'
+import { sanitizePhoneInput } from '../lib/format'
 
 export const LoginPage: React.FC = () => {
   // สลับโหมด เข้าสู่ระบบ / สมัครสมาชิก
@@ -180,10 +181,12 @@ export const LoginPage: React.FC = () => {
               <span>เบอร์โทรศัพท์</span>
             </label>
             <input
-              type="text"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
               required
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
               placeholder="เช่น 0812345678"
               className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
             />

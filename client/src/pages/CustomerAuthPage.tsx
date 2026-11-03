@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { sanitizePhoneInput } from '../lib/format'
 import { LogIn, UserPlus, Phone, User as UserIcon, AlertCircle, Loader2, KeyRound, Sparkles, Shield } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -129,10 +130,12 @@ export const CustomerAuthPage: React.FC = () => {
               <span>เบอร์โทรศัพท์</span>
             </label>
             <input
-              type="text"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
               required
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
               placeholder="เช่น 0812345678"
               className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
             />
