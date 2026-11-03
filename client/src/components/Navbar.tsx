@@ -169,7 +169,7 @@ export const Navbar: React.FC = () => {
                     className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-950 px-3.5 py-2 rounded-xl hover:bg-zinc-100/80 transition-all"
                   >
                     <UserIcon className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>เจ้าหน้าที่</span>
+                    <span>Sing In</span>
                   </Link>
                   <Link
                     to="/book"

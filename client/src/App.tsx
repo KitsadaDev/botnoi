@@ -10,6 +10,7 @@ import { TrackTicketPage } from './pages/TrackTicketPage'
 import { LoginPage } from './pages/LoginPage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 
+
 function ScrollToTopOnNavigate() {
   const { pathname } = useLocation()
   useEffect(() => {
