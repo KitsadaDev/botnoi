@@ -5,9 +5,10 @@ import {
   getTicketByCode,
   getMessages,
   createCustomerMessage,
+  getMyTickets,
 } from "../controllers/ticket.controller";
 import { uploadImages } from "../middleware/upload";
-import { optionalAuth } from "../middleware/auth";
+import { optionalAuth, authRequired } from "../middleware/auth";
 
 const router = Router();
 
@@ -58,6 +59,11 @@ router.post(
   },
   createTicket
 );
+
+// ==========================================
+// GET /api/tickets/my (ต้องอยู่ก่อน /:code เสมอ)
+// ==========================================
+router.get("/my", authRequired, getMyTickets);
 
 // GET /api/tickets/:code (public + rate limit)
 router.get("/:code", trackingLimiter, getTicketByCode);
