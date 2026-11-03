@@ -28,15 +28,45 @@ export const Navbar: React.FC = () => {
     navigate('/')
   }
 
+  // 1. ตรวจสอบไฮไลท์ให้แยกชัดเจนระหว่าง "หน้าแรก" กับ "โซลูชัน AI"
   const isActive = (path: string) => {
+    if (path === '/#ai-showcase') {
+      return location.pathname === '/' && location.hash === '#ai-showcase'
+    }
+    if (path === '/') {
+      return location.pathname === '/' && (!location.hash || location.hash === '')
+    }
     if (path === '/track') return location.pathname.startsWith('/track')
     if (path === '/my-tickets') return location.pathname.startsWith('/my-tickets')
     return location.pathname === path
   }
 
-  // เพิ่มเมนู "ประวัติการแจ้งซ่อม" ในแคปซูลตรงกลางให้อัตโนมัติเมื่อเป็นลูกค้าทั่วไป
+  // 2. ฟังก์ชันจัดการการคลิกและเลื่อนหน้าจอ
+  const handleNavClick = (path: string, e: React.MouseEvent) => {
+    if (path === '/') {
+      if (location.pathname === '/') {
+        e.preventDefault()
+        // ถ้าอยู่หน้าแรกอยู่แล้ว ให้ม้วนจอกลับไปบนสุด พร้อมล้าง hash
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        navigate('/', { replace: true })
+      }
+    } else if (path === '/#ai-showcase') {
+      e.preventDefault()
+      if (location.pathname === '/') {
+        // ถ้าอยู่หน้าแรก ให้เลื่อนลงไปหากล่อง AI และตั้ง hash เพื่อให้ปุ่มสว่าง
+        const el = document.getElementById('ai-showcase')
+        el?.scrollIntoView({ behavior: 'smooth' })
+        navigate('/#ai-showcase', { replace: true })
+      } else {
+        // ถ้าอยู่หน้าอื่น ให้พากลับไปหน้าแรกพร้อมติด hash ไปด้วย
+        navigate('/#ai-showcase')
+      }
+    }
+  }
+
   const navItems = [
     { path: '/', label: 'หน้าแรก' },
+    { path: '/#ai-showcase', label: 'โซลูชัน AI', icon: Sparkles },
     { path: '/book', label: 'แจ้งซ่อม / นัดหมาย' },
     { path: '/track', label: 'ติดตามสถานะ', icon: Search },
     ...(user && !isStaff
@@ -77,11 +107,14 @@ export const Navbar: React.FC = () => {
       {/* Main Glassmorphic Floating Navbar */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* เพิ่ม relative เพื่อให้ absolute center ยึดกึ่งกลางของ Navbar */}
           <div className="relative flex justify-between items-center h-16">
             
-            {/* ฝั่งซ้าย: Brand Logo */}
-            <Link to="/" className="flex items-center gap-3 group shrink-0">
+            {/* ฝั่งซ้าย: Brand Logo (คลิกแล้วเลื่อนขึ้นบนสุดได้เช่นกัน) */}
+            <Link
+              to="/"
+              onClick={(e) => handleNavClick('/', e)}
+              className="flex items-center gap-3 group shrink-0"
+            >
               <div className="relative w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-white shadow-md shadow-zinc-950/10 group-hover:scale-105 group-active:scale-95 transition-all duration-300 border border-zinc-800 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-tr from-sky-600/40 via-transparent to-cyan-400/30 opacity-80 group-hover:opacity-100 transition-opacity" />
                 <Wrench className="w-5 h-5 text-sky-400 relative z-10 group-hover:rotate-12 transition-transform" />
@@ -99,7 +132,7 @@ export const Navbar: React.FC = () => {
               </div>
             </Link>
 
-            {/* แคปซูลเมนูตรงกลาง (Absolute Center) */}
+            {/* แคปซูลเมนูตรงกลาง */}
             <nav
               onMouseLeave={() => setHoveredNav(null)}
               className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 p-1.5 rounded-full bg-zinc-100/90 border border-zinc-200/80 shadow-inner"
@@ -113,6 +146,7 @@ export const Navbar: React.FC = () => {
                   <Link
                     key={item.path}
                     to={item.path}
+                    onClick={(e) => handleNavClick(item.path, e)}
                     onMouseEnter={() => setHoveredNav(item.path)}
                     className={`relative flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
                       active
@@ -208,12 +242,27 @@ export const Navbar: React.FC = () => {
         <div className="md:hidden border-b border-zinc-200 bg-white/95 backdrop-blur-xl px-4 pt-3 pb-5 space-y-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
           <Link
             to="/"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              handleNavClick('/', e)
+              setMobileMenuOpen(false)
+            }}
             className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
               isActive('/') ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
             }`}
           >
             หน้าแรก
+          </Link>
+          <Link
+            to="/#ai-showcase"
+            onClick={(e) => {
+              handleNavClick('/#ai-showcase', e)
+              setMobileMenuOpen(false)
+            }}
+            className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
+              isActive('/#ai-showcase') ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
+            }`}
+          >
+            โซลูชัน AI
           </Link>
           <Link
             to="/book"

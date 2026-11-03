@@ -1,0 +1,14 @@
+[33mcommit e2a134adb64313101d93c21d9e7c29d3146f21b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: G <tanawat2302@gmail.com>
+Date:   Tue Nov 3 13:07:47 2026 +0700
+
+    Login Customer
+
+ client/env                            |   1 [32m+[m
+ client/env.example                    |  17 [32m+++[m
+ client/src/App.tsx                    |   3 [32m+[m[31m-[m
+ client/src/components/Navbar.tsx      |   2 [32m+[m[31m-[m
+ client/src/pages/CustomerAuthPage.tsx | 207 [32m+++++++++++++++++++++++++++++++[m
+ client/src/pages/LoginPage.tsx        | 224 [32m++++++++++++++++++++++++++[m[31m--------[m
+ package-lock.json                     | 101 [32m++++[m[31m-----------[m
+ 7 files changed, 424 insertions(+), 131 deletions(-)

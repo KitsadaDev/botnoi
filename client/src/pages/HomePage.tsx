@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import {
   Wrench,
   Search,
@@ -19,6 +20,12 @@ import {
   ChevronDown,
   HelpCircle,
   Sliders,
+  Mic,
+  Bot,
+  PhoneCall,
+  Volume2,
+  Play,
+  User as UserIcon,
 } from 'lucide-react'
 import { ScrollReveal, Tilt3DCard, MagneticButton, NumberTicker } from '../components/InteractiveUI'
 import { SAMPLE_TRACKING_CODES } from '../lib/constants'
@@ -58,10 +65,14 @@ const FAQ_ITEMS = [
 
 export const HomePage: React.FC = () => {
   const [quickCode, setQuickCode] = useState('')
-  // Interactive Price Estimator Tabs & BTU Selector
+  // Interactive Price Estimator Tabs & BTU Selector (ของเดิมแคน)
   const [activeCalcTab, setActiveCalcTab] = useState<'CLEANING' | 'REPAIR' | 'INSTALLATION'>('CLEANING')
   const [unitCount, setUnitCount] = useState<number>(1)
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
+
+  // Interactive AI Demo Tabs (ตามบรีฟพี่โมโน: Chatbot / Voicebot / AI Avatar)
+  const [activeAiTab, setActiveAiTab] = useState<'chatbot' | 'voicebot' | 'avatar'>('chatbot')
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false)
 
   const navigate = useNavigate()
 
@@ -77,9 +88,21 @@ export const HomePage: React.FC = () => {
       ? unitCount * 500 // multi-unit discount
       : unitCount * basePrice
 
+
+  useEffect(() => {
+  if (window.location.hash === '#ai-showcase') {
+    setTimeout(() => {
+      const el = document.getElementById('ai-showcase')
+      el?.scrollIntoView({ behavior: 'smooth' })
+    }, 150)
+  }
+}, [])
+
   return (
     <div className="space-y-24 pb-24 overflow-x-hidden">
-      {/* 1. 21st.dev Aurora + Grid Dark Hero Section */}
+      {/* ============================================================================
+          1. HERO BANNER: โครงเดิมแคน + แสดง 3 AI Products ต้อนรับตามบรีฟพี่โมโน
+      ============================================================================ */}
       <section className="relative bg-zinc-950 text-white overflow-hidden pt-14 pb-20 sm:py-24 border-b border-zinc-800">
         <div className="absolute inset-0 bg-grid-dark opacity-70 pointer-events-none" />
         <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full bg-sky-500/20 blur-[130px] pointer-events-none animate-pulse-slow" />
@@ -89,10 +112,10 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
             {/* Left Hero Content (7 cols) */}
-            <ScrollReveal direction="up" className="lg:col-span-7 space-y-7">
+            <ScrollReveal direction="up" className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 pl-2 pr-3.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-200 text-xs font-medium shadow-lg backdrop-blur-md hover:border-sky-500/50 transition-colors cursor-default">
                 <span className="px-2 py-0.5 rounded-full bg-sky-500 text-zinc-950 font-bold text-[10px] uppercase tracking-wider">
-                  21st UI
+                  AI After-Sales Service
                 </span>
                 <span className="text-zinc-300">ระบบแจ้งซ่อมแอร์อัจฉริยะ มาตรฐาน Carrier Style</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-sky-400" />
@@ -100,16 +123,77 @@ export const HomePage: React.FC = () => {
 
               <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.12] text-white">
                 ดูแลเครื่องปรับอากาศ <br />
-                ด้วยทีมช่างระดับ{' '}
+                ด้วยทีมช่าง &{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400">
-                  Professional
+                  AI Service 24/7
                 </span>
               </h1>
 
               <p className="text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed font-normal">
-                บริการล้าง ซ่อม และติดตั้งแอร์ครบวงจร โดยทีมวิศวกรและช่างเทคนิคผ่านการรับรอง
-                ใช้อะไหล่แท้ 100% พร้อมระบบติดตามสถานะงานซ่อมและแชทกับช่างแบบ Real-time
+                บริการล้าง ซ่อม และติดตั้งแอร์ครบวงจร พร้อมแพลตฟอร์ม AI บริการหลังการขายครบทั้ง{' '}
+                <strong className="text-zinc-200">3 Products (ข้อความ, เสียง และ AI Avatar)</strong>{' '}
+                ช่วยรับแจ้งซ่อม ตอบคำถาม และติดตามสถานะกับทีมช่างแบบ Real-time
               </p>
+
+              {/* แถบแสดง 3 AI Products บน Banner ต้อนรับ (ตามบรีฟพี่โมโน) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveAiTab('chatbot')
+                    document.getElementById('ai-usage-examples')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-sky-500/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white flex items-center gap-1">
+                      <span>1. Chatbot</span>
+                    </p>
+                    <p className="text-[11px] text-zinc-400">คุยแบบข้อความ / แจ้งซ่อม</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveAiTab('voicebot')
+                    document.getElementById('ai-usage-examples')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Mic className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white flex items-center gap-1">
+                      <span>2. Voicebot</span>
+                    </p>
+                    <p className="text-[11px] text-zinc-400">คุยผ่านเสียงเป็นธรรมชาติ</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveAiTab('avatar')
+                    document.getElementById('ai-usage-examples')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white flex items-center gap-1">
+                      <span>3. AI Avatar</span>
+                    </p>
+                    <p className="text-[11px] text-zinc-400">ตัวละครพูดคุยบนหน้าจอ</p>
+                  </div>
+                </button>
+              </div>
 
               {/* Magnetic & Ripple CTA Buttons */}
               <div className="flex flex-wrap items-center gap-3.5 pt-2">
@@ -124,11 +208,19 @@ export const HomePage: React.FC = () => {
                 </MagneticButton>
 
                 <a
-                  href="#estimator"
+                  href="#ai-usage-examples"
                   className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-sm bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 hover:border-zinc-700 transition-all"
                 >
+                  <Sparkles className="w-4 h-4 text-sky-400" />
+                  <span>ดูตัวอย่างการใช้งาน AI</span>
+                </a>
+
+                <a
+                  href="#estimator"
+                  className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl font-semibold text-sm text-zinc-400 hover:text-white transition-all"
+                >
                   <Sliders className="w-4 h-4 text-sky-400" />
-                  <span>คำนวณค่าบริการเบื้องต้น</span>
+                  <span>คำนวณค่าบริการ</span>
                 </a>
               </div>
 
@@ -255,7 +347,6 @@ export const HomePage: React.FC = () => {
             <span>CERTIFIED PARTS & TOOLS</span>
           </div>
           <div className="relative flex overflow-x-hidden">
-            {/* ใช้ mr-4 ที่แต่ละชิป (ไม่ใช้ gap) เพื่อให้ translateX(-50%) ตรงกับความกว้างชุดแรกพอดี ไม่กระตุกตอนวนลูป */}
             <div className="flex shrink-0 animate-marquee hover-pause whitespace-nowrap py-2">
               {[...SUPPORTED_BRANDS, ...SUPPORTED_BRANDS].map((brand, idx) => (
                 <span
@@ -271,7 +362,445 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Services Section with 3D Tilt Interactive Cards */}
+      {/* ============================================================================
+          SECTION เสริมตามบรีฟพี่โมโน: 3 AI PRODUCTS & ตัวอย่างการใช้งาน (พร้อม Tab สลับ)
+      ============================================================================ */}
+      <section id="ai-showcase" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14 scroll-mt-24">
+        {/* ส่วนที่ 1: การ์ดแนะนำ 3 Products */}
+        <div className="space-y-8">
+          <ScrollReveal className="text-center max-w-2xl mx-auto space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-700 border border-sky-500/20 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+              <span>AFTERCARE AI PRODUCTS</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
+              3 โซลูชัน AI ผู้ช่วยดูแลงานซ่อมแอร์
+            </h2>
+            <p className="text-zinc-500 text-sm">
+              รองรับการติดต่อแจ้งซ่อมและติดตามสถานะได้ครบทุกรูปแบบ ทั้งข้อความ เสียงสนทนา และตัวละครเสมือนจริง
+            </p>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Product 1: Chatbot */}
+            <ScrollReveal delay={50}>
+              <Tilt3DCard
+                spotlightColor="rgba(14, 165, 233, 0.14)"
+                className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-xl hover:border-sky-300 p-7 h-full flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-extrabold text-zinc-950">Chatbot</h3>
+                      <p className="text-xs font-semibold text-sky-600">คุยแบบข้อความ</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    AI แชทบอทสำหรับงานบริการหลังการขาย ตอบคำถาม ให้ข้อมูลบริการ รับแจ้งซ่อมแอร์ นัดหมายคิวช่าง และช่วยแก้ไขปัญหาเบื้องต้นได้อัตโนมัติ
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveAiTab('chatbot')}
+                  className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                >
+                  <span>ดูตัวอย่างการใช้งาน Chatbot</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Tilt3DCard>
+            </ScrollReveal>
+
+            {/* Product 2: Voicebot */}
+            <ScrollReveal delay={150}>
+              <Tilt3DCard
+                spotlightColor="rgba(99, 102, 241, 0.18)"
+                className="bg-zinc-950 text-white rounded-3xl border border-zinc-800 shadow-xl p-7 h-full flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+                      <Mic className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-extrabold text-white">Voicebot</h3>
+                      <p className="text-xs font-semibold text-indigo-400">คุยผ่านเสียง</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    AI รองรับการสนทนาผ่านเสียงด้วยเทคโนโลยี Speech AI ที่เข้าใจภาษาไทย ตอบโต้ได้เป็นธรรมชาติ เหมาะสำหรับสายด่วนแจ้งซ่อมและ Call Center
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveAiTab('voicebot')}
+                  className="mt-6 pt-4 border-t border-zinc-800 flex items-center justify-between text-xs font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                >
+                  <span>ดูตัวอย่างการใช้งาน Voicebot</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Tilt3DCard>
+            </ScrollReveal>
+
+            {/* Product 3: AI Avatar */}
+            <ScrollReveal delay={250}>
+              <Tilt3DCard
+                spotlightColor="rgba(168, 85, 247, 0.14)"
+                className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-xl hover:border-purple-300 p-7 h-full flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                      <Bot className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-extrabold text-zinc-950">AI Avatar</h3>
+                      <p className="text-xs font-semibold text-purple-600">ตัวละครดิจิทัลบนหน้าจอ พูดคุยด้วยเสียงได้</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    ผู้ช่วย AI ในรูปแบบตัวละครเสมือนจริง สื่อสารด้วยเสียงและท่าทางที่เป็นมิตร ดูเป็นธรรมชาติ สร้างประสบการณ์บริการหลังการขายที่ทันสมัย
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveAiTab('avatar')}
+                  className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-purple-600 hover:text-purple-700 cursor-pointer"
+                >
+                  <span>ดูตัวอย่างการใช้งาน AI Avatar</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Tilt3DCard>
+            </ScrollReveal>
+          </div>
+        </div>
+
+        {/* ส่วนที่ 2: ตัวอย่างการใช้งาน (พร้อม Tab สลับ Chatbot / Voicebot / AI Avatar) */}
+        <ScrollReveal className="bg-white rounded-3xl p-6 sm:p-10 border border-zinc-200/90 shadow-md space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-100 pb-6">
+            <div>
+              <h3 className="text-2xl font-extrabold text-zinc-950 tracking-tight">
+                ตัวอย่างการใช้งาน
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+                ดูตัวอย่างการให้บริการหลังการขายด้วย AI ในสถานการณ์จริง (คลิกสลับโหมดด้านขวา)
+              </p>
+            </div>
+
+            {/* ปุ่ม Tab สลับ Chatbot / Voicebot / AI Avatar */}
+            <div className="inline-flex p-1.5 bg-zinc-100 rounded-2xl border border-zinc-200/80 self-start">
+              <button
+                type="button"
+                onClick={() => setActiveAiTab('chatbot')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeAiTab === 'chatbot'
+                    ? 'bg-zinc-950 text-white shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-950'
+                }`}
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
+                <span>Chatbot</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAiTab('voicebot')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeAiTab === 'voicebot'
+                    ? 'bg-zinc-950 text-white shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-950'
+                }`}
+              >
+                <Mic className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Voicebot</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveAiTab('avatar')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeAiTab === 'avatar'
+                    ? 'bg-zinc-950 text-white shadow-sm'
+                    : 'text-zinc-600 hover:text-zinc-950'
+                }`}
+              >
+                <Bot className="w-3.5 h-3.5 text-purple-400" />
+                <span>AI Avatar</span>
+              </button>
+            </div>
+          </div>
+
+          {/* เนื้อหา TAB 1: CHATBOT (ตรงตามภาพม็อกอัปพี่โมโน) */}
+          {activeAiTab === 'chatbot' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* กล่องซ้าย: แจ้งซ่อมอุปกรณ์ไฟฟ้า / แอร์ */}
+              <div className="rounded-2xl border border-zinc-200/90 bg-zinc-50/60 p-5 sm:p-6 space-y-5">
+                <div className="flex items-center gap-3 pb-4 border-b border-zinc-200/80">
+                  <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Wrench className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-extrabold text-zinc-950">แจ้งซ่อมเครื่องปรับอากาศ</h4>
+                    <p className="text-xs text-zinc-500">AI ช่วยรับแจ้งปัญหา รวบรวมข้อมูลลูกค้า และสร้างใบงานส่งต่อทีมซ่อม</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
+                  {/* ขั้นตอน 1-4 ด้านซ้าย */}
+                  <div className="sm:col-span-4 space-y-3 text-xs">
+                    {[
+                      'รับแจ้งปัญหา',
+                      'รวบรวมข้อมูลลูกค้า',
+                      'สร้างใบงานซ่อม (Ticket)',
+                      'แจ้งเลขอ้างอิงและขั้นตอนถัดไป',
+                    ].map((stepText, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-sky-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <span className="font-semibold text-zinc-700 leading-snug">{stepText}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* บทสนทนาด้านขวา */}
+                  <div className="sm:col-span-8 space-y-2.5 text-xs">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <UserIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl rounded-tl-xs border border-zinc-200/80 text-zinc-800 shadow-2xs">
+                        เครื่องปรับอากาศที่บ้านไม่เย็นครับ ขอแจ้งซ่อมได้ไหมครับ?
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                        A
+                      </div>
+                      <div className="bg-sky-50/90 p-3 rounded-2xl rounded-tl-xs border border-sky-200/70 text-zinc-800 space-y-1">
+                        <p className="font-semibold text-sky-950">ได้เลยครับ รบกวนขอข้อมูลเบื้องต้นนะคะ</p>
+                        <ul className="list-disc list-inside text-[11px] text-zinc-600 space-y-0.5">
+                          <li>ชื่อ-นามสกุล และ เบอร์โทร</li>
+                          <li>ที่อยู่สำหรับเข้าซ่อม</li>
+                          <li>รุ่น/ยี่ห้อของเครื่อง</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <UserIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl rounded-tl-xs border border-zinc-200/80 text-zinc-800 shadow-2xs">
+                        ชื่อธนกร ครับ เบอร์ 081-234-5678 ที่อยู่ 99/1 ถนนรัชดา กรุงเทพฯ เป็นแอร์ Daikin รุ่น FTKQ12
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                        A
+                      </div>
+                      <div className="bg-emerald-50/90 p-3 rounded-2xl rounded-tl-xs border border-emerald-200 text-emerald-950">
+                        <p className="font-bold text-emerald-700 mb-0.5">✅ รับข้อมูลเรียบร้อยค่ะ</p>
+                        ได้สร้างใบแจ้งซ่อมเลขที่{' '}
+                        <strong className="font-mono bg-emerald-100 px-1.5 py-0.5 rounded text-emerald-900">
+                          AC-12567
+                        </strong>{' '}
+                        แล้ว ทีมช่างจะติดต่อกลับเพื่อยืนยันวันนัดหมายภายในวันนี้ค่ะ
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* กล่องขวา: ติดตามสถานะการซ่อม */}
+              <div className="rounded-2xl border border-zinc-200/90 bg-zinc-50/60 p-5 sm:p-6 space-y-5">
+                <div className="flex items-center gap-3 pb-4 border-b border-zinc-200/80">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Search className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-extrabold text-zinc-950">ติดตามสถานะการซ่อม</h4>
+                    <p className="text-xs text-zinc-500">ลูกค้าสามารถสอบถามและตรวจสอบความคืบหน้าการซ่อมได้ทันที</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-start">
+                  {/* ขั้นตอน 1-4 ด้านซ้าย */}
+                  <div className="sm:col-span-4 space-y-3 text-xs">
+                    {[
+                      'สอบถามเลขที่ใบงาน หรือข้อมูลการซ่อม',
+                      'ตรวจสอบสถานะจากระบบ',
+                      'แจ้งความคืบหน้าให้ลูกค้า',
+                      'เสนอขั้นตอนถัดไป (เช่น นัดหมายใหม่)',
+                    ].map((stepText, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <span className="font-semibold text-zinc-700 leading-snug">{stepText}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* บทสนทนาด้านขวา */}
+                  <div className="sm:col-span-8 space-y-2.5 text-xs">
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <UserIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl rounded-tl-xs border border-zinc-200/80 text-zinc-800 shadow-2xs">
+                        ขอเช็คสถานะการซ่อมครับ ใบงานเลขที่ <strong>AC-12567</strong> ครับ
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                        A
+                      </div>
+                      <div className="bg-sky-50/90 p-3 rounded-2xl rounded-tl-xs border border-sky-200/70 text-zinc-800 space-y-1.5">
+                        <p className="font-semibold text-sky-950">กำลังตรวจสอบสถานะให้ค่ะ...</p>
+                        <div className="bg-white p-2.5 rounded-xl border border-sky-200/60 space-y-1 text-[11px]">
+                          <p>📋 <strong>สถานะใบงาน:</strong> อยู่ระหว่างนัดหมายช่าง</p>
+                          <p>🗓️ <strong>กำหนดเข้าซ่อม:</strong> พรุ่งนี้ เวลา 10:00 น.</p>
+                          <p>👷 <strong>ทีมช่าง:</strong> ทีมบริการกรุงเทพฯ (ช่างเอก)</p>
+                        </div>
+                        <p className="text-[11px] text-zinc-600">ต้องการปรับวัน/เวลา หรือต้องการข้อมูลเพิ่มเติมไหมคะ?</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-zinc-200 text-zinc-600 flex items-center justify-center shrink-0 mt-0.5">
+                        <UserIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl rounded-tl-xs border border-zinc-200/80 text-zinc-800 shadow-2xs">
+                        ไม่ติดครับ ขอบคุณครับ
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                        A
+                      </div>
+                      <div className="bg-emerald-50/90 p-3 rounded-2xl rounded-tl-xs border border-emerald-200 text-emerald-950">
+                        ✅ ยินดีค่ะ หากต้องการความช่วยเหลือเพิ่มเติม สอบถามได้ตลอด 24 ชั่วโมงนะคะ
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* เนื้อหา TAB 2: VOICEBOT (คุยผ่านเสียง) */}
+          {activeAiTab === 'voicebot' && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-zinc-950 text-white rounded-2xl p-6 sm:p-8">
+              <div className="md:col-span-6 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>AI Call Center ภาษาไทย</span>
+                </div>
+                <h4 className="text-xl sm:text-2xl font-extrabold">
+                  สนทนาแจ้งซ่อมผ่านเสียง (Voicebot)
+                </h4>
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                  ลูกค้าสามารถโทรเข้าสายด่วนเพื่อให้ AI Voicebot รับเรื่องแจ้งซ่อมแอร์ ตอบโต้ด้วยน้ำเสียงภาษาไทยที่เป็นธรรมชาติ แปลงเสียงพูดเป็นใบงาน (Ticket) ส่งต่อให้ทีมช่างทันทีโดยไม่ต้องรอสายนาน
+                </p>
+                <div className="space-y-2 text-xs text-zinc-300 pt-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                    <span>เข้าใจชื่อรุ่นแอร์ อาการเสีย และที่อยู่ภาษาไทยแม่นยำ</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-indigo-400" />
+                    <span>ออกเลขใบงานพร้อมส่ง SMS ยืนยันให้ลูกค้าอัตโนมัติ</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center space-y-5">
+                <div className="flex items-center justify-center gap-1.5 h-12">
+                  {[35, 75, 45, 95, 60, 100, 50, 85, 30, 90, 55, 80, 40, 70].map((h, i) => (
+                    <span
+                      key={i}
+                      className={`w-1.5 rounded-full bg-indigo-400 transition-all duration-300 ${
+                        isPlayingVoice ? 'animate-pulse' : 'opacity-30'
+                      }`}
+                      style={{ height: isPlayingVoice ? `${h}%` : '25%' }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs font-mono text-zinc-300 bg-zinc-950/80 p-3 rounded-xl border border-zinc-800">
+                  {isPlayingVoice
+                    ? '🔊 AI Voicebot: "สวัสดีค่ะ ศูนย์บริการ CoolCare Pro ยินดีให้บริการค่ะ วันนี้ต้องการแจ้งซ่อมแอร์ หรือตรวจสอบสถานะใบงานคะ?"'
+                    : 'กดปุ่มด้านล่างเพื่อจำลองการสนทนาผ่านเสียงกับ AI Voicebot'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsPlayingVoice(!isPlayingVoice)}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs inline-flex items-center gap-2 transition cursor-pointer"
+                >
+                  {isPlayingVoice ? <Volume2 className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  <span>{isPlayingVoice ? 'หยุดจำลองเสียงสนทนา' : 'ทดลองฟังเสียง AI Voicebot'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* เนื้อหา TAB 3: AI AVATAR (ตัวละครเสมือนจริง) */}
+          {activeAiTab === 'avatar' && (
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-purple-950 via-zinc-950 to-zinc-950 text-white rounded-2xl p-6 sm:p-8">
+              <div className="md:col-span-6 space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30">
+                  <Bot className="w-3.5 h-3.5" />
+                  <span>Interactive Digital Human</span>
+                </div>
+                <h4 className="text-xl sm:text-2xl font-extrabold">
+                  ผู้ช่วยต้อนรับเสมือนจริงบนหน้าจอ (AI Avatar)
+                </h4>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  ยกระดับศูนย์บริการด้วยตัวละคร AI เสมือนจริงที่สามารถพูดคุยโต้ตอบ แสดงสีหน้าท่าทางที่เป็นมิตร แนะนำแพ็กเกจล้างแอร์ ซ่อมแอร์ และรับเรื่องหน้าเว็บหรือจุดบริการ Kiosk ได้ตลอด 24 ชั่วโมง
+                </p>
+                <div className="pt-2">
+                  <Link
+                    to="/book"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-zinc-950 font-bold text-xs hover:bg-purple-50 transition"
+                  >
+                    <span>ทดลองเปิดใบงานแจ้งซ่อมจริง</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="md:col-span-6">
+                <div className="relative rounded-2xl overflow-hidden aspect-video bg-zinc-900 border border-purple-500/30 shadow-xl">
+                  <img
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80"
+                    alt="AfterCare AI Avatar"
+                    className="w-full h-full object-cover opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent flex flex-col justify-end p-4">
+                    <div className="bg-zinc-950/85 backdrop-blur-md border border-white/15 rounded-xl p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-white">AfterCare AI Specialist</p>
+                        <p className="text-[11px] text-purple-300">พร้อมให้คำปรึกษาและรับแจ้งซ่อม 24/7</p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+                        LIVE AVATAR
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </ScrollReveal>
+      </section>
+
+      {/* ============================================================================
+          2. SERVICES SECTION 
+      ============================================================================ */}
       <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
@@ -465,7 +994,9 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Interactive Price Estimator Widget (กดเลือกแท็บและปรับจำนวนเครื่องได้สดๆ) */}
+      {/* ============================================================================
+          3. INTERACTIVE PRICE ESTIMATOR WIDGET (ของเดิมแคน อยู่ครบ 100%)
+      ============================================================================ */}
       <section id="estimator" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="bg-zinc-950 text-white rounded-3xl p-7 sm:p-10 border border-zinc-800 shadow-2xl relative overflow-hidden">
@@ -568,7 +1099,9 @@ export const HomePage: React.FC = () => {
         </ScrollReveal>
       </section>
 
-      {/* 4. 21st.dev Bento Grid Feature Showcase with ScrollReveal */}
+      {/* ============================================================================
+          4. BENTO GRID FEATURE SHOWCASE (ของเดิมแคน อยู่ครบ 100%)
+      ============================================================================ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-200/70 text-zinc-800 text-xs font-bold mb-3">
@@ -714,7 +1247,9 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. 21st.dev Interactive Accordion FAQ Section (กดพับ/กางดูคำตอบได้ลื่นไหล) */}
+      {/* ============================================================================
+          5. FAQ ACCORDION (ของเดิมแคน อยู่ครบ 100%)
+      ============================================================================ */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-bold mb-3">
