@@ -81,12 +81,7 @@ export async function createTicket(
 
     const data = createTicketSchema.parse(rawBody);
 
-    const imageUrls = files.map((f) => {
-      if (f.buffer) {
-        return `data:${f.mimetype};base64,${f.buffer.toString("base64")}`;
-      }
-      return `/uploads/${f.filename}`;
-    });
+    const imageUrls = files.map((f) => `/uploads/${f.filename}`);
 
     // สร้าง trackingCode ที่ไม่ซ้ำ
     const trackingCode = await generateUniqueCode();

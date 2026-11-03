@@ -1,68 +1,84 @@
-# คู่มือ Deploy CoolCare Pro บน Vercel (Full-Stack: Frontend + Backend API)
+# คู่มือ Deploy CoolCare Pro (Frontend บน Vercel + Backend บน Render)
 
-โปรเจกต์ถูกตั้งค่าให้รันทั้ง **Frontend (`client/`)** และ **Backend (`server/` ผ่าน `/api`)** บน **Vercel โปรเจกต์เดียว** โดยไม่ต้องแยกไปรันที่ Render แล้ว
-
----
-
-## 1. สิ่งที่ตั้งค่าให้เรียบร้อยแล้วในโค้ด
-
-- **[vercel.json](vercel.json)** — กำหนดให้ Vercel build ทั้ง `server` (รวม `prisma generate`) และ `client` พร้อมตั้งค่า Rewrite `/api/*` ไปยัง Serverless Function
-- **[api/index.ts](api/index.ts)** — จุดเชื่อมต่อ (Entrypoint) ที่นำ Express App จาก `server/src/index.ts` มารันเป็น Vercel Serverless Function
-- **[server/src/index.ts](server/src/index.ts)** — ข้าม `app.listen()` เมื่อรันบน Vercel (`process.env.VERCEL`)
-- **[server/src/middleware/upload.ts](server/src/middleware/upload.ts)** & **[ticket.controller.ts](server/src/controllers/ticket.controller.ts)** — เมื่อรันบน Vercel จะใช้ `memoryStorage` และแปลงรูปภาพที่อัปโหลดเป็น Data URL เก็บลงฐานข้อมูลโดยตรง ทำให้รูปไม่หายแม้ดิสก์ของ Serverless จะเป็นแบบชั่วคราว (จำกัดขนาด request รวมของ Vercel ไว้ที่ ~4.5 MB)
-- **[server/src/lib/prisma.ts](server/src/lib/prisma.ts)** — แคช PrismaClient instance บน global เพื่อลดการสร้าง Connection ซ้ำใน Serverless
+- **Frontend** (`client/`) → Vercel
+- **Backend** (`server/`) → Render
+- **Database** → Supabase (PostgreSQL)
 
 ---
 
-## 2. เตรียมฐานข้อมูล (ทำครั้งเดียวจากเครื่องคุณ)
+## ขั้นตอนที่ 1: Deploy Backend (`server`) บน Render
 
-1. ตรวจสอบว่า `server/.env` มีค่า `DATABASE_URL` และ `DIRECT_URL` ของ Supabase ถูกต้อง
-2. รันคำสั่งสร้างตารางและข้อมูลตั้งต้น (หากยังไม่ได้ทำ):
-   ```powershell
-   cd server
-   npx.cmd prisma migrate deploy
-   npm.cmd run db:seed
-   cd ..
-   ```
-3. สุ่มค่า `JWT_SECRET` สำหรับใช้งานจริง (เก็บค่าที่ได้ไว้ใส่ใน Vercel):
-   ```powershell
-   node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-   ```
+1. เข้าเว็บ [https://render.com](https://render.com) → ล็อกอินด้วย GitHub
+2. กดปุ่ม **New +** → เลือก **Web Service** → เลือก Repository `botnoi` ของคุณ
+3. ตั้งค่าตามตารางนี้:
 
----
+   | ช่องตั้งค่า | ค่าที่ต้องใส่ |
+   |---|---|
+   | **Name** | `coolcare-api` |
+   | **Region** | `Singapore` |
+   | **Branch** | `main` |
+   | **Root Directory** | `server` |
+   | **Runtime** | `Node` |
+   | **Build Command** | `npm install --include=dev && npx prisma generate && npm run build` |
+   | **Start Command** | `npm run start:prod` |
+   | **Instance Type** | `Free` |
 
-## 3. Push โค้ดขึ้น GitHub
-
-```powershell
-git add .
-git commit -m "Configure full-stack Vercel deployment"
-git push
-```
-
----
-
-## 4. ขั้นตอนสร้างโปรเจกต์บน Vercel
-
-1. เข้าเว็บ [https://vercel.com](https://vercel.com) → ล็อกอินด้วย GitHub
-2. กด **Add New... → Project** → เลือก Import repository นี้
-3. ตั้งค่าโปรเจกต์ดังนี้:
-   - **Framework Preset**: `Other` หรือ `Vite` (ไฟล์ `vercel.json` จะควบคุมคำสั่ง Build ให้อัตโนมัติ)
-   - **Root Directory**: ปล่อยว่างไว้เป็น `./` (Root ของโปรเจกต์ **ไม่ต้อง** เลือกเป็น `client`)
-4. เปิดส่วน **Environment Variables** แล้วเพิ่มตัวแปรต่อไปนี้:
+4. เลื่อนลงมาที่ส่วน **Environment Variables** กดเพิ่มตัวแปรดังนี้:
 
    | Key | Value |
    |---|---|
-   | `DATABASE_URL` | Connection string ของ Supabase แบบ Transaction Pooler (พอร์ต `6543` ลงท้ายด้วย `?pgbouncer=true`) |
-   | `DIRECT_URL` | Connection string ของ Supabase แบบ Session/Direct (พอร์ต `5432`) |
-   | `JWT_SECRET` | รหัสสุ่มความยาวอย่างน้อย 32 ตัวอักษรจากข้อ 2 |
+   | `NODE_VERSION` | `22.12.0` |
    | `NODE_ENV` | `production` |
+   | `DATABASE_URL` | `postgresql://postgres.ejziwqakreowjblwqrlf:0624216512yhnmju@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
+   | `DIRECT_URL` | `postgresql://postgres.ejziwqakreowjblwqrlf:0624216512yhnmju@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres` |
+   | `JWT_SECRET` | `c8f9a2b4d6e8f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5` |
+   | `CLIENT_URL` | `https://botnoi-lilac.vercel.app` *(ใส่โดเมน Vercel ของคุณ แบบไม่มี `/` ปิดท้าย)* |
 
-5. กด **Deploy** แล้วรอจนเสร็จสิ้น
+5. กด **Create Web Service** รอจนขึ้นสถานะสีเขียว **`Live`**
+6. คัดลอก URL ของ Render ด้านบนซ้าย (เช่น `https://coolcare-api.onrender.com`)
+   - ทดสอบเปิด `https://<ชื่อของคุณ>.onrender.com/api/health` ต้องขึ้น `{"success":true,"message":"CoolCare Pro API กำลังทำงาน 🆒"}`
 
 ---
 
-## 5. ทดสอบหลัง Deploy
+## ขั้นตอนที่ 2: อัปเดต URL ของ Render ใน `client/vercel.json`
 
-1. เปิด `https://<ชื่อโปรเจกต์ของคุณ>.vercel.app/api/health` — ต้องได้ข้อความ `{"success":true,"message":"CoolCare Pro API กำลังทำงาน 🆒"}`
-2. เปิดหน้าเว็บหลัก `https://<ชื่อโปรเจกต์ของคุณ>.vercel.app`
-3. ทดสอบจองคิวซ่อมแอร์ อัปโหลดรูปภาพ (ขนาดรวมไม่เกิน ~4MB) ค้นหารหัสติดตาม และล็อกอินหน้า Admin (`/login`)
+1. เปิดไฟล์ [client/vercel.json](client/vercel.json)
+2. หาก URL ที่ได้จาก Render **ไม่ใช่** `https://coolcare-api.onrender.com` ให้แก้เป็น URL จริงของคุณ:
+   ```json
+   {
+     "rewrites": [
+       {
+         "source": "/api/:path*",
+         "destination": "https://<ชื่อ-render-ของคุณ>.onrender.com/api/:path*"
+       },
+       {
+         "source": "/uploads/:path*",
+         "destination": "https://<ชื่อ-render-ของคุณ>.onrender.com/uploads/:path*"
+       },
+       {
+         "source": "/((?!api/|uploads/|assets/).*)",
+         "destination": "/index.html"
+       }
+     ]
+   }
+   ```
+3. Commit และ Push โค้ดขึ้น GitHub:
+   ```powershell
+   git add .
+   git commit -m "Configure separate Frontend (Vercel) and Backend (Render)"
+   git push
+   ```
+
+---
+
+## ขั้นตอนที่ 3: ตั้งค่าโปรเจกต์ Frontend บน Vercel
+
+สำหรับโปรเจกต์ `botnoi-lilac` ที่คุณสร้างไว้บน Vercel แล้ว ให้ปรับให้ชี้ไปที่โฟลเดอร์ `client` อย่างเดียว:
+
+1. เข้าไปที่โปรเจกต์ `botnoi-lilac` บนเว็บ Vercel → กดแท็บ **Settings** ด้านบน
+2. ในเมนู **General** (หน้าแรกของ Settings):
+   - เลื่อนหาหัวข้อ **Root Directory** → กดปุ่ม **Edit** → พิมพ์หรือเลือกโฟลเดอร์ **`client`** → กด **Save**
+   - เลื่อนหาหัวข้อ **Framework Settings** → เปลี่ยน **Framework Preset** เป็น **`Vite`** → กด **Save**
+3. ไปที่แท็บ **Deployments** ด้านบน → กดจุด 3 จุด (`...`) ที่รายการบนสุด → กด **Redeploy**
+
+เสร็จเรียบร้อย! เว็บ `https://botnoi-lilac.vercel.app` จะโหลดหน้าเว็บจาก `client` และส่งคำสั่ง `/api/*` ไปหา Backend บน Render ทันทีครับ

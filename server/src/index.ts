@@ -54,7 +54,7 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || true,
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   })
 );
@@ -134,13 +134,11 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // ===========================
-// เริ่ม Server (รันเฉพาะเมื่อไม่ได้อยู่บน Vercel Serverless)
+// เริ่ม Server
 // ===========================
-if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`🚀 CoolCare Pro Server กำลังทำงานที่ http://localhost:${PORT}`);
-    console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`🚀 CoolCare Pro Server กำลังทำงานที่ http://localhost:${PORT}`);
+  console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
+});
 
 export default app;
