@@ -294,3 +294,38 @@ export async function createCustomerMessage(
     next(err);
   }
 }
+
+// ===========================
+// GET /api/tickets/my - ดึงงานซ่อมของลูกค้าที่ล็อกอินอยู่
+// ===========================
+export const getMyTickets = async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id
+    const userPhone = req.user?.phone
+
+    if (!userId && !userPhone) {
+      return res.status(401).json({ success: false, error: 'กรุณาเข้าสู่ระบบก่อน' })
+    }
+
+    // ค้นหาทั้งจาก userId และเบอร์โทรศัพท์ (ครอบคลุมทั้งเคสสมัครใหม่และเบอร์ตรงกัน)
+    const tickets = await prisma.ticket.findMany({
+      where: {
+        OR: [
+          ...(userId ? [{ userId }] : []),
+          ...(userPhone ? [{ customerPhone: userPhone }] : []),
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        technician: true,
+        images: true,
+        statusLogs: { orderBy: { createdAt: 'desc' } },
+      },
+    })
+
+    return res.json({ success: true, data: tickets })
+  } catch (error) {
+    console.error('getMyTickets error:', error)
+    return res.status(500).json({ success: false, error: 'ไม่สามารถดึงข้อมูลประวัติการแจ้งซ่อมได้' })
+  }
+}

@@ -12,6 +12,7 @@ import {
   PhoneCall,
   LayoutDashboard,
   ArrowUpRight,
+  ClipboardList,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -29,18 +30,23 @@ export const Navbar: React.FC = () => {
 
   const isActive = (path: string) => {
     if (path === '/track') return location.pathname.startsWith('/track')
+    if (path === '/my-tickets') return location.pathname.startsWith('/my-tickets')
     return location.pathname === path
   }
 
+  // เพิ่มเมนู "ประวัติการแจ้งซ่อม" ในแคปซูลตรงกลางให้อัตโนมัติเมื่อเป็นลูกค้าทั่วไป
   const navItems = [
     { path: '/', label: 'หน้าแรก' },
     { path: '/book', label: 'แจ้งซ่อม / นัดหมาย' },
     { path: '/track', label: 'ติดตามสถานะ', icon: Search },
+    ...(user && !isStaff
+      ? [{ path: '/my-tickets', label: 'ประวัติการแจ้งซ่อม', icon: ClipboardList }]
+      : []),
   ]
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Top Sleek Announcement Strip (21st.dev style) */}
+      {/* Top Sleek Announcement Strip */}
       <div className="bg-zinc-950 text-zinc-300 text-[11px] py-1.5 px-4 border-b border-zinc-800/80">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -71,9 +77,11 @@ export const Navbar: React.FC = () => {
       {/* Main Glassmorphic Floating Navbar */}
       <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Brand Logo */}
-            <Link to="/" className="flex items-center gap-3 group">
+          {/* เพิ่ม relative เพื่อให้ absolute center ยึดกึ่งกลางของ Navbar */}
+          <div className="relative flex justify-between items-center h-16">
+            
+            {/* ฝั่งซ้าย: Brand Logo */}
+            <Link to="/" className="flex items-center gap-3 group shrink-0">
               <div className="relative w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-white shadow-md shadow-zinc-950/10 group-hover:scale-105 group-active:scale-95 transition-all duration-300 border border-zinc-800 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-tr from-sky-600/40 via-transparent to-cyan-400/30 opacity-80 group-hover:opacity-100 transition-opacity" />
                 <Wrench className="w-5 h-5 text-sky-400 relative z-10 group-hover:rotate-12 transition-transform" />
@@ -91,10 +99,10 @@ export const Navbar: React.FC = () => {
               </div>
             </Link>
 
-            {/* Desktop Tubelight Lamp Pill Navigation (21st.dev signature component) */}
+            {/* แคปซูลเมนูตรงกลาง (Absolute Center) */}
             <nav
               onMouseLeave={() => setHoveredNav(null)}
-              className="hidden md:flex items-center gap-1 p-1.5 rounded-full bg-zinc-100/90 border border-zinc-200/80 shadow-inner"
+              className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 p-1.5 rounded-full bg-zinc-100/90 border border-zinc-200/80 shadow-inner"
             >
               {navItems.map((item) => {
                 const active = isActive(item.path)
@@ -114,7 +122,6 @@ export const Navbar: React.FC = () => {
                         : 'text-zinc-600 hover:text-zinc-950'
                     }`}
                   >
-                    {/* 21st.dev Tubelight Top Glow Bar when Active */}
                     {active && (
                       <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-sky-400 shadow-[0_0_12px_2px_rgba(56,189,248,0.85)]" />
                     )}
@@ -143,8 +150,8 @@ export const Navbar: React.FC = () => {
               )}
             </nav>
 
-            {/* Right Action Area */}
-            <div className="hidden md:flex items-center gap-2.5">
+            {/* ฝั่งขวา: User Profile / Action Buttons */}
+            <div className="hidden md:flex items-center gap-2.5 shrink-0">
               {user ? (
                 <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200/80 rounded-full pl-2 pr-1.5 py-1">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
@@ -168,8 +175,8 @@ export const Navbar: React.FC = () => {
                     to="/login"
                     className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-950 px-3.5 py-2 rounded-xl hover:bg-zinc-100/80 transition-all"
                   >
-                    <UserIcon className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Sing In</span>
+                    <LogIn className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>เข้าสู่ระบบ</span>
                   </Link>
                   <Link
                     to="/book"
@@ -227,6 +234,18 @@ export const Navbar: React.FC = () => {
             ติดตามสถานะงานซ่อม
           </Link>
 
+          {user && !isStaff && (
+            <Link
+              to="/my-tickets"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
+                isActive('/my-tickets') ? 'bg-sky-600 text-white' : 'text-sky-700 bg-sky-50'
+              }`}
+            >
+              ประวัติการแจ้งซ่อมของฉัน
+            </Link>
+          )}
+
           {isStaff && (
             <Link
               to="/admin"
@@ -262,7 +281,7 @@ export const Navbar: React.FC = () => {
                   className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  สำหรับเจ้าหน้าที่
+                  เข้าสู่ระบบ
                 </Link>
                 <Link
                   to="/book"

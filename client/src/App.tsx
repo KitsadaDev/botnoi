@@ -9,6 +9,7 @@ import { BookServicePage } from './pages/BookServicePage'
 import { TrackTicketPage } from './pages/TrackTicketPage'
 import { LoginPage } from './pages/LoginPage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
+import { MyTicketsPage } from './pages/MyTicketsPage'
 
 
 function ScrollToTopOnNavigate() {
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="/track/:code" element={<TrackTicketPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/my-tickets" element={<MyTicketsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
