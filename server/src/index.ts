@@ -91,6 +91,10 @@ app.use(
 // ===========================
 // Health Check
 // ===========================
+app.get("/", (_req, res) => {
+  res.json({ success: true, message: "CoolCare Pro API กำลังทำงาน 🆒" });
+});
+
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, message: "CoolCare Pro API กำลังทำงาน 🆒" });
 });

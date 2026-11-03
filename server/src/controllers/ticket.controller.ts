@@ -7,14 +7,21 @@ import {
 } from "../validations/ticket.validation";
 import { AuthRequest } from "../middleware/auth";
 import { TicketStatus } from "@prisma/client";
-import { customAlphabet } from "nanoid";
+import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 
 // ===========================
 // nanoid: ตัวพิมพ์ใหญ่ + ตัวเลข 4 ตัว
 // ===========================
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
+const CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const nanoid = (length = 4): string => {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += CODE_ALPHABET[crypto.randomInt(0, CODE_ALPHABET.length)];
+  }
+  return result;
+};
 
 // ===========================
 // สร้างรหัสติดตาม CC-YYYYMMDD-XXXX
