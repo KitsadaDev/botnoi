@@ -18,6 +18,9 @@ import { getTechnicians } from "./controllers/admin.controller";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// อยู่หลัง reverse proxy (Render/Vercel rewrite) ต้องเชื่อ X-Forwarded-For เพื่อให้ rate limit แยก IP ผู้ใช้ได้ถูกต้อง
+app.set("trust proxy", 1);
+
 // ===========================
 // Security & Headers (OWASP Hardening)
 // ===========================
@@ -51,7 +54,7 @@ app.use(
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL || true,
     credentials: true,
   })
 );
@@ -131,11 +134,13 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // ===========================
-// เริ่ม Server
+// เริ่ม Server (รันเฉพาะเมื่อไม่ได้อยู่บน Vercel Serverless)
 // ===========================
-app.listen(PORT, () => {
-  console.log(`🚀 CoolCare Pro Server กำลังทำงานที่ http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 CoolCare Pro Server กำลังทำงานที่ http://localhost:${PORT}`);
+    console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
+  });
+}
 
 export default app;

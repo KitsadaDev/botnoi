@@ -1,14 +1,23 @@
 import multer, { FileFilterCallback } from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { Request } from "express";
 
 // ===========================
-// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
+// สร้างโฟลเดอร์ uploads ถ้ายังไม่มี (ใช้ /tmp บน Vercel Serverless เพราะ filesystem อื่นเป็น read-only)
 // ===========================
-const uploadDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const isServerless = Boolean(process.env.VERCEL);
+const uploadDir = isServerless
+  ? path.join(os.tmpdir(), "uploads")
+  : path.join(__dirname, "../../uploads");
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch {
+  // ป้องกันกรณี filesystem เป็น read-only
 }
 
 // ===========================
@@ -24,19 +33,21 @@ export const ALLOWED_MIME_TYPES: Record<string, string> = {
 export const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 
 // ===========================
-// กำหนดที่เก็บไฟล์และชื่อไฟล์ (ใช้นามสกุลที่คำนวณจาก MIME type ป้องกัน XSS)
+// กำหนดที่เก็บไฟล์ (บน Vercel ใช้ memoryStorage เพื่อแปลงเป็น data URL เก็บใน DB ได้ถาวร)
 // ===========================
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    // ใช้นามสกุลไฟล์ที่ปลอดภัยจาก MIME type เท่านั้น ไม่เชื่อถือ extension จาก originalname
-    const safeExt = ALLOWED_MIME_TYPES[file.mimetype] || ".jpg";
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`;
-    cb(null, unique);
-  },
-});
+const storage = isServerless
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => {
+        cb(null, uploadDir);
+      },
+      filename: (_req, file, cb) => {
+        // ใช้นามสกุลไฟล์ที่ปลอดภัยจาก MIME type เท่านั้น ไม่เชื่อถือ extension จาก originalname
+        const safeExt = ALLOWED_MIME_TYPES[file.mimetype] || ".jpg";
+        const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`;
+        cb(null, unique);
+      },
+    });
 
 // ===========================
 // Error ที่เกิดจากข้อมูลที่ผู้ใช้ส่งมาไม่ถูกต้อง (ให้ errorHandler ตอบ 400)
