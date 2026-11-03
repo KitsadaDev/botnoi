@@ -9,6 +9,13 @@ export const thaiPhoneSchema = z
   .regex(/^0[0-9]{9}$/, "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0");
 
 // ===========================
+// Regex รหัสติดตาม CC-YYYYMMDD-XXXX
+// ===========================
+export const trackingCodeSchema = z
+  .string()
+  .regex(/^CC-[0-9]{8}-[A-Z0-9]{4,}$/, "รูปแบบรหัสติดตามไม่ถูกต้อง");
+
+// ===========================
 // Schema สำหรับสร้าง Ticket (POST /api/tickets)
 // ===========================
 export const createTicketSchema = z.object({
@@ -16,8 +23,8 @@ export const createTicketSchema = z.object({
   brand: z.string().min(1, "กรุณากรอกยี่ห้อแอร์").max(100),
   symptom: z.string().min(1, "กรุณากรอกอาการเสีย").max(500),
   address: z.string().min(10, "กรุณากรอกที่อยู่ให้ครบถ้วน").max(500),
-  lat: z.coerce.number().optional(),
-  lng: z.coerce.number().optional(),
+  lat: z.coerce.number().min(-90, "พิกัด lat ไม่ถูกต้อง").max(90, "พิกัด lat ไม่ถูกต้อง").optional(),
+  lng: z.coerce.number().min(-180, "พิกัด lng ไม่ถูกต้อง").max(180, "พิกัด lng ไม่ถูกต้อง").optional(),
   // วันนัดต้องไม่ย้อนหลัง (เปรียบเทียบกับ "เริ่มต้นของวันนี้")
   preferredDate: z
     .string()
@@ -30,7 +37,6 @@ export const createTicketSchema = z.object({
   note: z.string().max(1000).optional(),
   customerName: z.string().min(2, "กรุณากรอกชื่อ-สกุล").max(100),
   customerPhone: thaiPhoneSchema,
-  userId: z.string().optional(), // ถ้าล็อกอินอยู่จะแนบ userId
 });
 
 // ===========================

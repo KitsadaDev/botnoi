@@ -71,6 +71,9 @@ export interface ApiResponse<T> {
   error?: string
 }
 
+// จำนวนเคสแยกตามสถานะ (นับจากทุกเคส ไม่ขึ้นกับ filter) จาก GET /api/admin/tickets
+export type TicketCounts = Record<TicketStatus | 'total', number>
+
 // Label สำหรับแสดงผลภาษาไทย
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   CLEANING: 'ล้างแอร์',

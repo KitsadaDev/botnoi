@@ -7,12 +7,27 @@ import { AuthRequest } from "../middleware/auth";
 import { Role } from "@prisma/client";
 
 // ===========================
+// bcrypt hash ที่ valid (60 ตัวอักษร, cost 10) ใช้เทียบเมื่อไม่พบ user
+// เพื่อให้เวลาตอบสนองเท่ากับกรณีมี user จริง (hash ที่ไม่ valid จะ return ทันที)
+// ===========================
+export const DUMMY_PASSWORD_HASH =
+  "$2a$10$TAeFIBf/PswQw.ZmiRxAruBcnyXFq0.ofVnXN4m3RNMwPpx4GGZh6";
+
+// ===========================
 // ฟังก์ชันสร้าง JWT token
 // ===========================
-function signToken(userId: string): string {
+export function signToken(userId: string): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET ไม่ได้ตั้งค่า");
-  return jwt.sign({ userId }, secret, { expiresIn: "7d" });
+  if (
+    process.env.NODE_ENV === "production" &&
+    (secret === "your-super-secret-jwt-key-change-this-in-production" || secret.length < 32)
+  ) {
+    throw new Error(
+      "JWT_SECRET ไม่ปลอดภัยสำหรับการใช้งานบน Production (ต้องมีความยาวอย่างน้อย 32 ตัวอักษรและไม่ใช้ค่าเริ่มต้น)"
+    );
+  }
+  return jwt.sign({ userId }, secret, { algorithm: "HS256", expiresIn: "7d" });
 }
 
 // ===========================
@@ -90,7 +105,7 @@ export async function login(
     // ตรวจสอบ user และรหัสผ่าน (ใช้เวลาเท่ากันเพื่อป้องกัน timing attack)
     const isValid = user
       ? await bcrypt.compare(data.password, user.passwordHash)
-      : await bcrypt.compare(data.password, "$2b$10$fakehashforsecurity"); // ทำให้เวลาเท่ากัน
+      : await bcrypt.compare(data.password, DUMMY_PASSWORD_HASH); // ทำให้เวลาเท่ากัน
 
     if (!user || !isValid) {
       res.status(401).json({ success: false, error: "เบอร์โทรหรือรหัสผ่านไม่ถูกต้อง" });

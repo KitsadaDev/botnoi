@@ -1,6 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
+import multer from "multer";
+import { UploadError } from "./upload";
+
+// ข้อความภาษาไทยสำหรับ error ของ multer
+const MULTER_MESSAGES: Record<string, string> = {
+  LIMIT_FILE_SIZE: "ไฟล์รูปต้องมีขนาดไม่เกิน 5MB",
+  LIMIT_FILE_COUNT: "อัปโหลดรูปได้สูงสุด 3 รูป",
+  LIMIT_UNEXPECTED_FILE: "อัปโหลดรูปได้สูงสุด 3 รูป",
+};
 
 // ===========================
 // Global Error Handler Middleware
@@ -12,6 +21,25 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
+  // Upload errors (multer + fileFilter) เป็นความผิดพลาดของ request ไม่ใช่ของ server
+  if (err instanceof multer.MulterError) {
+    res.status(400).json({
+      success: false,
+      error: MULTER_MESSAGES[err.code] ?? `อัปโหลดไฟล์ไม่สำเร็จ: ${err.message}`,
+    });
+    return;
+  }
+  if (err instanceof UploadError) {
+    res.status(400).json({ success: false, error: err.message });
+    return;
+  }
+
+  // JSON body ที่ parse ไม่ได้ (express.json)
+  if ((err as { type?: string }).type === "entity.parse.failed") {
+    res.status(400).json({ success: false, error: "รูปแบบข้อมูลที่ส่งมาไม่ถูกต้อง" });
+    return;
+  }
+
   // Zod validation error
   if (err instanceof ZodError) {
     const messages = err.errors.map((e) => e.message).join(", ");

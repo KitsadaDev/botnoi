@@ -16,8 +16,9 @@ import {
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import type { ApiResponse, Ticket, Technician, Message, TicketStatus } from '../lib/types'
+import type { ApiResponse, Ticket, Technician, Message, TicketStatus, TicketCounts } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
+import { formatDate } from '../lib/format'
 
 export const AdminDashboardPage: React.FC = () => {
   const { user, isStaff, isLoading: isAuthLoading } = useAuth()
@@ -33,21 +34,27 @@ export const AdminDashboardPage: React.FC = () => {
   const [staffMessageText, setStaffMessageText] = useState('')
 
   const {
-    data: tickets = [],
+    data: ticketData,
     isLoading: isTicketsLoading,
     refetch: refetchTickets,
-  } = useQuery<Ticket[]>({
+  } = useQuery<{ tickets: Ticket[]; counts: TicketCounts | null }>({
     queryKey: ['adminTickets', selectedStatus, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams()
       if (selectedStatus) params.append('status', selectedStatus)
       if (searchQuery) params.append('q', searchQuery)
-      const res = await api.get<ApiResponse<Ticket[]>>(`/admin/tickets?${params.toString()}`)
-      return res.data.success ? res.data.data : []
+      const res = await api.get<ApiResponse<Ticket[]> & { counts?: TicketCounts }>(
+        `/admin/tickets?${params.toString()}`
+      )
+      return res.data.success
+        ? { tickets: res.data.data, counts: res.data.counts ?? null }
+        : { tickets: [], counts: null }
     },
     enabled: isStaff,
     refetchInterval: 6000,
   })
+  const tickets = ticketData?.tickets ?? []
+  const ticketCounts = ticketData?.counts
 
   const { data: technicians = [] } = useQuery<Technician[]>({
     queryKey: ['technicians'],
@@ -86,9 +93,8 @@ export const AdminDashboardPage: React.FC = () => {
         status: newStatus,
         note: statusNote || undefined,
       }
-      if (assignedTechId) {
-        payload.technicianId = assignedTechId
-      }
+      // ส่ง null เมื่อเลือก "ไม่ระบุช่าง" เพื่อถอดช่างออกจากเคส (server ตีความ null = ยกเลิกการมอบหมาย)
+      payload.technicianId = assignedTechId || null
       const res = await api.patch<ApiResponse<Ticket>>(`/admin/tickets/${selectedTicketId}`, payload)
       if (!res.data.success) throw new Error(res.data.error || 'อัปเดตไม่สำเร็จ')
       return res.data.data
@@ -135,10 +141,15 @@ export const AdminDashboardPage: React.FC = () => {
     return <Navigate to="/login" replace />
   }
 
-  const countTotal = tickets.length
-  const countSubmitted = tickets.filter((t) => t.status === 'SUBMITTED').length
-  const countInProgress = tickets.filter((t) => t.status === 'RECEIVED' || t.status === 'IN_PROGRESS').length
-  const countCompleted = tickets.filter((t) => t.status === 'COMPLETED').length
+  // สถิติมาจาก server ซึ่งนับทุกเคส (ไม่หายไปเมื่อกรอง/ค้นหา)
+  const countTotal = ticketCounts?.total ?? tickets.length
+  const countSubmitted =
+    ticketCounts?.SUBMITTED ?? tickets.filter((t) => t.status === 'SUBMITTED').length
+  const countInProgress = ticketCounts
+    ? ticketCounts.RECEIVED + ticketCounts.IN_PROGRESS
+    : tickets.filter((t) => t.status === 'RECEIVED' || t.status === 'IN_PROGRESS').length
+  const countCompleted =
+    ticketCounts?.COMPLETED ?? tickets.filter((t) => t.status === 'COMPLETED').length
 
   const openTicketModal = (ticket: Ticket) => {
     setSelectedTicketId(ticket.id)
@@ -301,7 +312,7 @@ export const AdminDashboardPage: React.FC = () => {
                       <span className="font-bold text-zinc-900">{SERVICE_LABELS[t.service] || t.service}</span>
                       <p className="text-[11px] text-zinc-500">{t.brand}</p>
                     </td>
-                    <td className="px-6 py-4 font-mono font-medium text-zinc-700">{t.preferredDate}</td>
+                    <td className="px-6 py-4 font-mono font-medium text-zinc-700">{formatDate(t.preferredDate)}</td>
                     <td className="px-6 py-4">
                       {t.technician ? (
                         <div>
@@ -388,7 +399,7 @@ export const AdminDashboardPage: React.FC = () => {
                     {SERVICE_LABELS[activeTicket.service]} • {activeTicket.brand}
                   </p>
                   <p className="text-zinc-600 mt-2">
-                    <span className="font-bold text-zinc-800">วันนัดหมาย:</span> {activeTicket.preferredDate}
+                    <span className="font-bold text-zinc-800">วันนัดหมาย:</span> {formatDate(activeTicket.preferredDate)}
                   </p>
                   <p className="text-zinc-600 mt-1">
                     <span className="font-bold text-zinc-800">อาการ:</span> {activeTicket.symptom}

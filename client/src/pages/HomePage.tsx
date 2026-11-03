@@ -21,6 +21,7 @@ import {
   Sliders,
 } from 'lucide-react'
 import { ScrollReveal, Tilt3DCard, MagneticButton, NumberTicker } from '../components/InteractiveUI'
+import { SAMPLE_TRACKING_CODES } from '../lib/constants'
 
 const SUPPORTED_BRANDS = [
   'CARRIER',
@@ -204,7 +205,7 @@ export const HomePage: React.FC = () => {
                           type="text"
                           value={quickCode}
                           onChange={(e) => setQuickCode(e.target.value)}
-                          placeholder="เช่น TK-SEED001"
+                          placeholder={`เช่น ${SAMPLE_TRACKING_CODES[0]}`}
                           className="w-full pl-4 pr-12 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-950/90 border border-zinc-700/80 text-white placeholder:text-zinc-600 rounded-2xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
                           required
                         />
@@ -228,7 +229,7 @@ export const HomePage: React.FC = () => {
                       คลิกเพื่อทดสอบรหัสตัวอย่างทันที:
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {['TK-SEED001', 'TK-SEED002'].map((sample) => (
+                      {SAMPLE_TRACKING_CODES.map((sample) => (
                         <button
                           key={sample}
                           type="button"
@@ -254,11 +255,12 @@ export const HomePage: React.FC = () => {
             <span>CERTIFIED PARTS & TOOLS</span>
           </div>
           <div className="relative flex overflow-x-hidden">
-            <div className="flex animate-marquee hover-pause whitespace-nowrap gap-4 py-2">
+            {/* ใช้ mr-4 ที่แต่ละชิป (ไม่ใช้ gap) เพื่อให้ translateX(-50%) ตรงกับความกว้างชุดแรกพอดี ไม่กระตุกตอนวนลูป */}
+            <div className="flex shrink-0 animate-marquee hover-pause whitespace-nowrap py-2">
               {[...SUPPORTED_BRANDS, ...SUPPORTED_BRANDS].map((brand, idx) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800/90 text-xs font-mono font-bold text-zinc-300 hover:text-sky-400 hover:border-sky-500/40 transition-colors cursor-default"
+                  className="mr-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800/90 text-xs font-mono font-bold text-zinc-300 hover:text-sky-400 hover:border-sky-500/40 transition-colors cursor-default"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
                   {brand}
@@ -667,7 +669,7 @@ export const HomePage: React.FC = () => {
               </div>
               <h3 className="text-lg font-extrabold text-zinc-950 mb-1.5">ปักหมุดพิกัด GPS แม่นยำ</h3>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                รองรับการดึงพิกัด GPS ปัจจุบันและแนบรูปถ่ายหน้างานสูงสุด 5 รูป เพื่อให้ช่างเตรียมอะไหล่และเดินทางไปถึงได้รวดเร็วที่สุด
+                รองรับการดึงพิกัด GPS ปัจจุบันและแนบรูปถ่ายหน้างานสูงสุด 3 รูป เพื่อให้ช่างเตรียมอะไหล่และเดินทางไปถึงได้รวดเร็วที่สุด
               </p>
             </Tilt3DCard>
           </ScrollReveal>

@@ -2,7 +2,15 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import { updateTicketSchema, createMessageSchema } from "../validations/ticket.validation";
 import { AuthRequest } from "../middleware/auth";
-import { Prisma, TicketStatus } from "@prisma/client";
+import { Prisma, TicketStatus, Role } from "@prisma/client";
+
+// ===========================
+// ฟังก์ชัน mask เบอร์โทร เช่น 0891111111 → 089-xxx-1111
+// ===========================
+function maskPhone(phone: string): string {
+  if (phone.length < 7) return phone;
+  return `${phone.slice(0, 3)}-xxx-${phone.slice(-4)}`;
+}
 
 // ===========================
 // GET /api/admin/tickets?status=&q=
@@ -20,28 +28,47 @@ export async function getAllTickets(
     const where: Prisma.TicketWhereInput = {};
 
     if (status && typeof status === "string") {
+      // ตรวจว่าเป็นสถานะที่มีจริง ไม่เช่นนั้น Prisma จะ throw และกลายเป็น 500
+      if (!(Object.values(TicketStatus) as string[]).includes(status)) {
+        res.status(400).json({ success: false, error: "สถานะที่ใช้กรองไม่ถูกต้อง" });
+        return;
+      }
       where.status = status as TicketStatus;
     }
 
-    // ค้นหาด้วยรหัสติดตาม หรือเบอร์โทร
+    // ค้นหาด้วยรหัสติดตาม หรือเบอร์โทร (จำกัดความยาวเพื่อป้องกัน DoS)
     if (q && typeof q === "string" && q.trim()) {
+      const sanitizedQ = q.trim().slice(0, 100);
       where.OR = [
-        { trackingCode: { contains: q.trim(), mode: "insensitive" } },
-        { customerPhone: { contains: q.trim() } },
-        { customerName: { contains: q.trim(), mode: "insensitive" } },
+        { trackingCode: { contains: sanitizedQ, mode: "insensitive" } },
+        { customerPhone: { contains: sanitizedQ } },
+        { customerName: { contains: sanitizedQ, mode: "insensitive" } },
       ];
     }
 
-    const tickets = await prisma.ticket.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        technician: { select: { id: true, name: true } },
-        _count: { select: { messages: true } },
-      },
-    });
+    const [tickets, grouped] = await Promise.all([
+      prisma.ticket.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        include: {
+          technician: { select: { id: true, name: true, phone: true, area: true } },
+          _count: { select: { messages: true } },
+        },
+      }),
+      // จำนวนเคสแยกตามสถานะ นับจากทุกเคส (ไม่ขึ้นกับ filter/search) สำหรับการ์ดสถิติ
+      prisma.ticket.groupBy({ by: ["status"], _count: { _all: true } }),
+    ]);
 
-    res.json({ success: true, data: tickets, total: tickets.length });
+    const counts: Record<string, number> = {
+      total: 0,
+      ...Object.fromEntries(Object.values(TicketStatus).map((s) => [s, 0])),
+    };
+    for (const row of grouped) {
+      counts[row.status] = row._count._all;
+      counts.total += row._count._all;
+    }
+
+    res.json({ success: true, data: tickets, total: tickets.length, counts });
   } catch (err) {
     next(err);
   }
@@ -123,7 +150,21 @@ export async function updateTicket(
 
     // ทำทุกอย่างใน transaction
     const updated = await prisma.$transaction(async (tx) => {
-      const ticket = await tx.ticket.update({
+      // บันทึก StatusLog เมื่อสถานะเปลี่ยน หรือเมื่อเจ้าหน้าที่ใส่โน้ต (เพื่อไม่ให้โน้ตหาย)
+      // สร้างก่อน update เพื่อให้ response ที่ include statusLogs มี log ล่าสุดด้วย
+      const statusChanged = Boolean(data.status && data.status !== current.status);
+      const hasNote = Boolean(data.note && data.note.trim());
+      if (statusChanged || hasNote) {
+        await tx.statusLog.create({
+          data: {
+            ticketId: id,
+            status: (data.status ?? current.status) as TicketStatus,
+            note: data.note,
+          },
+        });
+      }
+
+      return tx.ticket.update({
         where: { id },
         data: {
           ...(data.status && { status: data.status as TicketStatus }),
@@ -135,19 +176,6 @@ export async function updateTicket(
           statusLogs: { orderBy: { createdAt: "asc" } },
         },
       });
-
-      // สร้าง StatusLog ถ้าสถานะเปลี่ยน
-      if (data.status && data.status !== current.status) {
-        await tx.statusLog.create({
-          data: {
-            ticketId: id,
-            status: data.status as TicketStatus,
-            note: data.note,
-          },
-        });
-      }
-
-      return ticket;
     });
 
     res.json({ success: true, data: updated });
@@ -204,18 +232,27 @@ export async function createStaffMessage(
 
 // ===========================
 // GET /api/technicians
-// ดูรายชื่อช่างทั้งหมด
+// ดูรายชื่อช่าง (ถ้าเป็น public จะ mask เบอร์โทรเพื่อป้องกันการ harvest ข้อมูล)
 // ===========================
 export async function getTechnicians(
-  _req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
     const technicians = await prisma.technician.findMany({
       orderBy: { name: "asc" },
+      select: { id: true, name: true, phone: true, area: true },
     });
-    res.json({ success: true, data: technicians });
+
+    const isStaffOrAdmin =
+      req.user && (req.user.role === Role.STAFF || req.user.role === Role.ADMIN);
+
+    const data = isStaffOrAdmin
+      ? technicians
+      : technicians.map((t) => ({ ...t, phone: maskPhone(t.phone) }));
+
+    res.json({ success: true, data });
   } catch (err) {
     next(err);
   }

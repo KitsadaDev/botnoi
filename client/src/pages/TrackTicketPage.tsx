@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -18,6 +18,8 @@ import {
 import api from '../lib/api'
 import type { ApiResponse, Ticket, Message, TicketStatus } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
+import { formatDate } from '../lib/format'
+import { SAMPLE_TRACKING_CODES } from '../lib/constants'
 
 const STEP_ORDER: TicketStatus[] = ['SUBMITTED', 'RECEIVED', 'IN_PROGRESS', 'COMPLETED']
 
@@ -28,6 +30,11 @@ export const TrackTicketPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState(code || '')
   const [messageText, setMessageText] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
+
+  // ให้ช่องค้นหาตรงกับรหัสใน URL เสมอ (เช่น กด Back, คลิกรหัสตัวอย่าง, หรือกลับมาที่ /track)
+  useEffect(() => {
+    setSearchInput(code || '')
+  }, [code])
 
   const {
     data: ticket,
@@ -127,7 +134,7 @@ export const TrackTicketPage: React.FC = () => {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="ระบุรหัสงาน เช่น TK-SEED001"
+                placeholder={`ระบุรหัสงาน เช่น ${SAMPLE_TRACKING_CODES[0]}`}
                 className="w-full pl-11 pr-4 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-900/90 border border-zinc-700/80 text-white placeholder:text-zinc-500 rounded-2xl focus:ring-2 focus:ring-sky-500 outline-hidden"
               />
             </div>
@@ -142,7 +149,7 @@ export const TrackTicketPage: React.FC = () => {
           {!code && (
             <div className="pt-3 flex items-center justify-center gap-2 text-xs text-zinc-400">
               <span>รหัสตัวอย่าง:</span>
-              {['TK-SEED001', 'TK-SEED002'].map((sample) => (
+              {SAMPLE_TRACKING_CODES.map((sample) => (
                 <button
                   key={sample}
                   type="button"
@@ -177,7 +184,7 @@ export const TrackTicketPage: React.FC = () => {
           </div>
           <h2 className="text-lg font-extrabold text-zinc-900">ไม่พบข้อมูลรหัสงานซ่อมนี้</h2>
           <p className="text-zinc-500 text-xs mt-1 mb-6">
-            กรุณาตรวจสอบความถูกต้องของรหัสติดตามงาน หรือลองค้นหาด้วยรหัสตัวอย่าง TK-SEED001
+            กรุณาตรวจสอบความถูกต้องของรหัสติดตามงาน หรือลองค้นหาด้วยรหัสตัวอย่าง {SAMPLE_TRACKING_CODES[0]}
           </p>
           <Link
             to="/book"
@@ -351,7 +358,7 @@ export const TrackTicketPage: React.FC = () => {
 
                   <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100">
                     <span className="text-zinc-400 block mb-1">วันที่นัดหมาย</span>
-                    <span className="font-bold text-zinc-900">{ticket.preferredDate}</span>
+                    <span className="font-bold text-zinc-900">{formatDate(ticket.preferredDate)}</span>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100">

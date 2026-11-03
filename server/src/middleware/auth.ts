@@ -39,7 +39,7 @@ export async function authRequired(
   }
 
   try {
-    const payload = jwt.verify(token, secret) as { userId: string };
+    const payload = jwt.verify(token, secret, { algorithms: ["HS256"] }) as { userId: string };
 
     // ดึงข้อมูล user จาก DB เพื่อให้ได้ข้อมูลล่าสุด
     const user = await prisma.user.findUnique({
@@ -57,6 +57,39 @@ export async function authRequired(
   } catch (err) {
     next(err); // ส่งต่อให้ errorHandler จัดการ JWT errors
   }
+}
+
+// ===========================
+// Middleware ตรวจสอบ JWT แบบไม่บังคับ
+// - มี token ที่ถูกต้อง → ใส่ req.user (เพื่อแนบ userId กับเคส/ข้อความ)
+// - ไม่มี token หรือ token ไม่ถูกต้อง → ปล่อยผ่านเป็นผู้ใช้ทั่วไป (ไม่ error)
+// ===========================
+export async function optionalAuth(
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authHeader = req.headers.authorization;
+  const secret = process.env.JWT_SECRET;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ") || !secret) {
+    next();
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(authHeader.split(" ")[1], secret, {
+      algorithms: ["HS256"],
+    }) as { userId: string };
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, role: true, name: true, phone: true },
+    });
+    if (user) req.user = user;
+  } catch {
+    // token ไม่ถูกต้อง/หมดอายุ: ถือเป็นผู้ใช้ที่ไม่ได้ล็อกอิน
+  }
+  next();
 }
 
 // ===========================

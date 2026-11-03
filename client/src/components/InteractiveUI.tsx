@@ -64,8 +64,10 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
         transitionDuration: '750ms',
         transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
         opacity: isVisible ? 1 : 0,
-        filter: isVisible ? 'blur(0px)' : 'blur(8px)',
-        transform: isVisible ? 'translate3d(0, 0, 0) scale(1)' : getInitialTransform(),
+        // เมื่อแสดงแล้วใช้ none (ไม่ใช่ blur(0)/translate(0)) เพื่อไม่ให้ค้าง stacking context
+        // ที่ทำให้ตัวอักษรเบลอและกระทบ position: fixed ของลูกหลาน
+        filter: isVisible ? 'none' : 'blur(8px)',
+        transform: isVisible ? 'none' : getInitialTransform(),
       }}
       className={`transition-all will-change-[transform,opacity,filter] ${className}`}
     >
@@ -299,6 +301,7 @@ export const NumberTicker: React.FC<NumberTickerProps> = ({
   useEffect(() => {
     if (!hasAnimated) return
     let startTimestamp: number | null = null
+    let frameId = 0
     const startVal = 0
 
     const step = (timestamp: number) => {
@@ -308,11 +311,13 @@ export const NumberTicker: React.FC<NumberTickerProps> = ({
       const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
       setDisplayValue(Math.round(startVal + eased * (value - startVal)))
       if (progress < 1) {
-        window.requestAnimationFrame(step)
+        frameId = window.requestAnimationFrame(step)
       }
     }
 
-    window.requestAnimationFrame(step)
+    frameId = window.requestAnimationFrame(step)
+    // ยกเลิกแอนิเมชันเมื่อ unmount หรือค่าเปลี่ยน ไม่ให้ setState ค้างหลังคอมโพเนนต์หายไป
+    return () => window.cancelAnimationFrame(frameId)
   }, [value, duration, hasAnimated])
 
   return (

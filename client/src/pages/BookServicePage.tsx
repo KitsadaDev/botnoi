@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,6 +25,8 @@ import {
 } from 'lucide-react'
 import api from '../lib/api'
 import type { ApiResponse, Ticket, ServiceType } from '../lib/types'
+import { formatDate, getMinBookingDate } from '../lib/format'
+import { MAX_IMAGES, selectValidImages } from '../lib/images'
 import { ScrollReveal, Tilt3DCard, MagneticButton } from '../components/InteractiveUI'
 
 const bookingSchema = z.object({
@@ -35,11 +37,8 @@ const bookingSchema = z.object({
   symptom: z.string().min(5, 'กรุณาระบุอาการเบื้องต้นอย่างน้อย 5 ตัวอักษร'),
   preferredDate: z.string().min(1, 'กรุณาเลือกวันที่ต้องการรับบริการ'),
   customerName: z.string().min(2, 'กรุณาระบุชื่อ-นามสกุล'),
-  customerPhone: z
-    .string()
-    .min(9, 'กรุณาระบุเบอร์โทรศัพท์ที่ถูกต้อง')
-    .max(10, 'เบอร์โทรศัพท์ไม่เกิน 10 หลัก')
-    .regex(/^[0-9]+$/, 'เบอร์โทรศัพท์ต้องเป็นตัวเลขเท่านั้น'),
+  // ต้องตรงกับ server: ตัวเลข 10 หลัก ขึ้นต้นด้วย 0
+  customerPhone: z.string().regex(/^0[0-9]{9}$/, 'เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0'),
   address: z.string().min(10, 'กรุณาระบุที่อยู่และจุดสังเกตอย่างละเอียด'),
   lat: z.number().optional().nullable(),
   lng: z.number().optional().nullable(),
@@ -119,30 +118,44 @@ export const BookServicePage: React.FC = () => {
   const currentLat = watch('lat')
   const currentLng = watch('lng')
 
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const minDateString = tomorrow.toISOString().split('T')[0]
+  const minDateString = getMinBookingDate()
+
+  // เก็บ preview ล่าสุดไว้ใน ref เพื่อ revoke ตอน unmount (กัน memory leak ของ object URL)
+  const previewsRef = useRef<string[]>([])
+  useEffect(() => {
+    previewsRef.current = imagePreviews
+  }, [imagePreviews])
+  useEffect(() => {
+    return () => previewsRef.current.forEach((url) => URL.revokeObjectURL(url))
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return
-    const files = Array.from(e.target.files)
-    if (images.length + files.length > 5) {
-      alert('สามารถอัปโหลดรูปภาพได้สูงสุด 5 รูปเท่านั้น')
-      return
+    const input = e.target
+    const files = input.files ? Array.from(input.files) : []
+    // เคลียร์ค่า input เพื่อให้เลือกไฟล์เดิมซ้ำได้หลังลบออก
+    input.value = ''
+    if (files.length === 0) return
+
+    const { accepted, errors: rejected } = selectValidImages(images.length, files)
+    if (rejected.length > 0) {
+      alert(rejected.join('\n'))
     }
+    if (accepted.length === 0) return
 
-    const newFiles = [...images, ...files].slice(0, 5)
-    setImages(newFiles)
-
-    const newPreviews = newFiles.map((file) => URL.createObjectURL(file))
-    setImagePreviews(newPreviews)
+    setImages((prev) => [...prev, ...accepted])
+    setImagePreviews((prev) => [...prev, ...accepted.map((file) => URL.createObjectURL(file))])
   }
 
   const removeImage = (index: number) => {
-    const updatedImages = images.filter((_, i) => i !== index)
-    const updatedPreviews = imagePreviews.filter((_, i) => i !== index)
-    setImages(updatedImages)
-    setImagePreviews(updatedPreviews)
+    URL.revokeObjectURL(imagePreviews[index])
+    setImages((prev) => prev.filter((_, i) => i !== index))
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const clearImages = () => {
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url))
+    setImages([])
+    setImagePreviews([])
   }
 
   const handleGetLocation = () => {
@@ -158,9 +171,13 @@ export const BookServicePage: React.FC = () => {
         setIsGettingLocation(false)
       },
       (err) => {
+        // ห้ามเติมพิกัดปลอม — แจ้งผู้ใช้แล้วให้กรอกที่อยู่เองแทน
         console.warn('Geolocation error:', err)
-        setValue('lat', 13.7563)
-        setValue('lng', 100.5018)
+        alert(
+          err.code === err.PERMISSION_DENIED
+            ? 'ไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง กรุณากรอกที่อยู่ด้วยตนเอง'
+            : 'ไม่สามารถระบุตำแหน่งปัจจุบันได้ กรุณากรอกที่อยู่ด้วยตนเอง'
+        )
         setIsGettingLocation(false)
       },
       { timeout: 8000 }
@@ -286,7 +303,7 @@ export const BookServicePage: React.FC = () => {
               </div>
               <div className="flex justify-between py-1 border-b border-zinc-200/70">
                 <span className="text-zinc-500">วันนัดหมาย:</span>
-                <span className="font-semibold text-zinc-900">{createdTicket.preferredDate}</span>
+                <span className="font-semibold text-zinc-900">{formatDate(createdTicket.preferredDate)}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-zinc-200/70">
                 <span className="text-zinc-500">ผู้ติดต่อ:</span>
@@ -313,8 +330,7 @@ export const BookServicePage: React.FC = () => {
               <button
                 onClick={() => {
                   setCreatedTicket(null)
-                  setImages([])
-                  setImagePreviews([])
+                  clearImages()
                 }}
                 className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm bg-zinc-100 hover:bg-zinc-200 text-zinc-700 transition-colors cursor-pointer"
               >
@@ -629,7 +645,7 @@ export const BookServicePage: React.FC = () => {
               </span>
               <div>
                 <h2 className="text-base font-extrabold text-zinc-950">แนบรูปภาพและหมายเหตุเพิ่มเติม</h2>
-                <p className="text-xs text-zinc-400">อัปโหลดรูปแอร์หรือจุดติดตั้ง (สูงสุด 5 รูป)</p>
+                <p className="text-xs text-zinc-400">อัปโหลดรูปแอร์หรือจุดติดตั้ง (สูงสุด {MAX_IMAGES} รูป)</p>
               </div>
             </div>
 
@@ -641,13 +657,13 @@ export const BookServicePage: React.FC = () => {
                   multiple
                   onChange={handleImageChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={images.length >= 5}
+                  disabled={images.length >= MAX_IMAGES}
                 />
                 <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center mx-auto mb-3 text-zinc-500 group-hover:text-sky-600 group-hover:scale-110 transition">
                   <UploadCloud className="w-6 h-6" />
                 </div>
                 <p className="text-sm font-bold text-zinc-800">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</p>
-                <p className="text-xs text-zinc-400 mt-1">รองรับ JPG, PNG, WEBP (สูงสุด 5 รูป รูปละไม่เกิน 5MB)</p>
+                <p className="text-xs text-zinc-400 mt-1">รองรับ JPG, PNG, WEBP (สูงสุด {MAX_IMAGES} รูป รูปละไม่เกิน 5MB)</p>
               </div>
 
               {imagePreviews.length > 0 && (

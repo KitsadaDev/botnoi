@@ -1,10 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
-import { createTicketSchema, createMessageSchema } from "../validations/ticket.validation";
+import {
+  createTicketSchema,
+  createMessageSchema,
+  trackingCodeSchema,
+} from "../validations/ticket.validation";
 import { AuthRequest } from "../middleware/auth";
 import { TicketStatus } from "@prisma/client";
 import { customAlphabet } from "nanoid";
 import path from "path";
+import fs from "fs";
 
 // ===========================
 // nanoid: ตัวพิมพ์ใหญ่ + ตัวเลข 4 ตัว
@@ -13,24 +18,38 @@ const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
 
 // ===========================
 // สร้างรหัสติดตาม CC-YYYYMMDD-XXXX
-// ถ้าซ้ำจะถูกเรียกซ้ำจาก caller
+// สุ่มใหม่จนกว่าจะไม่ซ้ำ ถ้าชนครบทุกรอบจะ throw (ห้ามคืนรหัสที่ซ้ำ)
 // ===========================
-async function generateUniqueCode(): Promise<string> {
+const MAX_CODE_ATTEMPTS = 10;
+
+export async function generateUniqueCode(): Promise<string> {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
 
-  let code: string;
-  let attempts = 0;
-  do {
-    code = `CC-${y}${m}${d}-${nanoid()}`;
+  for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
+    const code = `CC-${y}${m}${d}-${nanoid()}`;
     const exists = await prisma.ticket.findUnique({ where: { trackingCode: code } });
-    if (!exists) break;
-    attempts++;
-  } while (attempts < 10); // ป้องกัน infinite loop
+    if (!exists) return code;
+  }
 
-  return code;
+  throw new Error("ไม่สามารถสร้างรหัสติดตามที่ไม่ซ้ำได้ กรุณาลองใหม่");
+}
+
+// ===========================
+// ลบไฟล์ที่ multer เขียนลงดิสก์ไปแล้ว (ใช้เมื่อสร้างเคสไม่สำเร็จ ไม่ให้ไฟล์ค้าง)
+// ===========================
+async function removeUploadedFiles(files: Express.Multer.File[]): Promise<void> {
+  await Promise.all(
+    files.map(async (f) => {
+      try {
+        if (f.path) await fs.promises.unlink(f.path);
+      } catch {
+        // ไฟล์อาจถูกลบไปแล้ว ไม่ต้องทำอะไร
+      }
+    })
+  );
 }
 
 // ===========================
@@ -49,6 +68,9 @@ export async function createTicket(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  // รูปที่อัปโหลด (multer ใส่ไว้ใน req.files) — อยู่นอก try เพื่อลบทิ้งได้เมื่อเกิด error
+  const files = (req.files as Express.Multer.File[]) ?? [];
+
   try {
     // Parse และ validate ข้อมูล (form-data ส่งเป็น string ทั้งหมด)
     const rawBody = {
@@ -59,8 +81,6 @@ export async function createTicket(
 
     const data = createTicketSchema.parse(rawBody);
 
-    // รูปที่อัปโหลด (multer ใส่ไว้ใน req.files)
-    const files = (req.files as Express.Multer.File[]) ?? [];
     const imageUrls = files.map((f) => `/uploads/${f.filename}`);
 
     // สร้าง trackingCode ที่ไม่ซ้ำ
@@ -101,15 +121,17 @@ export async function createTicket(
       return t;
     });
 
+    // ส่งข้อมูลเคสครบ (หน้ายืนยันของ client ต้องใช้แสดงสรุป) พร้อมรหัสติดตาม
     res.status(201).json({
       success: true,
       data: {
-        trackingCode: ticket.trackingCode,
-        id: ticket.id,
+        ...ticket,
         message: "ส่งเรื่องสำเร็จ กรุณาบันทึกรหัสติดตามของท่าน",
       },
     });
   } catch (err) {
+    // สร้างเคสไม่สำเร็จ → ลบรูปที่ถูกอัปโหลดไปแล้วไม่ให้ค้างในดิสก์
+    await removeUploadedFiles(files);
     next(err);
   }
 }
@@ -126,6 +148,13 @@ export async function getTicketByCode(
   try {
     const { code } = req.params;
 
+    // Validate รูปแบบรหัสติดตามเพื่อป้องกัน arbitrary query / code injection
+    const codeValidation = trackingCodeSchema.safeParse(code);
+    if (!codeValidation.success) {
+      res.status(400).json({ success: false, error: "รูปแบบรหัสติดตามไม่ถูกต้อง" });
+      return;
+    }
+
     const ticket = await prisma.ticket.findUnique({
       where: { trackingCode: code },
       include: {
@@ -140,11 +169,14 @@ export async function getTicketByCode(
       return;
     }
 
+    // ตัด userId ออกจาก public response เพื่อไม่ให้เปิดเผยรหัสผู้ใช้ภายใน
+    const { userId: _omittedUserId, ...safeTicket } = ticket;
+
     // ปิดบังเบอร์โทรบางส่วน
     res.json({
       success: true,
       data: {
-        ...ticket,
+        ...safeTicket,
         customerPhone: maskPhone(ticket.customerPhone),
         // ปิดบังเบอร์ช่างด้วย
         technician: ticket.technician
@@ -168,6 +200,12 @@ export async function getMessages(
 ): Promise<void> {
   try {
     const { code } = req.params;
+
+    const codeValidation = trackingCodeSchema.safeParse(code);
+    if (!codeValidation.success) {
+      res.status(400).json({ success: false, error: "รูปแบบรหัสติดตามไม่ถูกต้อง" });
+      return;
+    }
 
     // ตรวจสอบว่าเคสมีอยู่จริง
     const ticket = await prisma.ticket.findUnique({
@@ -209,6 +247,13 @@ export async function createCustomerMessage(
 ): Promise<void> {
   try {
     const { code } = req.params;
+
+    const codeValidation = trackingCodeSchema.safeParse(code);
+    if (!codeValidation.success) {
+      res.status(400).json({ success: false, error: "รูปแบบรหัสติดตามไม่ถูกต้อง" });
+      return;
+    }
+
     const data = createMessageSchema.parse(req.body);
 
     // ตรวจสอบว่าเคสมีอยู่จริง
