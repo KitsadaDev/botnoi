@@ -13,6 +13,9 @@ import {
   LayoutDashboard,
   Inbox,
   Activity,
+  PhoneCall,
+  Globe,
+  MessagesSquare,
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -193,44 +196,113 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* 21st.dev Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs text-zinc-400 font-semibold">เคสทั้งหมด</p>
-            <p className="text-3xl font-black text-zinc-950 mt-1">{countTotal}</p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-extrabold text-zinc-900">
+            สถิติใบงานแจ้งซ่อม (Ticket Status)
+          </h2>
+          <span className="text-[11px] font-semibold text-zinc-400">ข้อมูลเรียลไทม์จากระบบ</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">เคสทั้งหมด</p>
+              <p className="text-3xl font-black text-zinc-950 mt-1">{countTotal}</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center">
+              <Inbox className="w-5 h-5" />
+            </div>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center">
-            <Inbox className="w-5 h-5" />
+
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">ยังไม่ปิด / รอรับเรื่อง</p>
+              <p className="text-3xl font-black text-sky-600 mt-1">{countSubmitted}</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+              <Clock className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">กำลังปฏิบัติงาน</p>
+              <p className="text-3xl font-black text-amber-600 mt-1">{countInProgress}</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Activity className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">ปิดแล้ว / เสร็จสิ้น</p>
+              <p className="text-3xl font-black text-emerald-600 mt-1">{countCompleted}</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs text-zinc-400 font-semibold">รอรับเรื่อง (Submitted)</p>
-            <p className="text-3xl font-black text-sky-600 mt-1">{countSubmitted}</p>
+      {/* Contact Channels Summary (Mock Data) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-extrabold text-zinc-900">
+              จำนวนข้อความที่ติดต่อเข้ามา (แยกตามช่องทาง)
+            </h2>
+            <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase rounded-full bg-zinc-200/80 text-zinc-600">
+              Mock Data
+            </span>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
-            <Clock className="w-5 h-5" />
-          </div>
+          <span className="text-[11px] font-semibold text-zinc-400">ยอดสะสมประจำเดือนนี้</span>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs text-zinc-400 font-semibold">กำลังดำเนินการ</p>
-            <p className="text-3xl font-black text-amber-600 mt-1">{countInProgress}</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">ติดต่อเข้ามาทั้งหมด</p>
+              <p className="text-3xl font-black text-zinc-950 mt-1">311</p>
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1">+14% จากเดือนก่อน</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center">
+              <MessagesSquare className="w-5 h-5" />
+            </div>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Activity className="w-5 h-5" />
-          </div>
-        </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-xs text-zinc-400 font-semibold">เสร็จสิ้นแล้ว</p>
-            <p className="text-3xl font-black text-emerald-600 mt-1">{countCompleted}</p>
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">จากแชท (LINE / Chat)</p>
+              <p className="text-3xl font-black text-indigo-600 mt-1">148</p>
+              <p className="text-[11px] text-zinc-400 mt-1">คิดเป็น 47.6%</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5" />
+            </div>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-5 h-5" />
+
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">จากโทร (Call Center)</p>
+              <p className="text-3xl font-black text-rose-600 mt-1">68</p>
+              <p className="text-[11px] text-zinc-400 mt-1">คิดเป็น 21.9%</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <PhoneCall className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-xs text-zinc-400 font-semibold">จากเว็บ (Website)</p>
+              <p className="text-3xl font-black text-teal-600 mt-1">95</p>
+              <p className="text-[11px] text-zinc-400 mt-1">คิดเป็น 30.5%</p>
+            </div>
+            <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
+              <Globe className="w-5 h-5" />
+            </div>
           </div>
         </div>
       </div>
