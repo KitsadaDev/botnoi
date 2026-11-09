@@ -7,14 +7,21 @@ import {
 } from "../validations/ticket.validation";
 import { AuthRequest } from "../middleware/auth";
 import { TicketStatus } from "@prisma/client";
-import { customAlphabet } from "nanoid";
+import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 
 // ===========================
 // nanoid: ตัวพิมพ์ใหญ่ + ตัวเลข 4 ตัว
 // ===========================
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
+const CODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const nanoid = (length = 4): string => {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += CODE_ALPHABET[crypto.randomInt(0, CODE_ALPHABET.length)];
+  }
+  return result;
+};
 
 // ===========================
 // สร้างรหัสติดตาม CC-YYYYMMDD-XXXX
@@ -81,7 +88,12 @@ export async function createTicket(
 
     const data = createTicketSchema.parse(rawBody);
 
-    const imageUrls = files.map((f) => `/uploads/${f.filename}`);
+    const imageUrls = files.map((f) => {
+      if (f.buffer) {
+        return `data:${f.mimetype};base64,${f.buffer.toString("base64")}`;
+      }
+      return `/uploads/${f.filename}`;
+    });
 
     // สร้าง trackingCode ที่ไม่ซ้ำ
     const trackingCode = await generateUniqueCode();

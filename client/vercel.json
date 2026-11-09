@@ -1,0 +1,17 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://coolcare-api.vercel.app/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://coolcare-api.vercel.app/uploads/:path*"
+    },
+    {
+      "source": "/((?!api/|uploads/|assets/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+
