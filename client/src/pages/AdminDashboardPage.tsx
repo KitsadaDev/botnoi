@@ -17,6 +17,7 @@ import {
   Globe,
   MessagesSquare,
   FileDown,
+  FileSpreadsheet,
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -24,6 +25,7 @@ import type { ApiResponse, Ticket, Technician, Message, TicketStatus, TicketCoun
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
 import { formatDate } from '../lib/format'
 import { exportDashboardToPdf } from '../lib/pdfExport'
+import { exportDashboardToExcel } from '../lib/excelExport'
 import AdminNotificationBell from '../components/AdminNotificationBell'
 
 export const AdminDashboardPage: React.FC = () => {
@@ -194,6 +196,27 @@ export const AdminDashboardPage: React.FC = () => {
     }
   }
 
+  const handleExportExcel = () => {
+    try {
+      exportDashboardToExcel({
+        staffName: user.name,
+        staffRole: user.role,
+        selectedStatus,
+        searchQuery,
+        summary: {
+          total: countTotal,
+          submitted: countSubmitted,
+          inProgress: countInProgress,
+          completed: countCompleted,
+        },
+        tickets,
+      })
+    } catch (err) {
+      console.error('Failed to export Excel:', err)
+      alert('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel')
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
       {/* Top Console Header */}
@@ -222,6 +245,16 @@ export const AdminDashboardPage: React.FC = () => {
               openTicketModal(ticket)
             }}
           />
+
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            disabled={isTicketsLoading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 disabled:opacity-50 transition shadow-sm cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Export Excel</span>
+          </button>
 
           <button
             type="button"

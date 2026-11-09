@@ -7,6 +7,10 @@ import {
   dataUrlToUint8Array,
   buildPdfFromJpegPages,
 } from '../src/lib/pdfExport.ts'
+import {
+  getDashboardExcelFilename,
+  buildDashboardExcelBytes,
+} from '../src/lib/excelExport.ts'
 
 test('formatDate: ไม่แสดง ISO ดิบ และไม่เลื่อนวัน', () => {
   const text = formatDate('2026-11-05T00:00:00.000Z')
@@ -85,6 +89,61 @@ test('buildPdfFromJpegPages: สร้างโครงสร้างไฟล
   assert.ok(pdfText.includes('/Count 2'))
   assert.ok(pdfText.includes('/Filter /DCTDecode'))
   assert.ok(pdfText.trimEnd().endsWith('%%EOF'))
+})
+
+test('getDashboardExcelFilename: สร้างชื่อไฟล์ Excel (.xlsx) ตามวันที่ท้องถิ่น', () => {
+  assert.equal(
+    getDashboardExcelFilename(new Date(2026, 10, 9, 13, 30)),
+    'coolcare-dashboard-2026-11-09.xlsx'
+  )
+})
+
+test('buildDashboardExcelBytes: สร้างไฟล์ ZIP/OpenXML (.xlsx) ที่มี 2 แผ่นงานและข้อมูลครบถ้วน', () => {
+  const xlsxBytes = buildDashboardExcelBytes({
+    staffName: 'สมชาย ใจดี',
+    staffRole: 'ADMIN',
+    selectedStatus: '',
+    searchQuery: '',
+    summary: { total: 5, submitted: 1, inProgress: 2, completed: 2 },
+    tickets: [
+      {
+        id: 't1',
+        trackingCode: 'CC-20261109-001',
+        service: 'CLEANING',
+        brand: 'Daikin',
+        symptom: 'แอร์ไม่เย็น',
+        address: 'สุขุมวิท 101 กรุงเทพฯ',
+        lat: null,
+        lng: null,
+        preferredDate: '2026-11-10T00:00:00.000Z',
+        note: null,
+        status: 'IN_PROGRESS',
+        customerName: 'คุณลูกค้า ทดสอบ',
+        customerPhone: '0812345678',
+        userId: null,
+        technicianId: 'tech1',
+        technician: { id: 'tech1', name: 'ช่างเอก', phone: '0899999999', area: 'บางนา' },
+        images: [],
+        statusLogs: [],
+        createdAt: '2026-11-09T02:00:00.000Z',
+        updatedAt: '2026-11-09T02:00:00.000Z',
+      },
+    ],
+    exportedAt: new Date(2026, 10, 9, 13, 40),
+  })
+
+  // ตรวจสอบ ZIP signature ("PK\x03\x04")
+  assert.equal(xlsxBytes[0], 0x50)
+  assert.equal(xlsxBytes[1], 0x4b)
+  assert.equal(xlsxBytes[2], 0x03)
+  assert.equal(xlsxBytes[3], 0x04)
+
+  const content = new TextDecoder('utf-8').decode(xlsxBytes)
+  assert.ok(content.includes('xl/workbook.xml'))
+  assert.ok(content.includes('xl/worksheets/sheet1.xml'))
+  assert.ok(content.includes('xl/worksheets/sheet2.xml'))
+  assert.ok(content.includes('CC-20261109-001'))
+  assert.ok(content.includes('คุณลูกค้า ทดสอบ'))
 })
 
 
