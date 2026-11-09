@@ -19,6 +19,7 @@ import { useAuth } from '../context/AuthContext'
 import type { ApiResponse, Ticket, Technician, Message, TicketStatus, TicketCounts } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
 import { formatDate } from '../lib/format'
+import AdminNotificationBell from '../components/AdminNotificationBell'
 
 export const AdminDashboardPage: React.FC = () => {
   const { user, isStaff, isLoading: isAuthLoading } = useAuth()
@@ -93,7 +94,6 @@ export const AdminDashboardPage: React.FC = () => {
         status: newStatus,
         note: statusNote || undefined,
       }
-      // ส่ง null เมื่อเลือก "ไม่ระบุช่าง" เพื่อถอดช่างออกจากเคส (server ตีความ null = ยกเลิกการมอบหมาย)
       payload.technicianId = assignedTechId || null
       const res = await api.patch<ApiResponse<Ticket>>(`/admin/tickets/${selectedTicketId}`, payload)
       if (!res.data.success) throw new Error(res.data.error || 'อัปเดตไม่สำเร็จ')
@@ -141,7 +141,6 @@ export const AdminDashboardPage: React.FC = () => {
     return <Navigate to="/login" replace />
   }
 
-  // สถิติมาจาก server ซึ่งนับทุกเคส (ไม่หายไปเมื่อกรอง/ค้นหา)
   const countTotal = ticketCounts?.total ?? tickets.length
   const countSubmitted =
     ticketCounts?.SUBMITTED ?? tickets.filter((t) => t.status === 'SUBMITTED').length
@@ -183,13 +182,24 @@ export const AdminDashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => refetchTickets()}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-sm cursor-pointer self-start sm:self-auto"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>รีเฟรชรายการ</span>
-        </button>
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          <AdminNotificationBell
+            onNewTicketDetected={() => {
+              refetchTickets()
+            }}
+            onSelectTicket={(ticket) => {
+              openTicketModal(ticket)
+            }}
+          />
+
+          <button
+            onClick={() => refetchTickets()}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-sm cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>รีเฟรชรายการ</span>
+          </button>
+        </div>
       </div>
 
       {/* 21st.dev Metric Cards */}
