@@ -2,6 +2,11 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { formatDate, getMinBookingDate, toLocalDateInputValue, sanitizePhoneInput } from '../src/lib/format.ts'
 import { selectValidImages, MAX_IMAGES, MAX_IMAGE_BYTES } from '../src/lib/images.ts'
+import {
+  getDashboardPdfFilename,
+  dataUrlToUint8Array,
+  buildPdfFromJpegPages,
+} from '../src/lib/pdfExport.ts'
 
 test('formatDate: ไม่แสดง ISO ดิบ และไม่เลื่อนวัน', () => {
   const text = formatDate('2026-11-05T00:00:00.000Z')
@@ -59,6 +64,27 @@ test('sanitizePhoneInput: กรองเฉพาะตัวเลขและ
   assert.equal(sanitizePhoneInput('081-234-5678'), '0812345678', 'ต้องตัดขีดและอักขระพิเศษออก')
   assert.equal(sanitizePhoneInput('abc081def2345678'), '0812345678', 'ต้องตัดตัวอักษรออก')
   assert.equal(sanitizePhoneInput(''), '')
+})
+
+test('getDashboardPdfFilename: สร้างชื่อไฟล์ PDF ตามวันที่ท้องถิ่น', () => {
+  assert.equal(
+    getDashboardPdfFilename(new Date(2026, 10, 9, 13, 30)),
+    'coolcare-dashboard-2026-11-09.pdf'
+  )
+})
+
+test('buildPdfFromJpegPages: สร้างโครงสร้างไฟล์ PDF-1.4 ที่ถูกต้องและรองรับหลายหน้า', () => {
+  const fakeJpeg = dataUrlToUint8Array('data:image/jpeg;base64,/9j/4AAQSkZJRg==')
+  const pdfBytes = buildPdfFromJpegPages([
+    { jpegBytes: fakeJpeg, widthPx: 1240, heightPx: 1754 },
+    { jpegBytes: fakeJpeg, widthPx: 1240, heightPx: 1754 },
+  ])
+  const pdfText = new TextDecoder('latin1').decode(pdfBytes)
+  assert.ok(pdfText.startsWith('%PDF-1.4\n'))
+  assert.ok(pdfText.includes('/Type /Catalog'))
+  assert.ok(pdfText.includes('/Count 2'))
+  assert.ok(pdfText.includes('/Filter /DCTDecode'))
+  assert.ok(pdfText.trimEnd().endsWith('%%EOF'))
 })
 
 

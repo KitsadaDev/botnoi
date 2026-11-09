@@ -16,12 +16,14 @@ import {
   PhoneCall,
   Globe,
   MessagesSquare,
+  FileDown,
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import type { ApiResponse, Ticket, Technician, Message, TicketStatus, TicketCounts } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
 import { formatDate } from '../lib/format'
+import { exportDashboardToPdf } from '../lib/pdfExport'
 import AdminNotificationBell from '../components/AdminNotificationBell'
 
 export const AdminDashboardPage: React.FC = () => {
@@ -31,6 +33,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
 
   const [newStatus, setNewStatus] = useState<TicketStatus>('RECEIVED')
   const [statusNote, setStatusNote] = useState('')
@@ -166,6 +169,31 @@ export const AdminDashboardPage: React.FC = () => {
     sendStaffMessageMutation.mutate(staffMessageText.trim())
   }
 
+  const handleExportPdf = async () => {
+    if (isExportingPdf) return
+    setIsExportingPdf(true)
+    try {
+      await exportDashboardToPdf({
+        staffName: user.name,
+        staffRole: user.role,
+        selectedStatus,
+        searchQuery,
+        summary: {
+          total: countTotal,
+          submitted: countSubmitted,
+          inProgress: countInProgress,
+          completed: countCompleted,
+        },
+        tickets,
+      })
+    } catch (err) {
+      console.error('Failed to export PDF:', err)
+      alert('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF')
+    } finally {
+      setIsExportingPdf(false)
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 space-y-8">
       {/* Top Console Header */}
@@ -185,7 +213,7 @@ export const AdminDashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
           <AdminNotificationBell
             onNewTicketDetected={() => {
               refetchTickets()
@@ -196,6 +224,17 @@ export const AdminDashboardPage: React.FC = () => {
           />
 
           <button
+            type="button"
+            onClick={handleExportPdf}
+            disabled={isExportingPdf || isTicketsLoading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 disabled:opacity-50 transition shadow-sm cursor-pointer"
+          >
+            <FileDown className="w-3.5 h-3.5 text-sky-400" />
+            <span>{isExportingPdf ? 'กำลังสร้าง PDF...' : 'Export PDF'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => refetchTickets()}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-sm cursor-pointer"
           >
