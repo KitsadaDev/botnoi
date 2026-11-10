@@ -352,22 +352,40 @@ export async function createTicketFromBotnoi(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { customer_name, phone, info, date, ticket: botTicketCode } = req.body;
+    console.log("📥 [Botnoi Webhook] ข้อมูลที่ส่งเข้ามา:", req.body);
 
-    // 1. จัดรูปแบบเบอร์โทรให้เหลือแต่ตัวเลข 10 หลัก
-    const cleanPhone = String(phone || "0000000000").replace(/\D/g, "").slice(0, 10) || "0000000000";
+    const { customer_name, phone, info, date, ticket: botTicketCode } = req.body || {};
 
-    // 2. ใช้รหัสที่บอทสร้างมา หรือถ้าไม่มีให้ระบบสุ่มให้ใหม่
-    let trackingCode = botTicketCode ? String(botTicketCode).trim().toUpperCase() : await generateUniqueCode();
+    // 1. เช็กว่าค่าที่ส่งมาติดเครื่องหมาย <...> หรือว่างเปล่าไหม
+    const isPlaceholder = (val: unknown) =>
+      !val || String(val).includes("<") || String(val).includes(">");
+
+    const cleanName = isPlaceholder(customer_name)
+      ? "ลูกค้าแจ้งผ่าน AI Chatbot"
+      : String(customer_name).trim();
+
+    const digitsOnly = String(phone || "").replace(/\D/g, "").slice(0, 10);
+    const cleanPhone = digitsOnly.length === 10 ? digitsOnly : "0800000000";
+
+    const cleanInfo = isPlaceholder(info)
+      ? "แจ้งซ่อมผ่านแชทบอท Plasom"
+      : String(info).trim();
+
+    const cleanDateText = isPlaceholder(date) ? "ตามนัดหมายในแชท" : String(date).trim();
+
+    // 2. สร้างรหัสติดตาม: ถ้าบอทส่งรหัสจริงมาและยังไม่ซ้ำใน DB ให้ใช้รหัสของบอท
+    //    แต่ถ้าเป็นคำว่า <ticket> หรือซ้ำกับเคสเดิม ให้สุ่มรหัสใหม่ทันที (เพื่อให้สร้างเคสใหม่เข้า Admin เสมอ!)
+    let trackingCode = !isPlaceholder(botTicketCode)
+      ? String(botTicketCode).trim().toUpperCase()
+      : await generateUniqueCode();
+
     const existing = await prisma.ticket.findUnique({ where: { trackingCode } });
     if (existing) {
-      // ถ้ารหัสมีอยู่แล้ว ให้คืนค่าเดิมกลับไปเลย (กันบอทยิงซ้ำ)
-      res.status(200).json({ success: true, data: existing });
-      return;
+      trackingCode = await generateUniqueCode();
     }
 
-    // 3. แปลงวันที่นัดหมาย (ถ้าบอทส่งมาเป็นข้อความ เช่น "พรุ่งนี้ 10 โมง" ให้ตั้งเป็นวันพรุ่งนี้ใน DB แล้วเก็บข้อความจริงไว้ใน note)
-    const parsedDate = date ? new Date(date) : new Date(Date.now() + 86400000);
+    // 3. แปลงวันที่นัดหมาย
+    const parsedDate = !isPlaceholder(date) ? new Date(String(date)) : new Date(Date.now() + 86400000);
     const preferredDate = isNaN(parsedDate.getTime())
       ? new Date(Date.now() + 86400000)
       : parsedDate;
@@ -377,13 +395,13 @@ export async function createTicketFromBotnoi(
       const t = await tx.ticket.create({
         data: {
           trackingCode,
-          service: "REPAIR", // ค่าเริ่มต้นสำหรับแจ้งซ่อมผ่านบอท
+          service: "REPAIR",
           brand: "แจ้งผ่าน AI Chatbot",
-          symptom: String(info || "แจ้งซ่อมผ่านแชทบอท Plasom"),
-          address: String(info || "รอเจ้าหน้าที่ติดต่อสอบถามรายละเอียดเพิ่มเติม"),
+          symptom: cleanInfo,
+          address: cleanInfo,
           preferredDate,
-          note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${date || "-"}`,
-          customerName: String(customer_name || "ลูกค้าจากแชทบอท"),
+          note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${cleanDateText}`,
+          customerName: cleanName,
           customerPhone: cleanPhone,
         },
       });
@@ -406,6 +424,8 @@ export async function createTicketFromBotnoi(
       data: createdTicket,
     });
   } catch (err) {
+    console.error("❌ [Botnoi Webhook Error]:", err);
     next(err);
   }
 }
+
