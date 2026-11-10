@@ -255,7 +255,7 @@ export const BookServicePage: React.FC = () => {
             </span>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-950 mb-2 tracking-tight">
-              ขอบคุณที่ไว้วางใจ CoolCare Pro
+              ขอบคุณที่ไว้วางใจ Plasom
             </h1>
 
             <p className="text-zinc-500 text-sm max-w-md mx-auto mb-8">

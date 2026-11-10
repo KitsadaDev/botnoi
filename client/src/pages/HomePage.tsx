@@ -733,7 +733,7 @@ export const HomePage: React.FC = () => {
                 </div>
                 <p className="text-xs font-mono text-zinc-300 bg-zinc-950/80 p-3 rounded-xl border border-zinc-800">
                   {isPlayingVoice
-                    ? '🔊 AI Voicebot: "สวัสดีค่ะ ศูนย์บริการ CoolCare Pro ยินดีให้บริการค่ะ วันนี้ต้องการแจ้งซ่อมแอร์ หรือตรวจสอบสถานะใบงานคะ?"'
+                    ? '🔊 AI Voicebot: "สวัสดีค่ะ ศูนย์บริการ Plasom ยินดีให้บริการค่ะ วันนี้ต้องการแจ้งซ่อมแอร์ หรือตรวจสอบสถานะใบงานคะ?"'
                     : 'กดปุ่มด้านล่างเพื่อจำลองการสนทนาผ่านเสียงกับ AI Voicebot'}
                 </p>
                 <button
@@ -1106,7 +1106,7 @@ export const HomePage: React.FC = () => {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-200/70 text-zinc-800 text-xs font-bold mb-3">
             <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span>WHY COOLCARE PRO</span>
+            <span>WHY PLASOM</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
             ยกระดับประสบการณ์ซ่อมแอร์ยุคดิจิทัล
@@ -1180,7 +1180,7 @@ export const HomePage: React.FC = () => {
 
               <div className="mt-6 space-y-2.5 bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 text-xs">
                 <div className="flex flex-col items-start">
-                  <span className="text-[10px] text-zinc-500 mb-1">ช่างสมชาย (CoolCare Pro)</span>
+                  <span className="text-[10px] text-zinc-500 mb-1">ช่างสมชาย (Plasom)</span>
                   <div className="bg-zinc-800 text-zinc-200 px-3.5 py-2 rounded-2xl rounded-tl-xs">
                     กำลังเดินทางเข้าไปครับ ถึงประมาณ 10:30 น. ครับผม
                   </div>

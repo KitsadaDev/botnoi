@@ -121,10 +121,7 @@ export const Navbar: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-lg tracking-tight text-zinc-950">CoolCare</span>
-                  <span className="font-mono font-bold text-[10px] uppercase px-1.5 py-0.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-md shadow-xs">
-                    PRO
-                  </span>
+                  <span className="font-extrabold text-lg tracking-tight text-zinc-950">Plasom</span>
                 </div>
                 <p className="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">
                   SMART AC SERVICE

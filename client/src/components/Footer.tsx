@@ -18,10 +18,7 @@ export const Footer: React.FC = () => {
                 <Wrench className="w-4 h-4" />
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight text-white">CoolCare</span>
-                <span className="font-mono font-bold text-[10px] uppercase px-1.5 py-0.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded">
-                  PRO
-                </span>
+                <span className="font-extrabold text-xl tracking-tight text-white">Plasom</span>
               </div>
             </Link>
 
@@ -120,7 +117,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-sky-400 shrink-0" />
-                <span className="font-mono text-zinc-200">support@coolcare.pro</span>
+                <span className="font-mono text-zinc-200">support@plasom.com</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-sky-400 shrink-0" />
@@ -132,7 +129,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-zinc-900 text-xs text-zinc-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© {new Date().getFullYear()} CoolCare Pro. Crafted with modern 21st.dev UI architecture.</p>
+          <p>© {new Date().getFullYear()} Plasom. Crafted with modern 21st.dev UI architecture.</p>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full text-[11px]">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />

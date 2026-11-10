@@ -483,7 +483,7 @@ export const TrackTicketPage: React.FC = () => {
                             {isStaff
                               ? msg.user?.name
                                 ? `เจ้าหน้าที่: ${msg.user.name}`
-                                : 'เจ้าหน้าที่ CoolCare'
+                                : 'เจ้าหน้าที่ Plasom'
                               : 'คุณ'}
                           </span>
                           <div

@@ -44,7 +44,7 @@ const DEFAULT_CHANNELS: DashboardContactChannelSummary = {
  * สร้างชื่อไฟล์ PDF สำหรับรายงาน Dashboard ตามวันที่ท้องถิ่น
  */
 export function getDashboardPdfFilename(now: Date = new Date()): string {
-  return `coolcare-dashboard-${toLocalDateInputValue(now)}.pdf`
+  return `plasom-dashboard-${toLocalDateInputValue(now)}.pdf`
 }
 
 /**
@@ -304,7 +304,7 @@ export async function exportDashboardToPdf(params: DashboardPdfExportParams): Pr
     ctx.font = `700 28px ${FONT_SANS}`
     ctx.fillStyle = '#ffffff'
     ctx.fillText(
-      'CoolCare Pro — รายงานศูนย์ควบคุมและจ่ายงานซ่อม',
+      'Plasom — รายงานศูนย์ควบคุมและจ่ายงานซ่อม',
       MARGIN_X + 32,
       y + 84
     )
@@ -558,7 +558,7 @@ export async function exportDashboardToPdf(params: DashboardPdfExportParams): Pr
     const footerY = PAGE_H - 42
     ctx.font = `500 13px ${FONT_SANS}`
     ctx.fillStyle = '#a1a1aa'
-    ctx.fillText('เอกสารสร้างจากระบบ CoolCare Pro (Staff Portal)', MARGIN_X, footerY)
+    ctx.fillText('เอกสารสร้างจากระบบ Plasom (Staff Portal)', MARGIN_X, footerY)
 
     ctx.textAlign = 'right'
     ctx.fillText(`หน้า ${pageIndex + 1} / ${totalPages}`, PAGE_W - MARGIN_X, footerY)
