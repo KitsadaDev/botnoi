@@ -341,3 +341,71 @@ export const getMyTickets = async (req: any, res: any) => {
     return res.status(500).json({ success: false, error: 'ไม่สามารถดึงข้อมูลประวัติการแจ้งซ่อมได้' })
   }
 }
+
+// ===========================
+// POST /api/tickets/botnoi-webhook
+// รับข้อมูลแจ้งซ่อมจาก Botnoi AI Agent (<customer_name>, <phone>, <info>, <date>, <ticket>)
+// ===========================
+export async function createTicketFromBotnoi(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { customer_name, phone, info, date, ticket: botTicketCode } = req.body;
+
+    // 1. จัดรูปแบบเบอร์โทรให้เหลือแต่ตัวเลข 10 หลัก
+    const cleanPhone = String(phone || "0000000000").replace(/\D/g, "").slice(0, 10) || "0000000000";
+
+    // 2. ใช้รหัสที่บอทสร้างมา หรือถ้าไม่มีให้ระบบสุ่มให้ใหม่
+    let trackingCode = botTicketCode ? String(botTicketCode).trim().toUpperCase() : await generateUniqueCode();
+    const existing = await prisma.ticket.findUnique({ where: { trackingCode } });
+    if (existing) {
+      // ถ้ารหัสมีอยู่แล้ว ให้คืนค่าเดิมกลับไปเลย (กันบอทยิงซ้ำ)
+      res.status(200).json({ success: true, data: existing });
+      return;
+    }
+
+    // 3. แปลงวันที่นัดหมาย (ถ้าบอทส่งมาเป็นข้อความ เช่น "พรุ่งนี้ 10 โมง" ให้ตั้งเป็นวันพรุ่งนี้ใน DB แล้วเก็บข้อความจริงไว้ใน note)
+    const parsedDate = date ? new Date(date) : new Date(Date.now() + 86400000);
+    const preferredDate = isNaN(parsedDate.getTime())
+      ? new Date(Date.now() + 86400000)
+      : parsedDate;
+
+    // 4. บันทึกลง Database พร้อมสร้าง StatusLog แรก
+    const createdTicket = await prisma.$transaction(async (tx) => {
+      const t = await tx.ticket.create({
+        data: {
+          trackingCode,
+          service: "REPAIR", // ค่าเริ่มต้นสำหรับแจ้งซ่อมผ่านบอท
+          brand: "แจ้งผ่าน AI Chatbot",
+          symptom: String(info || "แจ้งซ่อมผ่านแชทบอท Plasom"),
+          address: String(info || "รอเจ้าหน้าที่ติดต่อสอบถามรายละเอียดเพิ่มเติม"),
+          preferredDate,
+          note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${date || "-"}`,
+          customerName: String(customer_name || "ลูกค้าจากแชทบอท"),
+          customerPhone: cleanPhone,
+        },
+      });
+
+      await tx.statusLog.create({
+        data: {
+          ticketId: t.id,
+          status: TicketStatus.SUBMITTED,
+          note: "รับเรื่องอัตโนมัติผ่าน Plasom AI Agent (Botnoi.ai)",
+        },
+      });
+
+      return t;
+    });
+
+    res.status(201).json({
+      success: true,
+      trackingCode: createdTicket.trackingCode,
+      message: "บันทึกใบงานจาก Botnoi AI สำเร็จ",
+      data: createdTicket,
+    });
+  } catch (err) {
+    next(err);
+  }
+}

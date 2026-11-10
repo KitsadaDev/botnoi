@@ -13,7 +13,8 @@ export const thaiPhoneSchema = z
 // ===========================
 export const trackingCodeSchema = z
   .string()
-  .regex(/^CC-[0-9]{8}-[A-Z0-9]{4,}$/, "รูปแบบรหัสติดตามไม่ถูกต้อง");
+  .regex(/^(CC-[0-9]{8}-[A-Z0-9]{4,}|TCK-[A-Z0-9-]+)$/i, "รูปแบบรหัสติดตามไม่ถูกต้อง");
+
 
 // ===========================
 // Schema สำหรับสร้าง Ticket (POST /api/tickets)

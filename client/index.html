@@ -17,5 +17,39 @@
   <body class="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-orange-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+        <!-- =========================== -->
+    <!-- Botnoi AI Customer Chat Widget (Plasom) -->
+    <!-- =========================== -->
+    <div id="bn-root"></div>
+    <script>
+      window.addEventListener('load', function () {
+        if (window.BN) {
+          window.BN.init({ version: '1.0' });
+        }
+      });
+    </script>
+    <script>
+      (function (d, s, id) {
+        var js,
+          bjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s);
+        js.id = id;
+        js.src = 'https://console.botnoi.ai/customerchat/index.js';
+        bjs.parentNode.insertBefore(js, bjs);
+      })(document, 'script', 'bn-jssdk');
+    </script>
+    <div
+      class="bn-customerchat"
+      bot_id="6af1990838450ceff91278ac"
+      bot_logo=""
+      bot_name="Plasom AI Assistant"
+      theme_color="#ea580c"
+      locale="th"
+      logged_in_greeting="สวัสดีค่ะ! น้อง Plasom ยินดีให้บริการ ปรึกษาอาการเสียหรือแจ้งซ่อมได้เลยนะคะ"
+      greeting_message="สวัสดีค่ะ แจ้งอาการเสียของอุปกรณ์ หรือพิมพ์รหัสติดตามงานซ่อมได้เลยค่ะ"
+      default_open="false"
+    ></div>
+
   </body>
 </html>

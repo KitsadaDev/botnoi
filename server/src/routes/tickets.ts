@@ -6,6 +6,7 @@ import {
   getMessages,
   createCustomerMessage,
   getMyTickets,
+  createTicketFromBotnoi,
 } from "../controllers/ticket.controller";
 import { uploadImages } from "../middleware/upload";
 import { optionalAuth, authRequired } from "../middleware/auth";
@@ -59,6 +60,10 @@ router.post(
   },
   createTicket
 );
+
+// POST /api/tickets/botnoi-webhook (สำหรับให้ Botnoi AI Agent ยิงมาเปิดเคส)
+router.post("/botnoi-webhook", createTicketFromBotnoi);
+
 
 // ==========================================
 // GET /api/tickets/my (ต้องอยู่ก่อน /:code เสมอ)
