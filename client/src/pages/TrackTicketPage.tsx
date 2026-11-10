@@ -112,10 +112,10 @@ export const TrackTicketPage: React.FC = () => {
       {/* 21st.dev Command Search Header */}
       <div className="bg-zinc-950 text-white rounded-3xl p-7 sm:p-10 border border-zinc-800 shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-dark opacity-50 pointer-events-none" />
-        <div className="absolute -top-24 right-1/4 w-72 h-72 rounded-full bg-sky-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 right-1/4 w-72 h-72 rounded-full bg-orange-500/20 blur-3xl pointer-events-none" />
 
         <div className="max-w-2xl mx-auto text-center space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-sky-400 text-xs font-mono font-semibold">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-orange-400 text-xs font-mono font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>REAL-TIME TRACKING</span>
           </div>
@@ -135,12 +135,12 @@ export const TrackTicketPage: React.FC = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder={`ระบุรหัสงาน เช่น ${SAMPLE_TRACKING_CODES[0]}`}
-                className="w-full pl-11 pr-4 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-900/90 border border-zinc-700/80 text-white placeholder:text-zinc-500 rounded-2xl focus:ring-2 focus:ring-sky-500 outline-hidden"
+                className="w-full pl-11 pr-4 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-900/90 border border-zinc-700/80 text-white placeholder:text-zinc-500 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-hidden"
               />
             </div>
             <button
               type="submit"
-              className="px-7 py-3.5 rounded-2xl font-bold text-sm bg-sky-400 hover:bg-sky-300 text-zinc-950 shadow-lg shadow-sky-500/20 transition-all cursor-pointer"
+              className="px-7 py-3.5 rounded-2xl font-bold text-sm bg-orange-400 hover:bg-orange-300 text-zinc-950 shadow-lg shadow-orange-500/20 transition-all cursor-pointer"
             >
               ค้นหาสถานะ
             </button>
@@ -157,7 +157,7 @@ export const TrackTicketPage: React.FC = () => {
                     setSearchInput(sample)
                     navigate(`/track/${sample}`)
                   }}
-                  className="font-mono text-sky-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                  className="font-mono text-orange-400 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
                 >
                   {sample}
                   <ArrowUpRight className="w-3 h-3" />
@@ -171,7 +171,7 @@ export const TrackTicketPage: React.FC = () => {
       {/* Loading State */}
       {isTicketLoading && (
         <div className="bg-white rounded-3xl p-12 text-center border border-zinc-200/90 shadow-xs">
-          <RefreshCw className="w-8 h-8 text-sky-600 animate-spin mx-auto mb-3" />
+          <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto mb-3" />
           <p className="text-zinc-600 text-sm font-bold">กำลังซิงค์ข้อมูลสถานะงานซ่อม...</p>
         </div>
       )}
@@ -254,14 +254,14 @@ export const TrackTicketPage: React.FC = () => {
                               isCompleted
                                 ? 'bg-emerald-500 text-white'
                                 : isCurrent
-                                ? 'bg-sky-400 text-zinc-950'
+                                ? 'bg-orange-400 text-zinc-950'
                                 : 'bg-zinc-200 text-zinc-500'
                             }`}
                           >
                             {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : `0${idx + 1}`}
                           </span>
                           {isCurrent && (
-                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 font-semibold">
+                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-semibold">
                               ACTIVE
                             </span>
                           )}
@@ -305,12 +305,12 @@ export const TrackTicketPage: React.FC = () => {
               {ticket.technician ? (
                 <div className="bg-zinc-950 text-white rounded-3xl p-6 shadow-xl border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center font-black text-xl text-zinc-950 shadow-md">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center font-black text-xl text-zinc-950 shadow-md">
                       {ticket.technician.name.slice(0, 1)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold">
+                        <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-semibold">
                           ASSIGNED TECHNICIAN
                         </span>
                         <span className="text-xs text-zinc-400">• {ticket.technician.area}</span>
@@ -321,7 +321,7 @@ export const TrackTicketPage: React.FC = () => {
 
                   <a
                     href={`tel:${ticket.technician.phone}`}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-sky-400 hover:bg-sky-300 text-zinc-950 font-bold text-xs transition shadow-sm"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-orange-400 hover:bg-orange-300 text-zinc-950 font-bold text-xs transition shadow-sm"
                   >
                     <Phone className="w-3.5 h-3.5" />
                     <span className="font-mono">{ticket.technician.phone}</span>
@@ -339,7 +339,7 @@ export const TrackTicketPage: React.FC = () => {
               {/* Equipment & Location Details */}
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-zinc-200/90 shadow-xs space-y-5">
                 <h3 className="font-extrabold text-base text-zinc-950 pb-3 border-b border-zinc-100 flex items-center gap-2">
-                  <Wrench className="w-4 h-4 text-sky-600" />
+                  <Wrench className="w-4 h-4 text-orange-600" />
                   <span>ข้อมูลการแจ้งซ่อมและสถานที่</span>
                 </h3>
 
@@ -379,11 +379,11 @@ export const TrackTicketPage: React.FC = () => {
                 <div>
                   <span className="text-zinc-400 text-xs font-semibold block mb-1.5">สถานที่ให้บริการ</span>
                   <div className="flex items-start gap-2.5 text-xs text-zinc-800 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-                    <MapPin className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                    <MapPin className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="leading-relaxed">{ticket.address}</p>
                       {ticket.lat && ticket.lng && (
-                        <p className="text-[11px] font-mono text-sky-600 font-semibold mt-1">
+                        <p className="text-[11px] font-mono text-orange-600 font-semibold mt-1">
                           GPS: {ticket.lat}, {ticket.lng}
                         </p>
                       )}
@@ -416,7 +416,7 @@ export const TrackTicketPage: React.FC = () => {
               {/* Status Timeline History */}
               <div className="bg-white rounded-3xl p-6 sm:p-7 border border-zinc-200/90 shadow-xs">
                 <h3 className="font-extrabold text-base text-zinc-950 pb-3 border-b border-zinc-100 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-sky-600" />
+                  <Clock className="w-4 h-4 text-orange-600" />
                   <span>ประวัติการอัปเดตสถานะ (Timeline)</span>
                 </h3>
 
@@ -424,7 +424,7 @@ export const TrackTicketPage: React.FC = () => {
                   {ticket.statusLogs && ticket.statusLogs.length > 0 ? (
                     ticket.statusLogs.map((log) => (
                       <div key={log.id} className="flex gap-3.5 text-xs">
-                        <div className="w-2.5 h-2.5 rounded-full bg-sky-500 mt-1.5 shrink-0 ring-4 ring-sky-50" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-orange-500 mt-1.5 shrink-0 ring-4 ring-orange-50" />
                         <div className="flex-1 pb-4 border-b border-zinc-100">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-zinc-900">
@@ -450,7 +450,7 @@ export const TrackTicketPage: React.FC = () => {
               <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-sm flex flex-col h-[560px] overflow-hidden">
                 <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-950 text-white">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                    <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <div>
@@ -516,7 +516,7 @@ export const TrackTicketPage: React.FC = () => {
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                       placeholder="พิมพ์ข้อความสอบถามที่นี่..."
-                      className="flex-1 px-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+                      className="flex-1 px-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
                     />
                     <button
                       type="submit"

@@ -26,7 +26,7 @@ export default function App() {
       <AuthProvider>
         <ScrollToTopOnNavigate />
         <ScrollProgressAndFab />
-        <div className="min-h-screen flex flex-col bg-[#fafafa] bg-grid-light font-sans text-zinc-900 selection:bg-sky-500 selection:text-white">
+        <div className="min-h-screen flex flex-col bg-[#fafafa] bg-grid-light font-sans text-zinc-900 selection:bg-orange-500 selection:text-white">
           <Navbar />
           <main className="flex-1">
             <Routes>

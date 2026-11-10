@@ -139,7 +139,7 @@ export const AdminDashboardPage: React.FC = () => {
   if (isAuthLoading) {
     return (
       <div className="py-24 text-center">
-        <RefreshCw className="w-8 h-8 text-sky-600 animate-spin mx-auto mb-2" />
+        <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto mb-2" />
         <p className="text-zinc-500 text-sm">กำลังตรวจสอบสิทธิ์...</p>
       </div>
     )
@@ -223,7 +223,7 @@ export const AdminDashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-950 text-white p-6 sm:p-8 rounded-3xl border border-zinc-800 shadow-xl">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
-            <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-bold">
+            <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">
               <LayoutDashboard className="w-3.5 h-3.5" />
               {user.role} CONSOLE
             </span>
@@ -262,14 +262,14 @@ export const AdminDashboardPage: React.FC = () => {
             disabled={isExportingPdf || isTicketsLoading}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 disabled:opacity-50 transition shadow-sm cursor-pointer"
           >
-            <FileDown className="w-3.5 h-3.5 text-sky-400" />
+            <FileDown className="w-3.5 h-3.5 text-orange-400" />
             <span>{isExportingPdf ? 'กำลังสร้าง PDF...' : 'Export PDF'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => refetchTickets()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold text-zinc-950 bg-orange-400 hover:bg-orange-300 transition shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>รีเฟรชรายการ</span>
@@ -299,9 +299,9 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-xs flex items-center justify-between">
             <div>
               <p className="text-xs text-zinc-400 font-semibold">ยังไม่ปิด / รอรับเรื่อง</p>
-              <p className="text-3xl font-black text-sky-600 mt-1">{countSubmitted}</p>
+              <p className="text-3xl font-black text-orange-600 mt-1">{countSubmitted}</p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center">
               <Clock className="w-5 h-5" />
             </div>
           </div>
@@ -420,7 +420,7 @@ export const AdminDashboardPage: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="ค้นหารหัสงาน, ชื่อลูกค้า, เบอร์โทร..."
-            className="w-full pl-10 pr-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+            className="w-full pl-10 pr-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
           />
         </div>
       </div>
@@ -444,7 +444,7 @@ export const AdminDashboardPage: React.FC = () => {
               {isTicketsLoading ? (
                 <tr>
                   <td colSpan={7} className="text-center py-14">
-                    <RefreshCw className="w-6 h-6 text-sky-600 animate-spin mx-auto mb-2" />
+                    <RefreshCw className="w-6 h-6 text-orange-600 animate-spin mx-auto mb-2" />
                     <span>กำลังโหลดรายการงานซ่อม...</span>
                   </td>
                 </tr>
@@ -491,7 +491,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => openTicketModal(t)}
-                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-zinc-950 hover:bg-sky-600 transition shadow-2xs cursor-pointer"
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-zinc-950 hover:bg-orange-600 transition shadow-2xs cursor-pointer"
                       >
                         จัดการเคส
                       </button>
@@ -541,7 +541,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <span className="font-bold text-zinc-800">ที่อยู่:</span> {activeTicket.address}
                   </p>
                   {activeTicket.lat && activeTicket.lng && (
-                    <p className="text-[11px] font-mono text-sky-600 mt-1">
+                    <p className="text-[11px] font-mono text-orange-600 mt-1">
                       GPS: {activeTicket.lat}, {activeTicket.lng}
                     </p>
                   )}
@@ -583,7 +583,7 @@ export const AdminDashboardPage: React.FC = () => {
               {/* Update Status & Technician Form */}
               <div className="bg-zinc-950 text-white p-6 rounded-3xl border border-zinc-800 space-y-4">
                 <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                  <UserCheck className="w-4 h-4 text-sky-400" />
+                  <UserCheck className="w-4 h-4 text-orange-400" />
                   <span>อัปเดตสถานะและมอบหมายช่างเทคนิค</span>
                 </h3>
 
@@ -593,7 +593,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <select
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value as TicketStatus)}
-                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="SUBMITTED">ส่งเรื่องแล้ว (SUBMITTED)</option>
                       <option value="RECEIVED">รับเรื่องแล้ว (RECEIVED)</option>
@@ -608,7 +608,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <select
                       value={assignedTechId}
                       onChange={(e) => setAssignedTechId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl font-semibold outline-hidden focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="">-- ไม่ระบุช่าง --</option>
                       {technicians.map((t) => (
@@ -628,7 +628,7 @@ export const AdminDashboardPage: React.FC = () => {
                       value={statusNote}
                       onChange={(e) => setStatusNote(e.target.value)}
                       placeholder="เช่น มอบหมายช่างสมชายเข้าตรวจสอบหน้างานเวลา 10:00 น."
-                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-500 rounded-xl outline-hidden focus:ring-2 focus:ring-sky-500"
+                      className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 text-white placeholder:text-zinc-500 rounded-xl outline-hidden focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export const AdminDashboardPage: React.FC = () => {
                     type="button"
                     onClick={() => updateTicketMutation.mutate()}
                     disabled={updateTicketMutation.isPending}
-                    className="px-6 py-2.5 rounded-xl text-xs font-bold bg-sky-400 hover:bg-sky-300 text-zinc-950 shadow-sm disabled:opacity-50 transition cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl text-xs font-bold bg-orange-400 hover:bg-orange-300 text-zinc-950 shadow-sm disabled:opacity-50 transition cursor-pointer"
                   >
                     {updateTicketMutation.isPending ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
                   </button>
@@ -649,7 +649,7 @@ export const AdminDashboardPage: React.FC = () => {
               <div className="border border-zinc-200 rounded-3xl overflow-hidden">
                 <div className="bg-zinc-50 px-5 py-3.5 border-b border-zinc-200 flex items-center justify-between">
                   <span className="font-bold text-xs text-zinc-900 flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-sky-600" />
+                    <MessageSquare className="w-4 h-4 text-orange-600" />
                     <span>แชทสนทนากับลูกค้า (Live Chat)</span>
                   </span>
                   <span className="text-[11px] text-zinc-400">ซิงค์ข้อความแบบเรียลไทม์</span>
@@ -687,7 +687,7 @@ export const AdminDashboardPage: React.FC = () => {
                     value={staffMessageText}
                     onChange={(e) => setStaffMessageText(e.target.value)}
                     placeholder="พิมพ์ตอบกลับลูกค้า..."
-                    className="flex-1 px-4 py-2 text-xs bg-white border border-zinc-200 rounded-xl outline-hidden focus:ring-2 focus:ring-sky-500"
+                    className="flex-1 px-4 py-2 text-xs bg-white border border-zinc-200 rounded-xl outline-hidden focus:ring-2 focus:ring-orange-500"
                   />
                   <button
                     type="submit"

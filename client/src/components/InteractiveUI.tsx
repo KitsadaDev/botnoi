@@ -89,7 +89,7 @@ interface Tilt3DCardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Tilt3DCard: React.FC<Tilt3DCardProps> = ({
   children,
-  spotlightColor = 'rgba(56, 189, 248, 0.16)',
+  spotlightColor = 'rgba(251, 146, 60, 0.16)',
   maxTilt = 7,
   glare = true,
   className = '',
@@ -358,7 +358,7 @@ export const ScrollProgressAndFab: React.FC = () => {
       {/* Top Laser Scroll Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-[3px] z-[100] pointer-events-none bg-transparent">
         <div
-          className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.9)] transition-[width] duration-100 ease-out"
+          className="h-full bg-gradient-to-r from-orange-400 via-amber-500 to-amber-300 shadow-[0_0_12px_rgba(251, 146, 60,0.9)] transition-[width] duration-100 ease-out"
           style={{ width: `${scrollPercent}%` }}
         />
       </div>
@@ -368,11 +368,11 @@ export const ScrollProgressAndFab: React.FC = () => {
         type="button"
         onClick={scrollToTop}
         aria-label="เลื่อนกลับด้านบน"
-        className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-2xl bg-zinc-950/90 backdrop-blur-xl text-white border border-zinc-800 shadow-2xl flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-90 hover:border-sky-500/50 group ${
+        className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-2xl bg-zinc-950/90 backdrop-blur-xl text-white border border-zinc-800 shadow-2xl flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-90 hover:border-orange-500/50 group ${
           showTopBtn ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'
         }`}
       >
-        <svg className="w-5 h-5 text-sky-400 group-hover:-translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <svg className="w-5 h-5 text-orange-400 group-hover:-translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
         </svg>
       </button>

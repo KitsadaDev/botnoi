@@ -244,7 +244,7 @@ export const BookServicePage: React.FC = () => {
       <div className="max-w-3xl mx-auto px-4 py-16">
         <ScrollReveal direction="scale">
           <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-zinc-200/90 text-center relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-emerald-500" />
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-500 via-amber-600 to-emerald-500" />
 
             <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm animate-bounce">
               <CheckCircle2 className="w-9 h-9" />
@@ -268,7 +268,7 @@ export const BookServicePage: React.FC = () => {
                 YOUR TRACKING CODE
               </p>
               <div className="flex items-center justify-center gap-3">
-                <span className="font-mono text-3xl font-black text-sky-400 tracking-wider">
+                <span className="font-mono text-3xl font-black text-orange-400 tracking-wider">
                   {createdTicket.trackingCode}
                 </span>
                 <button
@@ -322,7 +322,7 @@ export const BookServicePage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
               <Link
                 to={`/track/${createdTicket.trackingCode}`}
-                className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-sm text-white shadow-lg shadow-sky-500/20 transition-all"
+                className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-sm text-white shadow-lg shadow-orange-500/20 transition-all"
               >
                 <span>ติดตามสถานะงานซ่อม</span>
                 <ArrowRight className="w-4 h-4" />
@@ -346,8 +346,8 @@ export const BookServicePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <ScrollReveal className="text-center mb-10">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-700 border border-sky-500/20 text-xs font-bold mb-3">
-          <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-700 border border-orange-500/20 text-xs font-bold mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-orange-600" />
           <span>INTERACTIVE BOOKING FORM</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
@@ -423,12 +423,12 @@ export const BookServicePage: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div
                         className={`p-2.5 rounded-xl transition-colors ${
-                          isSelected ? 'bg-sky-400 text-zinc-950' : 'bg-sky-100/80 text-sky-600'
+                          isSelected ? 'bg-orange-400 text-zinc-950' : 'bg-orange-100/80 text-orange-600'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
                       </div>
-                      {isSelected && <CheckCircle2 className="w-5 h-5 text-sky-400" />}
+                      {isSelected && <CheckCircle2 className="w-5 h-5 text-orange-400" />}
                     </div>
                     <h3 className="font-bold text-base">{item.title}</h3>
                     <p className={`text-xs mt-1 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -436,7 +436,7 @@ export const BookServicePage: React.FC = () => {
                     </p>
                     <p
                       className={`text-xs font-mono font-bold mt-4 ${
-                        isSelected ? 'text-sky-400' : 'text-zinc-900'
+                        isSelected ? 'text-orange-400' : 'text-zinc-900'
                       }`}
                     >
                       {item.price}
@@ -469,7 +469,7 @@ export const BookServicePage: React.FC = () => {
                 </label>
                 <select
                   {...register('brand')}
-                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 >
                   {BRAND_OPTIONS.map((b) => (
                     <option key={b} value={b}>
@@ -491,7 +491,7 @@ export const BookServicePage: React.FC = () => {
                   type="date"
                   min={minDateString}
                   {...register('preferredDate')}
-                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 />
                 {errors.preferredDate && (
                   <p className="text-xs text-rose-600 mt-1">{errors.preferredDate.message}</p>
@@ -505,7 +505,7 @@ export const BookServicePage: React.FC = () => {
 
                 {/* Interactive Quick-Fill Symptom Chips */}
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 mr-1">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 mr-1">
                     <Wand2 className="w-3 h-3" />
                     กดเลือกอาการด่วน:
                   </span>
@@ -517,7 +517,7 @@ export const BookServicePage: React.FC = () => {
                       className={`text-[11px] px-3 py-1 rounded-full border transition-all cursor-pointer ${
                         currentSymptom === chip
                           ? 'bg-zinc-950 text-white border-zinc-950 font-semibold'
-                          : 'bg-zinc-50 hover:bg-sky-50 text-zinc-600 hover:text-sky-700 border-zinc-200 hover:border-sky-300'
+                          : 'bg-zinc-50 hover:bg-orange-50 text-zinc-600 hover:text-orange-700 border-zinc-200 hover:border-orange-300'
                       }`}
                     >
                       + {chip}
@@ -529,7 +529,7 @@ export const BookServicePage: React.FC = () => {
                   rows={3}
                   placeholder="เช่น แอร์ไม่เย็น มีแต่ลมธรรมดาออกมา มีน้ำหยดตรงคอยล์เย็น หรือต้องการล้างแอร์ 2 เครื่อง..."
                   {...register('symptom')}
-                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 />
                 {errors.symptom && <p className="text-xs text-rose-600 mt-1">{errors.symptom.message}</p>}
               </div>
@@ -562,7 +562,7 @@ export const BookServicePage: React.FC = () => {
                   type="text"
                   placeholder="เช่น สมชาย ใจดี"
                   {...register('customerName')}
-                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                  className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 />
                 {errors.customerName && (
                   <p className="text-xs text-rose-600 mt-1">{errors.customerName.message}</p>
@@ -588,7 +588,7 @@ export const BookServicePage: React.FC = () => {
                       setValue('customerPhone', digits, { shouldValidate: true })
                     },
                   })}
-                  className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                  className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 />
                 {errors.customerPhone && (
                   <p className="text-xs text-rose-600 mt-1">{errors.customerPhone.message}</p>
@@ -608,7 +608,7 @@ export const BookServicePage: React.FC = () => {
                   type="button"
                   onClick={handleGetLocation}
                   disabled={isGettingLocation}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 hover:bg-sky-100 text-xs font-bold transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-700 hover:bg-orange-100 text-xs font-bold transition cursor-pointer"
                 >
                   <Navigation className="w-3 h-3" />
                   <span>{isGettingLocation ? 'กำลังระบุพิกัด...' : 'ดึงพิกัดปัจจุบัน (GPS)'}</span>
@@ -619,7 +619,7 @@ export const BookServicePage: React.FC = () => {
                 rows={3}
                 placeholder="บ้านเลขที่, ชื่อหมู่บ้าน/คอนโด, ซอย, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด..."
                 {...register('address')}
-                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
               />
               {errors.address && <p className="text-xs text-rose-600 mt-1">{errors.address.message}</p>}
 
@@ -658,7 +658,7 @@ export const BookServicePage: React.FC = () => {
             </div>
 
             <div className="mb-6">
-              <div className="border-2 border-dashed border-zinc-200 hover:border-sky-500 rounded-2xl p-7 text-center transition-colors cursor-pointer bg-zinc-50/70 relative group">
+              <div className="border-2 border-dashed border-zinc-200 hover:border-orange-500 rounded-2xl p-7 text-center transition-colors cursor-pointer bg-zinc-50/70 relative group">
                 <input
                   type="file"
                   accept="image/*"
@@ -667,7 +667,7 @@ export const BookServicePage: React.FC = () => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   disabled={images.length >= MAX_IMAGES}
                 />
-                <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center mx-auto mb-3 text-zinc-500 group-hover:text-sky-600 group-hover:scale-110 transition">
+                <div className="w-12 h-12 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center mx-auto mb-3 text-zinc-500 group-hover:text-orange-600 group-hover:scale-110 transition">
                   <UploadCloud className="w-6 h-6" />
                 </div>
                 <p className="text-sm font-bold text-zinc-800">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</p>
@@ -702,7 +702,7 @@ export const BookServicePage: React.FC = () => {
                 type="text"
                 placeholder="เช่น สะดวกช่วงเช้า, ต้องแลกบัตรนิติบุคคลก่อนขึ้นอาคาร"
                 {...register('note')}
-                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
               />
             </div>
           </div>
@@ -712,14 +712,14 @@ export const BookServicePage: React.FC = () => {
         <ScrollReveal delay={250}>
           <div className="bg-zinc-950 text-white rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center gap-3 text-xs text-zinc-300">
-              <ShieldCheck className="w-5 h-5 text-sky-400 shrink-0" />
+              <ShieldCheck className="w-5 h-5 text-orange-400 shrink-0" />
               <span>รับประกันงานซ่อม 90 วัน • ประเมินราคาก่อนซ่อมทุกครั้ง</span>
             </div>
 
             <MagneticButton
               type="submit"
               disabled={isSubmitting}
-              className="btn-shimmer w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white shadow-lg shadow-sky-500/20 disabled:opacity-50"
+              className="btn-shimmer w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white shadow-lg shadow-orange-500/20 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

@@ -59,14 +59,14 @@ export const CustomerAuthPage: React.FC = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-zinc-200/90 shadow-xl space-y-6 relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-sky-400 via-sky-500 to-blue-600" />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-600" />
 
         <div className="text-center">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500 flex items-center justify-center text-white mx-auto mb-4 shadow-md">
+          <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center text-white mx-auto mb-4 shadow-md">
             {mode === 'login' ? <LogIn className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
           </div>
-          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[10px] font-mono uppercase tracking-wider font-bold mb-2">
-            <Sparkles className="w-3 h-3 text-sky-500" />
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 text-[10px] font-mono uppercase tracking-wider font-bold mb-2">
+            <Sparkles className="w-3 h-3 text-orange-500" />
             CUSTOMER PORTAL
           </div>
           <h1 className="text-2xl font-extrabold text-zinc-950 tracking-tight">
@@ -119,7 +119,7 @@ export const CustomerAuthPage: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="กรอกชื่อ-นามสกุลของคุณ"
-                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
               />
             </div>
           )}
@@ -137,7 +137,7 @@ export const CustomerAuthPage: React.FC = () => {
               value={phone}
               onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
               placeholder="เช่น 0812345678"
-              className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+              className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
             />
           </div>
 
@@ -152,7 +152,7 @@ export const CustomerAuthPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+              className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
             />
           </div>
 
@@ -168,7 +168,7 @@ export const CustomerAuthPage: React.FC = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
               />
             </div>
           )}
@@ -176,7 +176,7 @@ export const CustomerAuthPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-sky-600 hover:bg-sky-500 text-white shadow-lg flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-orange-600 hover:bg-orange-500 text-white shadow-lg flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

@@ -105,26 +105,26 @@ export const HomePage: React.FC = () => {
       ============================================================================ */}
       <section className="relative bg-zinc-950 text-white overflow-hidden pt-14 pb-20 sm:py-24 border-b border-zinc-800">
         <div className="absolute inset-0 bg-grid-dark opacity-70 pointer-events-none" />
-        <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full bg-sky-500/20 blur-[130px] pointer-events-none animate-pulse-slow" />
-        <div className="absolute bottom-0 right-1/4 w-[450px] h-[450px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none" />
+        <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] rounded-full bg-orange-500/20 blur-[130px] pointer-events-none animate-pulse-slow" />
+        <div className="absolute bottom-0 right-1/4 w-[450px] h-[450px] rounded-full bg-amber-600/20 blur-[130px] pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-950/30 to-zinc-950 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
             {/* Left Hero Content (7 cols) */}
             <ScrollReveal direction="up" className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 pl-2 pr-3.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-200 text-xs font-medium shadow-lg backdrop-blur-md hover:border-sky-500/50 transition-colors cursor-default">
-                <span className="px-2 py-0.5 rounded-full bg-sky-500 text-zinc-950 font-bold text-[10px] uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 pl-2 pr-3.5 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-zinc-200 text-xs font-medium shadow-lg backdrop-blur-md hover:border-orange-500/50 transition-colors cursor-default">
+                <span className="px-2 py-0.5 rounded-full bg-orange-500 text-zinc-950 font-bold text-[10px] uppercase tracking-wider">
                   AI After-Sales Service
                 </span>
                 <span className="text-zinc-300">ระบบแจ้งซ่อมแอร์อัจฉริยะ มาตรฐาน Carrier Style</span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-sky-400" />
+                <ArrowUpRight className="w-3.5 h-3.5 text-orange-400" />
               </div>
 
               <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.12] text-white">
                 ดูแลเครื่องปรับอากาศ <br />
                 ด้วยทีมช่าง &{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-blue-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-amber-400">
                   AI Service 24/7
                 </span>
               </h1>
@@ -143,9 +143,9 @@ export const HomePage: React.FC = () => {
                     setActiveAiTab('chatbot')
                     document.getElementById('ai-usage-examples')?.scrollIntoView({ behavior: 'smooth' })
                   }}
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-sky-500/50 text-left transition-all group cursor-pointer"
+                  className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 text-left transition-all group cursor-pointer"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                     <MessageSquare className="w-4 h-4" />
                   </div>
                   <div>
@@ -200,7 +200,7 @@ export const HomePage: React.FC = () => {
                 <MagneticButton
                   type="button"
                   onClick={() => navigate('/book')}
-                  className="btn-shimmer px-7 py-4 rounded-2xl font-bold text-sm text-white shadow-xl shadow-sky-500/20 hover:shadow-sky-500/40"
+                  className="btn-shimmer px-7 py-4 rounded-2xl font-bold text-sm text-white shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40"
                 >
                   <Wrench className="w-4 h-4" />
                   <span>แจ้งซ่อม / นัดหมายทันที</span>
@@ -211,7 +211,7 @@ export const HomePage: React.FC = () => {
                   href="#ai-usage-examples"
                   className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl font-semibold text-sm bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 hover:border-zinc-700 transition-all"
                 >
-                  <Sparkles className="w-4 h-4 text-sky-400" />
+                  <Sparkles className="w-4 h-4 text-orange-400" />
                   <span>ดูตัวอย่างการใช้งาน AI</span>
                 </a>
 
@@ -219,15 +219,15 @@ export const HomePage: React.FC = () => {
                   href="#estimator"
                   className="inline-flex items-center gap-2 px-5 py-4 rounded-2xl font-semibold text-sm text-zinc-400 hover:text-white transition-all"
                 >
-                  <Sliders className="w-4 h-4 text-sky-400" />
+                  <Sliders className="w-4 h-4 text-orange-400" />
                   <span>คำนวณค่าบริการ</span>
                 </a>
               </div>
 
               {/* Animated NumberTicker Metric Pills */}
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-zinc-800/80 max-w-lg">
-                <div className="bg-zinc-900/50 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-sky-500/40 rounded-2xl p-3.5 backdrop-blur-xs transition-all duration-300">
-                  <div className="flex items-center gap-1.5 text-sky-400 text-xs font-mono mb-0.5">
+                <div className="bg-zinc-900/50 hover:bg-zinc-900/90 border border-zinc-800/80 hover:border-orange-500/40 rounded-2xl p-3.5 backdrop-blur-xs transition-all duration-300">
+                  <div className="flex items-center gap-1.5 text-orange-400 text-xs font-mono mb-0.5">
                     <ShieldCheck className="w-4 h-4" />
                     <span>WARRANTY</span>
                   </div>
@@ -264,16 +264,16 @@ export const HomePage: React.FC = () => {
             {/* Right: 3D Tilt Interactive Live Tracking Command Card (5 cols) */}
             <ScrollReveal direction="scale" delay={150} className="lg:col-span-5">
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 via-blue-500/20 to-cyan-400/30 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-500" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/30 via-amber-500/20 to-amber-400/30 rounded-3xl blur-xl opacity-75 group-hover:opacity-100 transition duration-500" />
 
                 <Tilt3DCard
                   maxTilt={5}
-                  spotlightColor="rgba(56, 189, 248, 0.22)"
+                  spotlightColor="rgba(251, 146, 60, 0.22)"
                   className="bg-zinc-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 text-white border border-zinc-800 shadow-2xl"
                 >
                   <div className="flex items-center justify-between pb-5 mb-6 border-b border-zinc-800">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center">
                         <Search className="w-5 h-5" />
                       </div>
                       <div>
@@ -298,7 +298,7 @@ export const HomePage: React.FC = () => {
                           value={quickCode}
                           onChange={(e) => setQuickCode(e.target.value)}
                           placeholder={`เช่น ${SAMPLE_TRACKING_CODES[0]}`}
-                          className="w-full pl-4 pr-12 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-950/90 border border-zinc-700/80 text-white placeholder:text-zinc-600 rounded-2xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-hidden transition"
+                          className="w-full pl-4 pr-12 py-3.5 text-sm font-mono tracking-wider uppercase bg-zinc-950/90 border border-zinc-700/80 text-white placeholder:text-zinc-600 rounded-2xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                           required
                         />
                         <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700">
@@ -309,7 +309,7 @@ export const HomePage: React.FC = () => {
 
                     <MagneticButton
                       type="submit"
-                      className="w-full py-3.5 px-4 rounded-2xl text-sm font-bold text-zinc-950 bg-sky-400 hover:bg-sky-300 transition shadow-lg shadow-sky-500/20"
+                      className="w-full py-3.5 px-4 rounded-2xl text-sm font-bold text-zinc-950 bg-orange-400 hover:bg-orange-300 transition shadow-lg shadow-orange-500/20"
                     >
                       <Search className="w-4 h-4" />
                       <span>ค้นหาสถานะงานซ่อม</span>
@@ -326,10 +326,10 @@ export const HomePage: React.FC = () => {
                           key={sample}
                           type="button"
                           onClick={() => navigate(`/track/${sample}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-sky-500/20 text-zinc-300 hover:text-sky-300 border border-zinc-800 hover:border-sky-500/40 text-xs font-mono transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-orange-500/20 text-zinc-300 hover:text-orange-300 border border-zinc-800 hover:border-orange-500/40 text-xs font-mono transition-all cursor-pointer"
                         >
                           <span>{sample}</span>
-                          <ArrowUpRight className="w-3 h-3 text-sky-400" />
+                          <ArrowUpRight className="w-3 h-3 text-orange-400" />
                         </button>
                       ))}
                     </div>
@@ -351,9 +351,9 @@ export const HomePage: React.FC = () => {
               {[...SUPPORTED_BRANDS, ...SUPPORTED_BRANDS].map((brand, idx) => (
                 <span
                   key={idx}
-                  className="mr-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800/90 text-xs font-mono font-bold text-zinc-300 hover:text-sky-400 hover:border-sky-500/40 transition-colors cursor-default"
+                  className="mr-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800/90 text-xs font-mono font-bold text-zinc-300 hover:text-orange-400 hover:border-orange-500/40 transition-colors cursor-default"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
                   {brand}
                 </span>
               ))}
@@ -369,8 +369,8 @@ export const HomePage: React.FC = () => {
         {/* ส่วนที่ 1: การ์ดแนะนำ 3 Products */}
         <div className="space-y-8">
           <ScrollReveal className="text-center max-w-2xl mx-auto space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-700 border border-sky-500/20 text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-700 border border-orange-500/20 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
               <span>AFTERCARE AI PRODUCTS</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
@@ -385,17 +385,17 @@ export const HomePage: React.FC = () => {
             {/* Product 1: Chatbot */}
             <ScrollReveal delay={50}>
               <Tilt3DCard
-                spotlightColor="rgba(14, 165, 233, 0.14)"
-                className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-xl hover:border-sky-300 p-7 h-full flex flex-col justify-between"
+                spotlightColor="rgba(249, 115, 22, 0.14)"
+                className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-xl hover:border-orange-300 p-7 h-full flex flex-col justify-between"
               >
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600 flex items-center justify-center shrink-0">
                       <MessageSquare className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="text-lg font-extrabold text-zinc-950">Chatbot</h3>
-                      <p className="text-xs font-semibold text-sky-600">คุยแบบข้อความ</p>
+                      <p className="text-xs font-semibold text-orange-600">คุยแบบข้อความ</p>
                     </div>
                   </div>
                   <p className="text-xs text-zinc-600 leading-relaxed">
@@ -405,7 +405,7 @@ export const HomePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveAiTab('chatbot')}
-                  className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                  className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs font-bold text-orange-600 hover:text-orange-700 cursor-pointer"
                 >
                   <span>ดูตัวอย่างการใช้งาน Chatbot</span>
                   <ArrowRight className="w-4 h-4" />
@@ -500,7 +500,7 @@ export const HomePage: React.FC = () => {
                     : 'text-zinc-600 hover:text-zinc-950'
                 }`}
               >
-                <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
+                <MessageSquare className="w-3.5 h-3.5 text-orange-400" />
                 <span>Chatbot</span>
               </button>
               <button
@@ -536,7 +536,7 @@ export const HomePage: React.FC = () => {
               {/* กล่องซ้าย: แจ้งซ่อมอุปกรณ์ไฟฟ้า / แอร์ */}
               <div className="rounded-2xl border border-zinc-200/90 bg-zinc-50/60 p-5 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 pb-4 border-b border-zinc-200/80">
-                  <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-10 h-10 rounded-xl bg-orange-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                     <Wrench className="w-5 h-5" />
                   </div>
                   <div>
@@ -555,7 +555,7 @@ export const HomePage: React.FC = () => {
                       'แจ้งเลขอ้างอิงและขั้นตอนถัดไป',
                     ].map((stepText, idx) => (
                       <div key={idx} className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-sky-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="w-5 h-5 rounded-full bg-orange-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                           {idx + 1}
                         </span>
                         <span className="font-semibold text-zinc-700 leading-snug">{stepText}</span>
@@ -575,11 +575,11 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                         A
                       </div>
-                      <div className="bg-sky-50/90 p-3 rounded-2xl rounded-tl-xs border border-sky-200/70 text-zinc-800 space-y-1">
-                        <p className="font-semibold text-sky-950">ได้เลยครับ รบกวนขอข้อมูลเบื้องต้นนะคะ</p>
+                      <div className="bg-orange-50/90 p-3 rounded-2xl rounded-tl-xs border border-orange-200/70 text-zinc-800 space-y-1">
+                        <p className="font-semibold text-orange-950">ได้เลยครับ รบกวนขอข้อมูลเบื้องต้นนะคะ</p>
                         <ul className="list-disc list-inside text-[11px] text-zinc-600 space-y-0.5">
                           <li>ชื่อ-นามสกุล และ เบอร์โทร</li>
                           <li>ที่อยู่สำหรับเข้าซ่อม</li>
@@ -598,7 +598,7 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                         A
                       </div>
                       <div className="bg-emerald-50/90 p-3 rounded-2xl rounded-tl-xs border border-emerald-200 text-emerald-950">
@@ -617,7 +617,7 @@ export const HomePage: React.FC = () => {
               {/* กล่องขวา: ติดตามสถานะการซ่อม */}
               <div className="rounded-2xl border border-zinc-200/90 bg-zinc-50/60 p-5 sm:p-6 space-y-5">
                 <div className="flex items-center gap-3 pb-4 border-b border-zinc-200/80">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                     <Search className="w-5 h-5" />
                   </div>
                   <div>
@@ -636,7 +636,7 @@ export const HomePage: React.FC = () => {
                       'เสนอขั้นตอนถัดไป (เช่น นัดหมายใหม่)',
                     ].map((stepText, idx) => (
                       <div key={idx} className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="w-5 h-5 rounded-full bg-amber-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                           {idx + 1}
                         </span>
                         <span className="font-semibold text-zinc-700 leading-snug">{stepText}</span>
@@ -656,12 +656,12 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                         A
                       </div>
-                      <div className="bg-sky-50/90 p-3 rounded-2xl rounded-tl-xs border border-sky-200/70 text-zinc-800 space-y-1.5">
-                        <p className="font-semibold text-sky-950">กำลังตรวจสอบสถานะให้ค่ะ...</p>
-                        <div className="bg-white p-2.5 rounded-xl border border-sky-200/60 space-y-1 text-[11px]">
+                      <div className="bg-orange-50/90 p-3 rounded-2xl rounded-tl-xs border border-orange-200/70 text-zinc-800 space-y-1.5">
+                        <p className="font-semibold text-orange-950">กำลังตรวจสอบสถานะให้ค่ะ...</p>
+                        <div className="bg-white p-2.5 rounded-xl border border-orange-200/60 space-y-1 text-[11px]">
                           <p>📋 <strong>สถานะใบงาน:</strong> อยู่ระหว่างนัดหมายช่าง</p>
                           <p>🗓️ <strong>กำหนดเข้าซ่อม:</strong> พรุ่งนี้ เวลา 10:00 น.</p>
                           <p>👷 <strong>ทีมช่าง:</strong> ทีมบริการกรุงเทพฯ (ช่างเอก)</p>
@@ -680,7 +680,7 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full bg-sky-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
                         A
                       </div>
                       <div className="bg-emerald-50/90 p-3 rounded-2xl rounded-tl-xs border border-emerald-200 text-emerald-950">
@@ -804,8 +804,8 @@ export const HomePage: React.FC = () => {
       <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-700 border border-sky-500/20 text-xs font-bold mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-700 border border-orange-500/20 text-xs font-bold mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
               <span>3D INTERACTIVE PACKAGES</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
@@ -821,13 +821,13 @@ export const HomePage: React.FC = () => {
           {/* Card 1: Cleaning */}
           <ScrollReveal delay={50}>
             <Tilt3DCard
-              spotlightColor="rgba(14, 165, 233, 0.14)"
-              className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-2xl hover:border-sky-300 p-8 h-full"
+              spotlightColor="rgba(249, 115, 22, 0.14)"
+              className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-2xl hover:border-orange-300 p-8 h-full"
             >
               <div className="flex flex-col justify-between h-full">
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600 flex items-center justify-center">
                       <Wind className="w-6 h-6" />
                     </div>
                     <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500/20">
@@ -847,19 +847,19 @@ export const HomePage: React.FC = () => {
 
                   <ul className="space-y-3 text-xs text-zinc-600 mb-8">
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
                       <span>ฉีดล้างคอยล์เย็นและคอยล์ร้อนด้วยน้ำยาเฉพาะ</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
                       <span>เป่าไล่ท่อน้ำทิ้ง ป้องกันปัญหาน้ำหยด</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
                       <span>ตรวจเช็คแรงดันน้ำยาแอร์และกระแสไฟฟรี</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
                       <span>รับประกันอาการน้ำรั่วซึม 30 วัน</span>
                     </li>
                   </ul>
@@ -879,16 +879,16 @@ export const HomePage: React.FC = () => {
           {/* Card 2: Repair */}
           <ScrollReveal delay={150}>
             <Tilt3DCard
-              spotlightColor="rgba(56, 189, 248, 0.22)"
+              spotlightColor="rgba(251, 146, 60, 0.22)"
               className="bg-zinc-950 text-white rounded-3xl border border-zinc-800 shadow-2xl p-8 relative h-full"
             >
               <div className="flex flex-col justify-between h-full">
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/30 text-orange-400 flex items-center justify-center">
                       <Wrench className="w-6 h-6" />
                     </div>
-                    <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm">
+                    <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm">
                       บริการด่วนแนะนำ
                     </span>
                   </div>
@@ -905,19 +905,19 @@ export const HomePage: React.FC = () => {
 
                   <ul className="space-y-3 text-xs text-zinc-300 mb-8">
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />
                       <span>วิเคราะห์อาการเสียด้วยเครื่องมือดิจิทัล</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />
                       <span>เสนอราคาค่าซ่อมชัดเจนก่อนเริ่มงานเสมอ</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />
                       <span>อะไหล่แท้จากโรงงานผู้ผลิต 100%</span>
                     </li>
                     <li className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />
                       <span>รับประกันงานซ่อมและอะไหล่สูงสุด 90 วัน</span>
                     </li>
                   </ul>
@@ -925,7 +925,7 @@ export const HomePage: React.FC = () => {
 
                 <Link
                   to="/book?service=REPAIR"
-                  className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-bold text-white shadow-lg shadow-sky-500/20 transition-all"
+                  className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-bold text-white shadow-lg shadow-orange-500/20 transition-all"
                 >
                   <span>แจ้งซ่อมแอร์ด่วน</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1000,11 +1000,11 @@ export const HomePage: React.FC = () => {
       <section id="estimator" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="bg-zinc-950 text-white rounded-3xl p-7 sm:p-10 border border-zinc-800 shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-sky-500/15 blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-orange-500/15 blur-3xl pointer-events-none" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
               <div className="lg:col-span-7 space-y-5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/25 text-xs font-mono font-bold">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25 text-xs font-mono font-bold">
                   <Sliders className="w-3.5 h-3.5" />
                   <span>INTERACTIVE ESTIMATOR</span>
                 </div>
@@ -1031,7 +1031,7 @@ export const HomePage: React.FC = () => {
                         onClick={() => setActiveCalcTab(tab.id as any)}
                         className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-sky-400 text-zinc-950 shadow-md scale-[1.02]'
+                            ? 'bg-orange-400 text-zinc-950 shadow-md scale-[1.02]'
                             : 'text-zinc-400 hover:text-white'
                         }`}
                       >
@@ -1046,7 +1046,7 @@ export const HomePage: React.FC = () => {
                 <div className="space-y-2 pt-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-zinc-300 font-semibold">จำนวนเครื่องปรับอากาศ:</span>
-                    <span className="font-mono font-bold text-sky-400">{unitCount} เครื่อง</span>
+                    <span className="font-mono font-bold text-orange-400">{unitCount} เครื่อง</span>
                   </div>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((num) => (
@@ -1073,7 +1073,7 @@ export const HomePage: React.FC = () => {
                   ESTIMATED COST
                 </p>
                 <div className="py-2">
-                  <span className="text-4xl sm:text-5xl font-black text-sky-400 tracking-tight tabular-nums">
+                  <span className="text-4xl sm:text-5xl font-black text-orange-400 tracking-tight tabular-nums">
                     ฿{estimatedTotal.toLocaleString()}
                   </span>
                   {activeCalcTab === 'CLEANING' && unitCount >= 2 && (
@@ -1121,7 +1121,7 @@ export const HomePage: React.FC = () => {
           <ScrollReveal delay={50} className="md:col-span-7">
             <Tilt3DCard maxTilt={3} className="bg-white rounded-3xl p-8 border border-zinc-200/90 shadow-xs flex flex-col justify-between h-full">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-bold mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-bold mb-4">
                   <Activity className="w-3.5 h-3.5" />
                   <span>Real-time Status Pipeline</span>
                 </div>
@@ -1146,11 +1146,11 @@ export const HomePage: React.FC = () => {
                   </span>
                   <p className="text-[11px] font-bold text-zinc-800">จัดช่างแล้ว</p>
                 </div>
-                <div className="p-2.5 rounded-xl bg-sky-50/80 border border-sky-300 shadow-xs hover:scale-105 transition-transform">
-                  <span className="w-6 h-6 rounded-full bg-sky-600 text-white text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5 animate-pulse">
+                <div className="p-2.5 rounded-xl bg-orange-50/80 border border-orange-300 shadow-xs hover:scale-105 transition-transform">
+                  <span className="w-6 h-6 rounded-full bg-orange-600 text-white text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5 animate-pulse">
                     3
                   </span>
-                  <p className="text-[11px] font-bold text-sky-900">กำลังเข้าซ่อม</p>
+                  <p className="text-[11px] font-bold text-orange-900">กำลังเข้าซ่อม</p>
                 </div>
                 <div className="p-2.5 rounded-xl bg-zinc-100/70 border border-zinc-200/50 opacity-60">
                   <span className="w-6 h-6 rounded-full bg-zinc-300 text-zinc-600 text-[11px] font-bold flex items-center justify-center mx-auto mb-1.5">
@@ -1166,7 +1166,7 @@ export const HomePage: React.FC = () => {
           <ScrollReveal delay={120} className="md:col-span-5">
             <Tilt3DCard maxTilt={4} className="bg-zinc-950 text-white rounded-3xl p-8 border border-zinc-800 shadow-xl flex flex-col justify-between h-full">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/20 text-xs font-bold mb-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/20 text-xs font-bold mb-4">
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Direct Technician Chat</span>
                 </div>
@@ -1186,7 +1186,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <div className="bg-sky-500 text-zinc-950 font-semibold px-3.5 py-2 rounded-2xl rounded-tr-xs">
+                  <div className="bg-orange-500 text-zinc-950 font-semibold px-3.5 py-2 rounded-2xl rounded-tr-xs">
                     รับทราบครับ แจ้งรปภ.หน้าหมู่บ้านได้เลยครับ
                   </div>
                 </div>
@@ -1222,22 +1222,22 @@ export const HomePage: React.FC = () => {
 
           {/* Bento 5 */}
           <ScrollReveal delay={300} className="md:col-span-4">
-            <div className="bg-gradient-to-br from-sky-500 to-blue-700 text-white rounded-3xl p-7 shadow-lg flex flex-col justify-between h-full">
+            <div className="bg-gradient-to-br from-orange-500 to-amber-700 text-white rounded-3xl p-7 shadow-lg flex flex-col justify-between h-full">
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <CalendarCheck className="w-8 h-8 text-sky-100" />
+                  <CalendarCheck className="w-8 h-8 text-orange-100" />
                   <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-white/20 text-white font-bold">
                     FAST BOOKING
                   </span>
                 </div>
                 <h3 className="text-xl font-extrabold mb-1">แอร์มีปัญหาใช่ไหม?</h3>
-                <p className="text-xs text-sky-100 leading-relaxed mb-6">
+                <p className="text-xs text-orange-100 leading-relaxed mb-6">
                   กรอกฟอร์มใช้เวลาไม่ถึง 2 นาที รับรหัสติดตามงานซ่อมได้ทันทีไม่ต้องสมัครสมาชิก
                 </p>
               </div>
               <Link
                 to="/book"
-                className="w-full py-3 px-4 rounded-2xl bg-white text-zinc-950 hover:bg-sky-50 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition"
+                className="w-full py-3 px-4 rounded-2xl bg-white text-zinc-950 hover:bg-orange-50 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition"
               >
                 <span>เริ่มแจ้งซ่อมตอนนี้</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -1252,7 +1252,7 @@ export const HomePage: React.FC = () => {
       ============================================================================ */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal className="text-center mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-bold mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-bold mb-3">
             <HelpCircle className="w-3.5 h-3.5" />
             <span>FREQUENTLY ASKED QUESTIONS</span>
           </div>
@@ -1284,7 +1284,7 @@ export const HomePage: React.FC = () => {
                     <span className="font-bold text-sm">{item.q}</span>
                     <span
                       className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${
-                        isOpen ? 'bg-sky-500 text-zinc-950 rotate-180' : 'bg-zinc-100 text-zinc-600'
+                        isOpen ? 'bg-orange-500 text-zinc-950 rotate-180' : 'bg-zinc-100 text-zinc-600'
                       }`}
                     >
                       <ChevronDown className="w-4 h-4" />

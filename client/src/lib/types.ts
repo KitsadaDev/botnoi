@@ -91,7 +91,7 @@ export const STATUS_LABELS: Record<TicketStatus, string> = {
 
 export const STATUS_COLORS: Record<TicketStatus, string> = {
   SUBMITTED: 'bg-zinc-100 text-zinc-700 ring-1 ring-inset ring-zinc-300/80',
-  RECEIVED: 'bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-500/30',
+  RECEIVED: 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-500/30',
   IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-500/30',
   COMPLETED: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-500/30',
   CANCELLED: 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-500/30',

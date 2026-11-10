@@ -101,15 +101,15 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-zinc-200 shadow-xl space-y-6 relative overflow-hidden">
         {/* แถบ Gradient ด้านบน */}
-        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-sky-400 via-blue-600 to-indigo-600" />
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-400 via-amber-600 to-indigo-600" />
 
         {/* ส่วนหัวหน้าเว็บ */}
         <div className="text-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white mx-auto mb-4 shadow-md shadow-sky-500/20">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-600 flex items-center justify-center text-white mx-auto mb-4 shadow-md shadow-orange-500/20">
             {mode === 'login' ? <LogIn className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-700 text-xs font-bold mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-700 text-xs font-bold mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-orange-500" />
             <span>AfterCare AI Platform</span>
           </div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
@@ -170,7 +170,7 @@ export const LoginPage: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="กรอกชื่อ-นามสกุลของคุณ"
-                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
               />
             </div>
           )}
@@ -188,7 +188,7 @@ export const LoginPage: React.FC = () => {
               value={phone}
               onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
               placeholder="เช่น 0812345678"
-              className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+              className="w-full px-4 py-3 text-sm font-mono bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
             />
           </div>
 
@@ -203,7 +203,7 @@ export const LoginPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+              className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
             />
           </div>
 
@@ -219,7 +219,7 @@ export const LoginPage: React.FC = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-sky-500 outline-hidden transition"
+                className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden transition"
               />
             </div>
           )}
@@ -236,12 +236,12 @@ export const LoginPage: React.FC = () => {
               </>
             ) : mode === 'login' ? (
               <>
-                <LogIn className="w-4 h-4 text-sky-400" />
+                <LogIn className="w-4 h-4 text-orange-400" />
                 <span>เข้าสู่ระบบ</span>
               </>
             ) : (
               <>
-                <UserPlus className="w-4 h-4 text-sky-400" />
+                <UserPlus className="w-4 h-4 text-orange-400" />
                 <span>ยืนยันการสมัครสมาชิก</span>
               </>
             )}
@@ -270,7 +270,7 @@ export const LoginPage: React.FC = () => {
               onClick={() => fillRole('staff')}
               className="py-2 px-3 rounded-xl text-xs font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <UserCheck className="w-3.5 h-3.5 text-sky-600" />
+              <UserCheck className="w-3.5 h-3.5 text-orange-600" />
               <span>ทีมช่าง/เจ้าหน้าที่</span>
             </button>
           </div>

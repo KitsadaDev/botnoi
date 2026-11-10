@@ -6,15 +6,15 @@ export const Footer: React.FC = () => {
   return (
     <footer className="relative bg-zinc-950 text-zinc-400 pt-16 pb-12 border-t border-zinc-800/80 overflow-hidden">
       {/* Subtle top ambient glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-sky-500/60 to-transparent" />
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-sky-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-orange-500/60 to-transparent" />
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-orange-500/10 blur-3xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 mb-14">
           {/* Col 1: Brand & Mission (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-sky-400 shadow-inner">
+              <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-orange-400 shadow-inner">
                 <Wrench className="w-4 h-4" />
               </div>
               <div className="flex items-center gap-1.5">
@@ -27,8 +27,8 @@ export const Footer: React.FC = () => {
               ด้วยทีมช่างมาตรฐานโรงงาน อะไหล่แท้ 100% พร้อมระบบติดตามสถานะแบบเรียลไทม์
             </p>
 
-            <div className="inline-flex items-center gap-2 text-sky-300 text-[11px] font-medium bg-zinc-900/90 px-3 py-2 rounded-xl border border-zinc-800">
-              <Award className="w-4 h-4 shrink-0 text-sky-400" />
+            <div className="inline-flex items-center gap-2 text-orange-300 text-[11px] font-medium bg-zinc-900/90 px-3 py-2 rounded-xl border border-zinc-800">
+              <Award className="w-4 h-4 shrink-0 text-orange-400" />
               <span>Carrier & B.Grimm Certified Service Standard</span>
             </div>
           </div>
@@ -42,31 +42,31 @@ export const Footer: React.FC = () => {
               <li>
                 <Link to="/book?service=CLEANING" className="hover:text-white transition-colors flex items-center justify-between group">
                   <span>ล้างแอร์ระบบปลอดเชื้อ</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-sky-400 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
                 <Link to="/book?service=REPAIR" className="hover:text-white transition-colors flex items-center justify-between group">
                   <span>ซ่อมแอร์ไม่เย็น / มีน้ำรั่ว</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-sky-400 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
                 <Link to="/book?service=REPAIR" className="hover:text-white transition-colors flex items-center justify-between group">
                   <span>ตรวจเช็คระบบไฟและคอมเพรสเซอร์</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-sky-400 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
                 <Link to="/book?service=INSTALLATION" className="hover:text-white transition-colors flex items-center justify-between group">
                   <span>ติดตั้งและย้ายตำแหน่งแอร์</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-sky-400 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
                 <Link to="/book?service=CLEANING" className="hover:text-white transition-colors flex items-center justify-between group">
                   <span>เติมน้ำยาแอร์ R32 / R410a</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-sky-400 transition-opacity" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
             </ul>
@@ -108,19 +108,19 @@ export const Footer: React.FC = () => {
             </h3>
             <div className="space-y-3 text-xs">
               <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
                 <span>อาคารบีกริมม์ ถนนเพชรบุรีตัดใหม่ แขวงมักกะสัน กรุงเทพฯ</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-sky-400 shrink-0" />
+                <Phone className="w-4 h-4 text-orange-400 shrink-0" />
                 <span className="font-mono text-zinc-200">02-123-4567</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-sky-400 shrink-0" />
+                <Mail className="w-4 h-4 text-orange-400 shrink-0" />
                 <span className="font-mono text-zinc-200">support@plasom.com</span>
               </div>
               <div className="flex items-center gap-2.5">
-                <Clock className="w-4 h-4 text-sky-400 shrink-0" />
+                <Clock className="w-4 h-4 text-orange-400 shrink-0" />
                 <span>เปิดทำการทุกวัน 08:00 - 18:00 น.</span>
               </div>
             </div>

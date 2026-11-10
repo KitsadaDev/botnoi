@@ -214,12 +214,12 @@ export default function AdminNotificationBell({
         onClick={() => setIsOpen((prev) => !prev)}
         className={`relative inline-flex items-center justify-center rounded-2xl border p-2.5 transition cursor-pointer ${
           isOpen
-            ? 'border-sky-400 bg-sky-500/20 text-sky-300'
+            ? 'border-orange-400 bg-orange-500/20 text-orange-300'
             : 'border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-600 hover:bg-zinc-800'
         }`}
         title="ศูนย์การแจ้งเตือนและประวัติเคสล่าสุด"
       >
-        <Bell className={`h-5 w-5 ${unreadTickets.length > 0 ? 'text-sky-400' : ''}`} />
+        <Bell className={`h-5 w-5 ${unreadTickets.length > 0 ? 'text-orange-400' : ''}`} />
         {unreadTickets.length > 0 && (
           <span className=" -top-1.5 -right-1.5 absolute flex h-5 min-w-[20px] items-center justify-center">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
@@ -248,13 +248,13 @@ export default function AdminNotificationBell({
                   className="rounded-xl bg-zinc-800/80 p-1.5 text-zinc-300 hover:bg-zinc-700 hover:text-white transition cursor-pointer"
                   title={isMuted ? 'เปิดเสียงแจ้งเตือน' : 'ปิดเสียงแจ้งเตือน'}
                 >
-                  {isMuted ? <VolumeX className="h-4 w-4 text-rose-400" /> : <Volume2 className="h-4 w-4 text-sky-400" />}
+                  {isMuted ? <VolumeX className="h-4 w-4 text-rose-400" /> : <Volume2 className="h-4 w-4 text-orange-400" />}
                 </button>
                 {unreadTickets.length > 0 && (
                   <button
                     type="button"
                     onClick={handleMarkAllRead}
-                    className="inline-flex items-center gap-1 rounded-xl bg-sky-500/20 border border-sky-500/30 px-2.5 py-1 text-[11px] font-bold text-sky-300 hover:bg-sky-500/30 transition cursor-pointer"
+                    className="inline-flex items-center gap-1 rounded-xl bg-orange-500/20 border border-orange-500/30 px-2.5 py-1 text-[11px] font-bold text-orange-300 hover:bg-orange-500/30 transition cursor-pointer"
                   >
                     <CheckCheck className="h-3.5 w-3.5" />
                     <span>อ่านทั้งหมด</span>
@@ -269,7 +269,7 @@ export default function AdminNotificationBell({
                 type="button"
                 onClick={() => setActiveTab('all')}
                 className={`flex-1 rounded-lg py-1.5 font-bold transition cursor-pointer ${
-                  activeTab === 'all' ? 'bg-sky-400 text-zinc-950 shadow-xs' : 'text-zinc-400 hover:text-white'
+                  activeTab === 'all' ? 'bg-orange-400 text-zinc-950 shadow-xs' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 ประวัติล่าสุด ({recentTickets.length})
@@ -278,7 +278,7 @@ export default function AdminNotificationBell({
                 type="button"
                 onClick={() => setActiveTab('unread')}
                 className={`flex-1 rounded-lg py-1.5 font-bold transition cursor-pointer ${
-                  activeTab === 'unread' ? 'bg-sky-400 text-zinc-950 shadow-xs' : 'text-zinc-400 hover:text-white'
+                  activeTab === 'unread' ? 'bg-orange-400 text-zinc-950 shadow-xs' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 ยังไม่อ่าน ({unreadTickets.length})
@@ -306,14 +306,14 @@ export default function AdminNotificationBell({
                     key={ticket.id}
                     onClick={() => handleSelectTicket(ticket)}
                     className={`group relative flex cursor-pointer items-start gap-3 p-4 transition ${
-                      isUnread ? 'bg-sky-50/60 hover:bg-sky-100/60' : 'bg-white hover:bg-zinc-50'
+                      isUnread ? 'bg-orange-50/60 hover:bg-orange-100/60' : 'bg-white hover:bg-zinc-50'
                     }`}
                   >
                     {/* จุดสถานะยังไม่อ่าน */}
                     <div className="mt-1.5 flex shrink-0 items-center">
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${
-                          isUnread ? 'bg-sky-500 ring-4 ring-sky-500/20' : 'bg-zinc-200'
+                          isUnread ? 'bg-orange-500 ring-4 ring-orange-500/20' : 'bg-zinc-200'
                         }`}
                       />
                     </div>
@@ -345,7 +345,7 @@ export default function AdminNotificationBell({
                           <Clock className="h-3 w-3" />
                           {formatTimeAgo(ticket.createdAt)}
                         </span>
-                        <span className="inline-flex items-center gap-0.5 font-semibold text-sky-600 opacity-0 transition group-hover:opacity-100">
+                        <span className="inline-flex items-center gap-0.5 font-semibold text-orange-600 opacity-0 transition group-hover:opacity-100">
                           จัดการเคส <ChevronRight className="h-3 w-3" />
                         </span>
                       </div>
@@ -366,16 +366,16 @@ export default function AdminNotificationBell({
 
       {/* Toast เด้งมุมขวาบนเวลาเคสใหม่วิ่งเข้าสดๆ */}
       {toastTicket && (
-        <div className="fixed top-5 right-5 z-50 w-80 sm:w-96 overflow-hidden rounded-3xl border border-sky-500/30 bg-zinc-950 p-4 text-white shadow-2xl">
+        <div className="fixed top-5 right-5 z-50 w-80 sm:w-96 overflow-hidden rounded-3xl border border-orange-500/30 bg-zinc-950 p-4 text-white shadow-2xl">
           <div className="flex items-start gap-3.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-500/20 text-orange-400 border border-orange-500/30">
               <Sparkles className="h-5 w-5 animate-pulse" />
             </div>
 
             <div className="min-w-0 flex-1 text-left">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-sky-400">
-                  <span className="h-2 w-2 rounded-full bg-sky-400 animate-ping" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-orange-400">
+                  <span className="h-2 w-2 rounded-full bg-orange-400 animate-ping" />
                   มีเคสแจ้งซ่อมใหม่เข้ามา!
                 </span>
                 <button
@@ -401,7 +401,7 @@ export default function AdminNotificationBell({
                 <button
                   type="button"
                   onClick={() => handleSelectTicket(toastTicket)}
-                  className="inline-flex items-center gap-1 rounded-xl bg-sky-400 px-3 py-1.5 text-xs font-bold text-zinc-950 hover:bg-sky-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 rounded-xl bg-orange-400 px-3 py-1.5 text-xs font-bold text-zinc-950 hover:bg-orange-300 transition cursor-pointer"
                 >
                   <span>เปิดดูเคสทันที</span>
                   <ChevronRight className="h-3.5 w-3.5" />

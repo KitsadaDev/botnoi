@@ -207,7 +207,7 @@ function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: num
 
 const STATUS_BADGE_THEME: Record<string, { bg: string; text: string; border: string }> = {
   SUBMITTED: { bg: '#f4f4f5', text: '#3f3f46', border: '#d4d4d8' },
-  RECEIVED: { bg: '#f0f9ff', text: '#0369a1', border: '#bae6fd' },
+  RECEIVED: { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' },
   IN_PROGRESS: { bg: '#fffbeb', text: '#b45309', border: '#fde68a' },
   COMPLETED: { bg: '#ecfdf5', text: '#047857', border: '#a7f3d0' },
   CANCELLED: { bg: '#fff1f2', text: '#be123c', border: '#fecdd3' },
@@ -294,10 +294,10 @@ export async function exportDashboardToPdf(params: DashboardPdfExportParams): Pr
 
     // Badge inside header
     drawRoundedRect(ctx, MARGIN_X + 32, y + 24, 150, 26, 13)
-    ctx.fillStyle = 'rgba(14, 165, 233, 0.2)'
+    ctx.fillStyle = 'rgba(249, 115, 22, 0.2)'
     ctx.fill()
     ctx.font = `700 13px ${FONT_MONO}`
-    ctx.fillStyle = '#38bdf8'
+    ctx.fillStyle = '#fb923c'
     ctx.fillText(`${staffRole} REPORT`, MARGIN_X + 48, y + 42)
 
     // Title
@@ -344,7 +344,7 @@ export async function exportDashboardToPdf(params: DashboardPdfExportParams): Pr
 
       const statusCards = [
         { label: 'เคสทั้งหมด', value: String(summary.total), color: '#09090b', sub: 'รายการในระบบ' },
-        { label: 'ยังไม่ปิด / รอรับเรื่อง', value: String(summary.submitted), color: '#0284c7', sub: 'รอดำเนินการ' },
+        { label: 'ยังไม่ปิด / รอรับเรื่อง', value: String(summary.submitted), color: '#ea580c', sub: 'รอดำเนินการ' },
         { label: 'กำลังปฏิบัติงาน', value: String(summary.inProgress), color: '#d97706', sub: 'รับเรื่อง / กำลังซ่อม' },
         { label: 'ปิดแล้ว / เสร็จสิ้น', value: String(summary.completed), color: '#059669', sub: 'ส่งมอบงานแล้ว' },
       ]
