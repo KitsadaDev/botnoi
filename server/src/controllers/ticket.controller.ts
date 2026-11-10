@@ -346,17 +346,63 @@ export const getMyTickets = async (req: any, res: any) => {
 // POST /api/tickets/botnoi-webhook
 // รับข้อมูลแจ้งซ่อมจาก Botnoi AI Agent (<customer_name>, <phone>, <info>, <date>, <ticket>)
 // ===========================
+// ===========================
+// Helper แปลงวันที่จากแชทบอท (รองรับทั้ง YYYY-MM-DD และภาษาไทย เช่น "7 กันยายน 2570")
+// ===========================
+function parseBotnoiDate(raw: string): Date {
+  const fallback = new Date(Date.now() + 86400000);
+  if (!raw) return fallback;
+
+  const text = raw.trim();
+
+  // 1. กรณีส่งมาเป็น YYYY-MM-DD
+  const isoMatch = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (isoMatch) {
+    let year = parseInt(isoMatch[1], 10);
+    if (year > 2400) year -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+    const month = String(isoMatch[2]).padStart(2, "0");
+    const day = String(isoMatch[3]).padStart(2, "0");
+    const d = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  // 2. กรณีส่งมาเป็นภาษาไทย เช่น "วันที่ 7 กันยายน 2570" หรือ "7 ก.ย. 70"
+  const thaiMonths: Record<string, number> = {
+    มกรา: 1, "ม.ค": 1, กุมภา: 2, "ก.พ": 2, มีนา: 3, "มี.ค": 3,
+    เมษา: 4, "เม.ย": 4, พฤษภา: 5, "พ.ค": 5, มิถุนา: 6, "มิ.ย": 6,
+    กรกฎา: 7, "ก.ค": 7, สิงหา: 8, "ส.ค": 8, กันยา: 9, "ก.ย": 9,
+    ตุลา: 10, "ต.ค": 10, พฤศจิกา: 11, "พ.ย": 11, ธันวา: 12, "ธ.ค": 12,
+  };
+
+  for (const [key, mNum] of Object.entries(thaiMonths)) {
+    if (text.includes(key)) {
+      const nums = text.match(/\d+/g)?.map(Number) || [];
+      const day = nums.find((n) => n >= 1 && n <= 31) || new Date().getDate();
+      let year = nums.find((n) => n >= 67 && n <= 2600) || new Date().getFullYear();
+      if (year < 100) year += 2500; // เช่น "ปี 70" -> 2570
+      if (year > 2400) year -= 543; // แปลง พ.ศ. เป็น ค.ศ.
+      const monthStr = String(mNum).padStart(2, "0");
+      const dayStr = String(day).padStart(2, "0");
+      const d = new Date(`${year}-${monthStr}-${dayStr}T00:00:00.000Z`);
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+
+  const parsed = new Date(text);
+  return isNaN(parsed.getTime()) ? fallback : parsed;
+}
+
+// ===========================
+// POST /api/tickets/botnoi-webhook
+// ===========================
 export async function createTicketFromBotnoi(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    console.log("📥 [Botnoi Webhook] ข้อมูลที่ส่งเข้ามา:", req.body);
-
     const { customer_name, phone, info, date, ticket: botTicketCode } = req.body || {};
 
-    // 1. เช็กว่าค่าที่ส่งมาติดเครื่องหมาย <...> หรือว่างเปล่าไหม
     const isPlaceholder = (val: unknown) =>
       !val || String(val).includes("<") || String(val).includes(">");
 
@@ -373,8 +419,7 @@ export async function createTicketFromBotnoi(
 
     const cleanDateText = isPlaceholder(date) ? "ตามนัดหมายในแชท" : String(date).trim();
 
-    // 2. สร้างรหัสติดตาม: ถ้าบอทส่งรหัสจริงมาและยังไม่ซ้ำใน DB ให้ใช้รหัสของบอท
-    //    แต่ถ้าเป็นคำว่า <ticket> หรือซ้ำกับเคสเดิม ให้สุ่มรหัสใหม่ทันที (เพื่อให้สร้างเคสใหม่เข้า Admin เสมอ!)
+    // สร้างรหัสติดตาม
     let trackingCode = !isPlaceholder(botTicketCode)
       ? String(botTicketCode).trim().toUpperCase()
       : await generateUniqueCode();
@@ -384,13 +429,11 @@ export async function createTicketFromBotnoi(
       trackingCode = await generateUniqueCode();
     }
 
-    // 3. แปลงวันที่นัดหมาย
-    const parsedDate = !isPlaceholder(date) ? new Date(String(date)) : new Date(Date.now() + 86400000);
-    const preferredDate = isNaN(parsedDate.getTime())
-      ? new Date(Date.now() + 86400000)
-      : parsedDate;
+    // แปลงวันที่นัดหมายด้วย parseBotnoiDate
+    const preferredDate = !isPlaceholder(date)
+      ? parseBotnoiDate(String(date))
+      : new Date(Date.now() + 86400000);
 
-    // 4. บันทึกลง Database พร้อมสร้าง StatusLog แรก
     const createdTicket = await prisma.$transaction(async (tx) => {
       const t = await tx.ticket.create({
         data: {
@@ -428,4 +471,5 @@ export async function createTicketFromBotnoi(
     next(err);
   }
 }
+
 
