@@ -25,7 +25,7 @@ const DEFAULT_CHANNELS: DashboardContactChannelSummary = {
  * สร้างชื่อไฟล์ Excel (.xlsx) สำหรับรายงาน Dashboard ตามวันที่ท้องถิ่น
  */
 export function getDashboardExcelFilename(now: Date = new Date()): string {
-  return `coolcare-dashboard-${toLocalDateInputValue(now)}.xlsx`
+  return `plasom-dashboard-${toLocalDateInputValue(now)}.xlsx`
 }
 
 function escapeXml(value: string): string {
@@ -284,7 +284,7 @@ export function buildDashboardExcelBytes(params: DashboardExcelExportParams): Ui
 
   // Sheet 2: สรุปภาพรวม (Summary)
   const summaryRows: (CellValue | CellSpec)[][] = [
-    [{ value: 'CoolCare Pro — รายงานสรุปศูนย์ควบคุมและจ่ายงานซ่อม (Staff Portal)', style: 2 }],
+    [{ value: 'Plasom — รายงานสรุปศูนย์ควบคุมและจ่ายงานซ่อม (Staff Portal)', style: 2 }],
     [
       { value: 'ผู้ส่งออกรายงาน', style: 1 },
       { value: `${staffName} (${staffRole})`, style: 3 },

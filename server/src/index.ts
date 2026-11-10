@@ -92,11 +92,11 @@ app.use(
 // Health Check
 // ===========================
 app.get("/", (_req, res) => {
-  res.json({ success: true, message: "CoolCare Pro API กำลังทำงาน 🆒" });
+  res.json({ success: true, message: "Plasom API กำลังทำงาน 🆒" });
 });
 
 app.get("/api/health", (_req, res) => {
-  res.json({ success: true, message: "CoolCare Pro API กำลังทำงาน 🆒" });
+  res.json({ success: true, message: "Plasom API กำลังทำงาน 🆒" });
 });
 
 // ===========================
@@ -142,7 +142,7 @@ if (process.env.NODE_ENV === "production") {
 // ===========================
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`🚀 CoolCare Pro Server กำลังทำงานที่ http://localhost:${PORT}`);
+    console.log(`🚀 Plasom Server กำลังทำงานที่ http://localhost:${PORT}`);
     console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
   });
 }

@@ -73,7 +73,7 @@ test('sanitizePhoneInput: กรองเฉพาะตัวเลขและ
 test('getDashboardPdfFilename: สร้างชื่อไฟล์ PDF ตามวันที่ท้องถิ่น', () => {
   assert.equal(
     getDashboardPdfFilename(new Date(2026, 10, 9, 13, 30)),
-    'coolcare-dashboard-2026-11-09.pdf'
+    'plasom-dashboard-2026-11-09.pdf'
   )
 })
 
@@ -94,7 +94,7 @@ test('buildPdfFromJpegPages: สร้างโครงสร้างไฟล
 test('getDashboardExcelFilename: สร้างชื่อไฟล์ Excel (.xlsx) ตามวันที่ท้องถิ่น', () => {
   assert.equal(
     getDashboardExcelFilename(new Date(2026, 10, 9, 13, 30)),
-    'coolcare-dashboard-2026-11-09.xlsx'
+    'plasom-dashboard-2026-11-09.xlsx'
   )
 })
 

@@ -80,7 +80,7 @@ export const Navbar: React.FC = () => {
       <div className="bg-zinc-950 text-zinc-300 text-[11px] py-1.5 px-4 border-b border-zinc-800/80">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-400 font-semibold border border-sky-500/20">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 font-semibold border border-orange-500/20">
               <Sparkles className="w-3 h-3 animate-spin" style={{ animationDuration: '6s' }} />
               Carrier Standard
             </span>
@@ -90,7 +90,7 @@ export const Navbar: React.FC = () => {
           </div>
           <div className="hidden sm:flex items-center gap-4 text-zinc-400">
             <a href="tel:021234567" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <PhoneCall className="w-3 h-3 text-sky-400" />
+              <PhoneCall className="w-3 h-3 text-orange-400" />
               <span>
                 สายด่วน: <strong className="text-zinc-200 font-mono">02-123-4567</strong>
               </span>
@@ -116,15 +116,12 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-3 group shrink-0"
             >
               <div className="relative w-10 h-10 rounded-xl bg-zinc-950 flex items-center justify-center text-white shadow-md shadow-zinc-950/10 group-hover:scale-105 group-active:scale-95 transition-all duration-300 border border-zinc-800 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-sky-600/40 via-transparent to-cyan-400/30 opacity-80 group-hover:opacity-100 transition-opacity" />
-                <Wrench className="w-5 h-5 text-sky-400 relative z-10 group-hover:rotate-12 transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/40 via-transparent to-amber-400/30 opacity-80 group-hover:opacity-100 transition-opacity" />
+                <Wrench className="w-5 h-5 text-orange-400 relative z-10 group-hover:rotate-12 transition-transform" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-lg tracking-tight text-zinc-950">CoolCare</span>
-                  <span className="font-mono font-bold text-[10px] uppercase px-1.5 py-0.5 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-md shadow-xs">
-                    PRO
-                  </span>
+                  <span className="font-extrabold text-lg tracking-tight text-zinc-950">Plasom</span>
                 </div>
                 <p className="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">
                   SMART AC SERVICE
@@ -157,9 +154,9 @@ export const Navbar: React.FC = () => {
                     }`}
                   >
                     {active && (
-                      <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-sky-400 shadow-[0_0_12px_2px_rgba(56,189,248,0.85)]" />
+                      <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-orange-400 shadow-[0_0_12px_2px_rgba(251, 146, 60,0.85)]" />
                     )}
-                    {Icon && <Icon className={`w-3.5 h-3.5 ${active ? 'text-sky-400' : 'text-sky-600'}`} />}
+                    {Icon && <Icon className={`w-3.5 h-3.5 ${active ? 'text-orange-400' : 'text-orange-600'}`} />}
                     <span>{item.label}</span>
                   </Link>
                 )
@@ -188,12 +185,12 @@ export const Navbar: React.FC = () => {
             <div className="hidden md:flex items-center gap-2.5 shrink-0">
               {user ? (
                 <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200/80 rounded-full pl-2 pr-1.5 py-1">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
                     {user.name.slice(0, 1)}
                   </div>
                   <div className="text-left pr-1">
                     <p className="font-bold text-zinc-900 text-xs leading-none">{user.name}</p>
-                    <span className="text-[10px] font-mono text-sky-600 font-semibold">{user.role}</span>
+                    <span className="text-[10px] font-mono text-orange-600 font-semibold">{user.role}</span>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -217,7 +214,7 @@ export const Navbar: React.FC = () => {
                     className="group relative inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-zinc-950 hover:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
                   >
                     <span className="relative z-10">แจ้งซ่อมด่วน</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-sky-400 relative z-10 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    <ArrowUpRight className="w-3.5 h-3.5 text-orange-400 relative z-10 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </Link>
                 </div>
               )}
@@ -288,7 +285,7 @@ export const Navbar: React.FC = () => {
               to="/my-tickets"
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
-                isActive('/my-tickets') ? 'bg-sky-600 text-white' : 'text-sky-700 bg-sky-50'
+                isActive('/my-tickets') ? 'bg-orange-600 text-white' : 'text-orange-700 bg-orange-50'
               }`}
             >
               ประวัติการแจ้งซ่อมของฉัน
@@ -310,7 +307,7 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center justify-between px-2">
                 <div>
                   <p className="font-bold text-sm text-zinc-900">{user.name}</p>
-                  <p className="text-xs font-mono text-sky-600">{user.role}</p>
+                  <p className="text-xs font-mono text-orange-600">{user.role}</p>
                 </div>
                 <button
                   onClick={() => {

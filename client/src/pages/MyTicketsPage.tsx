@@ -43,7 +43,7 @@ export const MyTicketsPage: React.FC = () => {
         </div>
         <Link
           to="/book"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md shadow-sky-600/20 transition cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-md shadow-orange-600/20 transition cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
           <span>แจ้งซ่อมรายการใหม่</span>
@@ -53,7 +53,7 @@ export const MyTicketsPage: React.FC = () => {
       {/* Loading State */}
       {isLoading && (
         <div className="py-20 flex flex-col items-center justify-center gap-3 text-zinc-400">
-          <Loader2 className="w-8 h-8 animate-spin text-sky-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
           <p className="text-xs">กำลังโหลดประวัติการแจ้งซ่อม...</p>
         </div>
       )}
@@ -91,11 +91,11 @@ export const MyTicketsPage: React.FC = () => {
           {tickets.map((ticket) => (
             <div
               key={ticket.id}
-              className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs hover:border-sky-300 hover:shadow-md transition space-y-4"
+              className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs hover:border-orange-300 hover:shadow-md transition space-y-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="font-mono text-sm font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-100">
+                  <span className="font-mono text-sm font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
                     {ticket.trackingCode}
                   </span>
                   <span className="text-xs font-bold text-zinc-800">
@@ -135,7 +135,7 @@ export const MyTicketsPage: React.FC = () => {
                 </span>
                 <Link
                   to={`/track/${ticket.trackingCode}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline"
                 >
                   <span>ติดตามสถานะเรียลไทม์</span>
                   <ArrowRight className="w-3.5 h-3.5" />
