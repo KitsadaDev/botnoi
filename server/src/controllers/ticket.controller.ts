@@ -472,20 +472,46 @@ export async function createTicketFromBotnoi(
 
     const cleanDateText = isPlaceholder(date) ? "ตามนัดหมายในแชท" : String(date).trim();
 
-    // สร้างรหัสติดตาม
-    let trackingCode = !isPlaceholder(botTicketCode)
-      ? String(botTicketCode).trim().toUpperCase()
-      : await generateUniqueCode();
-
-    const existing = await prisma.ticket.findUnique({ where: { trackingCode } });
-    if (existing) {
-      trackingCode = await generateUniqueCode();
-    }
-
-    // แปลงวันที่นัดหมายด้วย parseBotnoiDate
+    // แปลงวันที่นัดหมายด้วย parseBotnoiDate ก่อน เพื่อเอามาสร้างรหัสให้ตรงกับบอท 100%
     const preferredDate = !isPlaceholder(date)
       ? parseBotnoiDate(String(date))
       : new Date(Date.now() + 86400000);
+
+    // สูตรสร้างรหัสเดียวกับบอท: CC-YYYYMMDD-เลขท้ายเบอร์โทร4ตัว (เช่น CC-20270110-6719)
+    const y = preferredDate.getUTCFullYear();
+    const m = String(preferredDate.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(preferredDate.getUTCDate()).padStart(2, "0");
+    const last4Phone = cleanPhone.slice(-4);
+    const deterministicCode = `CC-${y}${m}${d}-${last4Phone}`;
+
+    // ถ้าบอทส่งรหัสมาให้ใช้ของบอท แต่ถ้าไม่ได้ส่งมาให้ใช้สูตร deterministicCode ที่ตรงกับในแชทเป๊ะๆ!
+    const trackingCode = !isPlaceholder(botTicketCode)
+      ? String(botTicketCode).trim().toUpperCase()
+      : deterministicCode;
+
+    // ถ้ามีรหัสนี้ในระบบแล้ว (เช่น ลูกค้าคนเดิมแจ้งซ้ำในวันนัดเดิม) ให้อัปเดตข้อมูลเคสเดิมแทนการสร้างซ้ำ
+    const existing = await prisma.ticket.findUnique({ where: { trackingCode } });
+    if (existing) {
+      const updated = await prisma.ticket.update({
+        where: { trackingCode },
+        data: {
+          brand,
+          symptom,
+          address,
+          preferredDate,
+          note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${cleanDateText}`,
+          customerName: cleanName,
+          customerPhone: cleanPhone,
+        },
+      });
+      res.status(200).json({
+        success: true,
+        trackingCode: updated.trackingCode,
+        message: "อัปเดตใบงานจาก Botnoi AI สำเร็จ",
+        data: updated,
+      });
+      return;
+    }
 
     const createdTicket = await prisma.$transaction(async (tx) => {
       const t = await tx.ticket.create({
@@ -524,4 +550,3 @@ export async function createTicketFromBotnoi(
     next(err);
   }
 }
-
