@@ -98,18 +98,26 @@ export const HomePage: React.FC = () => {
 
   // ฟังก์ชันสั่งให้เบราว์เซอร์พูดภาษาไทย (Text-to-Speech ฟรี 0 เครดิต)
     // ฟังก์ชันพูดเสียงผู้หญิงไทย (ดึงไฟล์ MP3 จากเซิร์ฟเวอร์ /api/tickets/tts เท่านั้น เพื่อให้ทุกเครื่องเสียงเหมือนกัน 100%)
+    // ฟังก์ชันหยุดเสียงบอททันที (กดข้ามเสียงพูดได้)
+  const stopBotSpeaking = () => {
+    const existingAudio = (window as any).__currentTtsAudio as HTMLAudioElement | undefined
+    if (existingAudio) {
+      existingAudio.pause()
+      existingAudio.currentTime = 0
+    }
+    window.speechSynthesis?.cancel()
+    setIsPlayingVoice(false)
+    setIsAvatarSpeaking(false)
+  }
+
+  // ฟังก์ชันพูดเสียงผู้หญิงไทย (เร่งความเร็ว 1.25x ให้พูดกระชับทันใจ + กดหยุดข้ามได้)
   const speakThai = (text: string, mode: 'voicebot' | 'avatar', onEndCallback?: () => void) => {
     if (typeof window === 'undefined') {
       onEndCallback?.()
       return
     }
 
-    // หยุดเสียงเก่าที่กำลังเล่นอยู่ก่อนเสมอ
-    const existingAudio = (window as any).__currentTtsAudio as HTMLAudioElement | undefined
-    if (existingAudio) {
-      existingAudio.pause()
-      existingAudio.currentTime = 0
-    }
+    stopBotSpeaking()
 
     if (mode === 'voicebot') {
       setVoiceBotText(text)
@@ -127,6 +135,7 @@ export const HomePage: React.FC = () => {
 
     const cleanText = text.replace(/["“”]/g, '').trim().slice(0, 190)
     const audio = new Audio(`/api/tickets/tts?text=${encodeURIComponent(cleanText)}`)
+    audio.playbackRate = 1.25 // เร่งจังหวะการพูดให้ไวและกระชับขึ้น 25%
     ;(window as any).__currentTtsAudio = audio
 
     audio.onended = finish
@@ -134,13 +143,10 @@ export const HomePage: React.FC = () => {
     audio.play().catch(finish)
   }
 
-
   // หยุดเสียงเมื่อสลับแท็บหรือออกจากหน้า
   useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel()
-      }
+      stopBotSpeaking()
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
@@ -194,10 +200,7 @@ export const HomePage: React.FC = () => {
     if (currentStep <= 1) {
       setVoiceData((prev) => ({ ...prev, namePhone: transcript }))
       setVoiceStep(2)
-      speakThai(
-        `ขอบคุณค่ะ รบกวนแจ้งยี่ห้อแอร์ อาการเสีย และที่อยู่หน้างานได้เลยค่ะ`,
-        'voicebot'
-      )
+      speakThai('ขอบคุณค่ะ รบกวนแจ้งยี่ห้อแอร์ อาการเสีย และที่อยู่หน้างานได้เลยค่ะ', 'voicebot')
     } else if (currentStep === 2) {
       setVoiceData((prev) => ({ ...prev, info: transcript }))
       setVoiceStep(3)
@@ -223,76 +226,156 @@ export const HomePage: React.FC = () => {
     )
   }
 
-  // กดปุ่มไมโครโฟนเพื่อพูดภาษาไทย (ใช้ได้ทั้ง Voicebot และ Avatar)
+  // กดปุ่มไมโครโฟนเพื่อพูดภาษาไทย (สะสมประโยคต่อเนื่อง รอหยุดพูด 2.5 วินาที หรือกดซ้ำเพื่อส่งทันที ไม่มี Alert กวนใจ)
   const startMicListening = (mode: 'voicebot' | 'avatar') => {
-    const SpeechRec =
-      (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any }).SpeechRecognition ||
-      (window as unknown as { webkitSpeechRecognition?: any }).webkitSpeechRecognition
+    // 1. ถ้าบอทกำลังพูดอยู่ พอกดปุ่มไมค์ปุ๊บ จะตัดเสียงบอททันทีเพื่อให้เราพูดได้เลย!
+    stopBotSpeaking()
 
-    if (!SpeechRec) {
-      alert('เบราว์เซอร์นี้ไม่รองรับการรับเสียงไมโครโฟน กรุณาเปิดด้วย Google Chrome หรือกดปุ่มจำลองพูดแทนครับ')
+    const win = window as any
+
+    // 2. ถ้ากำลังเปิดไมค์ฟังอยู่ แล้วกดปุ่มไมค์ซ้ำ = สั่งส่งข้อความที่พูดค้างไว้ทันที!
+    if ((mode === 'voicebot' && isListening) || (mode === 'avatar' && isAvatarListening)) {
+      if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
+      try {
+        recognitionRef.current?.stop()
+      } catch {
+        // ignore
+      }
+      setIsListening(false)
+      setIsAvatarListening(false)
+
+      const accumulated = String(win.__accumulatedSpeech || '').trim()
+      if (accumulated) {
+        win.__accumulatedSpeech = ''
+        if (mode === 'voicebot') {
+          const activeStep = voiceStep === 0 || voiceStep === 4 ? 1 : voiceStep
+          if (voiceStep === 0 || voiceStep === 4) setVoiceStep(1)
+          handleVoicebotUserSpeech(accumulated, activeStep)
+        }
+      }
       return
     }
 
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
-      setIsPlayingVoice(false)
-      setIsAvatarSpeaking(false)
+    const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition
+    if (!SpeechRec) {
+      setVoiceUserText('เบราว์เซอร์นี้ไม่รองรับไมโครโฟน กรุณากดปุ่มจำลองพูดแทนครับ')
+      return
     }
+
+    if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
+    win.__accumulatedSpeech = ''
 
     const recognition = new SpeechRec()
     recognitionRef.current = recognition
     recognition.lang = 'th-TH'
-    recognition.interimResults = false
+    recognition.continuous = true
+    recognition.interimResults = true
     recognition.maxAlternatives = 1
 
-    recognition.onstart = () => {
-      if (mode === 'voicebot') setIsListening(true)
-      if (mode === 'avatar') setIsAvatarListening(true)
-    }
+    const submitAccumulatedSpeech = (finalText: string) => {
+      if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
+      win.__accumulatedSpeech = ''
+      try {
+        recognition.stop()
+      } catch {
+        // ignore
+      }
+      setIsListening(false)
+      setIsAvatarListening(false)
 
-    recognition.onresult = (event: any) => {
-      const transcript = event.results?.[0]?.[0]?.transcript || ''
-      if (!transcript) return
+      const cleanTranscript = finalText.trim()
+      if (!cleanTranscript) return
 
       if (mode === 'voicebot') {
         const activeStep = voiceStep === 0 || voiceStep === 4 ? 1 : voiceStep
         if (voiceStep === 0 || voiceStep === 4) setVoiceStep(1)
-        handleVoicebotUserSpeech(transcript, activeStep)
+        handleVoicebotUserSpeech(cleanTranscript, activeStep)
       } else {
-        // โหมด Avatar ตอบคำถามอัตโนมัติตามสิ่งที่ลูกค้าพูด
-        setVoiceUserText(transcript)
-        if (transcript.includes('ราคา') || transcript.includes('เท่าไหร่') || transcript.includes('ล้าง')) {
+        setVoiceUserText(cleanTranscript)
+        if (
+          cleanTranscript.includes('ราคา') ||
+          cleanTranscript.includes('เท่าไหร่') ||
+          cleanTranscript.includes('ล้าง')
+        ) {
           speakThai(
-            'บริการล้างแอร์ปลอดเชื้อราคาเริ่มต้น 590 บาทต่อเครื่อง พิเศษถ้าล้าง 2 เครื่องขึ้นไปลดเหลือเครื่องละ 500 บาทค่ะ ส่วนตรวจเช็คแอร์เสียเริ่มต้น 400 บาทค่ะ',
+            'บริการล้างแอร์ปลอดเชื้อราคา 590 บาทต่อเครื่อง พิเศษถ้าล้าง 2 เครื่องขึ้นไปเหลือเครื่องละ 500 บาทค่ะ ส่วนตรวจเช็คแอร์เสียเริ่มต้น 400 บาทค่ะ',
             'avatar'
           )
-        } else if (transcript.includes('ไม่เย็น') || transcript.includes('เสีย') || transcript.includes('น้ำหยด')) {
+        } else if (
+          cleanTranscript.includes('ไม่เย็น') ||
+          cleanTranscript.includes('เสีย') ||
+          cleanTranscript.includes('น้ำหยด')
+        ) {
           speakThai(
-            'หากแอร์ไม่เย็นหรือมีน้ำหยด เบื้องต้นแนะนำให้ลองเช็คแผ่นกรองฝุ่นและตั้งโหมด Cool ที่รีโมตนะคะ หากยังไม่หาย กดปุ่มแจ้งซ่อมเพื่อให้ช่างเข้าดูแลได้เลยค่ะ',
+            'หากแอร์ไม่เย็นหรือมีน้ำหยด แนะนำให้ลองเช็คแผ่นกรองฝุ่นและตั้งโหมดความเย็นที่รีโมตนะคะ หากยังไม่หาย กดปุ่มเปิดใบงานด่วนให้ช่างเข้าตรวจได้เลยค่ะ',
             'avatar'
           )
+        } else if (
+          cleanTranscript.includes('ซ่อม') ||
+          cleanTranscript.includes('ช่าง') ||
+          cleanTranscript.includes('จอง')
+        ) {
+          submitVoiceTicketToDb('คุณลูกค้าผ่าน Avatar 0802366719', cleanTranscript, 'พรุ่งนี้ 10 โมง')
         } else {
           speakThai(
-            `ดิฉันได้รับข้อความว่า "${transcript}" แล้วค่ะ คุณลูกค้าสามารถกดปุ่มแจ้งซ่อมด้านซ้าย หรือทักแชทบอทมุมขวาล่างเพื่อออกรหัสใบงานได้ทันทีเลยนะคะ`,
+            `คุณลูกค้าพูดว่า ${cleanTranscript} ใช่ไหมคะ หากต้องการให้ดิฉันเปิดใบงานซ่อมแอร์ด่วน สามารถกดปุ่มเปิดใบงานด้านซ้ายมือได้เลยนะคะ`,
             'avatar'
           )
         }
       }
     }
 
+    recognition.onstart = () => {
+      if (mode === 'voicebot') setIsListening(true)
+      if (mode === 'avatar') setIsAvatarListening(true)
+      setVoiceUserText('🎙️ กำลังฟัง... (พูดจนจบประโยคแล้วหยุด 2.5 วินาที หรือกดปุ่มไมค์ซ้ำเพื่อส่งทันที)')
+    }
+
+    recognition.onresult = (event: any) => {
+      let fullText = ''
+      for (let i = 0; i < event.results.length; i++) {
+        fullText += event.results[i][0].transcript + ' '
+      }
+      const cleanFullText = fullText.trim()
+
+      if (cleanFullText) {
+        win.__accumulatedSpeech = cleanFullText
+        setVoiceUserText(cleanFullText)
+
+        // รีเซ็ตเวลารอทุกครั้งที่มีคำพูดใหม่เข้ามา (รอจนกว่าจะหยุดพูดครบ 2.5 วินาทีถึงจะส่ง!)
+        if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
+        win.__silenceTimer = setTimeout(() => {
+          submitAccumulatedSpeech(cleanFullText)
+        }, 2500)
+      }
+    }
+
     recognition.onerror = () => {
-      setIsListening(false)
-      setIsAvatarListening(false)
+      if (!win.__accumulatedSpeech) {
+        setIsListening(false)
+        setIsAvatarListening(false)
+      }
     }
 
     recognition.onend = () => {
+      const remaining = String(win.__accumulatedSpeech || '').trim()
+      if (remaining) {
+        submitAccumulatedSpeech(remaining)
+      } else {
+        setIsListening(false)
+        setIsAvatarListening(false)
+      }
+    }
+
+    try {
+      recognition.start()
+    } catch {
       setIsListening(false)
       setIsAvatarListening(false)
     }
-
-    recognition.start()
   }
+
+
 
   const handleQuickTrack = (e: React.FormEvent) => {
     e.preventDefault()

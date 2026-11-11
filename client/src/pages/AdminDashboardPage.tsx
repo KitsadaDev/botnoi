@@ -18,6 +18,7 @@ import {
   MessagesSquare,
   FileDown,
   FileSpreadsheet,
+  Trash2,
 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -117,6 +118,32 @@ export const AdminDashboardPage: React.FC = () => {
       alert(err.response?.data?.error || 'เกิดข้อผิดพลาดในการอัปเดต')
     },
   })
+
+  const deleteTicketMutation = useMutation({
+    mutationFn: async (ticketId: string) => {
+      const res = await api.delete<ApiResponse<null>>(`/admin/tickets/${ticketId}`)
+      if (!res.data.success) throw new Error(res.data.error || 'ลบไม่สำเร็จ')
+    },
+    onSuccess: (_data, deletedId) => {
+      if (selectedTicketId === deletedId) {
+        setSelectedTicketId(null)
+      }
+      queryClient.invalidateQueries({ queryKey: ['adminTickets'] })
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.error || 'เกิดข้อผิดพลาดในการลบเคส')
+    },
+  })
+
+  const handleDeleteTicket = (ticket: Ticket) => {
+    if (
+      window.confirm(
+        `ยืนยันการลบใบงาน ${ticket.trackingCode} (${ticket.customerName}) ออกจากระบบถาวรหรือไม่?`
+      )
+    ) {
+      deleteTicketMutation.mutate(ticket.id)
+    }
+  }
 
   const sendStaffMessageMutation = useMutation({
     mutationFn: async (text: string) => {
@@ -489,12 +516,24 @@ export const AdminDashboardPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => openTicketModal(t)}
-                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-zinc-950 hover:bg-orange-600 transition shadow-2xs cursor-pointer"
-                      >
-                        จัดการเคส
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openTicketModal(t)}
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-zinc-950 hover:bg-orange-600 transition shadow-2xs cursor-pointer"
+                        >
+                          จัดการเคส
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTicket(t)}
+                          disabled={deleteTicketMutation.isPending}
+                          title="ลบใบงานถาวร"
+                          className="p-2 rounded-xl text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 transition cursor-pointer disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -521,12 +560,24 @@ export const AdminDashboardPage: React.FC = () => {
                   {STATUS_LABELS[activeTicket.status]}
                 </span>
               </div>
-              <button
-                onClick={() => setSelectedTicketId(null)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTicket(activeTicket)}
+                  disabled={deleteTicketMutation.isPending}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white border border-rose-200 transition cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>ลบเคสนี้</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTicketId(null)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-6 space-y-6">
@@ -681,7 +732,7 @@ export const AdminDashboardPage: React.FC = () => {
                   )}
                 </div>
 
-                <form onSubmit={handleSendStaffMessage} className="p-3 bg-zinc-50 border-t border-zinc-200 flex gap-2">
+                                <form onSubmit={handleSendStaffMessage} className="p-3 bg-zinc-50 border-t border-zinc-200 flex gap-2">
                   <input
                     type="text"
                     value={staffMessageText}
@@ -706,3 +757,4 @@ export const AdminDashboardPage: React.FC = () => {
     </div>
   )
 }
+

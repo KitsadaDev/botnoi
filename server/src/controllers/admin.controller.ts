@@ -230,6 +230,42 @@ export async function createStaffMessage(
   }
 }
 
+
+// ===========================
+// DELETE /api/admin/tickets/:id
+// ลบใบงานออกจากระบบถาวร (Hard Delete สำหรับลบเคสทดสอบ/เคสซ้ำ)
+// ===========================
+export async function deleteTicket(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const id = String(req.params.id);
+
+    const existing = await prisma.ticket.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({
+        success: false,
+        error: "ไม่พบรายการแจ้งซ่อมนี้ในระบบ",
+      });
+      return;
+    }
+
+    await prisma.ticket.delete({
+      where: { id },
+    });
+
+    res.json({
+      success: true,
+      message: "ลบรายการแจ้งซ่อมเรียบร้อยแล้ว",
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 // ===========================
 // GET /api/technicians
 // ดูรายชื่อช่าง (ถ้าเป็น public จะ mask เบอร์โทรเพื่อป้องกันการ harvest ข้อมูล)
