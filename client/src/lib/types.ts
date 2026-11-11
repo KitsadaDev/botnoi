@@ -77,8 +77,8 @@ export type TicketCounts = Record<TicketStatus | 'total', number>
 // Label สำหรับแสดงผลภาษาไทย
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   CLEANING: 'ล้างแอร์',
-  REPAIR: 'ซ่อมแอร์',
-  INSTALLATION: 'ติดตั้ง/ย้ายแอร์',
+  REPAIR: 'ซ่อมบำรุง',
+  INSTALLATION: 'ติดตั้ง/ย้าย',
 }
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {

@@ -470,6 +470,13 @@ export async function createTicketFromBotnoi(
     // แยก brand, symptom, address ไม่ให้ทับกัน
     const { brand, symptom, address } = parseBotnoiInfo(cleanInfo);
 
+    // ตรวจสอบประเภทบริการอัตโนมัติจากสิ่งที่ลูกค้าแจ้งในแชท
+    const detectedService = /ล้าง|ทำความสะอาด/.test(cleanInfo)
+      ? "CLEANING"
+      : /ติดตั้ง|ย้ายแอร์|ย้ายจุด|ติดแอร์/.test(cleanInfo)
+      ? "INSTALLATION"
+      : "REPAIR";
+
     // ดึงรหัส CC-YYYYMMDD-XXXX ที่บอทแนบมาใน <date> หรือ <ticket> หรือ <info>
     const combinedRaw = `${botTicketCode || ""} ${date || ""} ${info || ""}`;
     const codeMatch = combinedRaw.match(/(CC-[0-9]{8}-[A-Z0-9]{4,}|TCK-[A-Z0-9-]+)/i);
@@ -488,7 +495,7 @@ export async function createTicketFromBotnoi(
       ? parseBotnoiDate(rawDateOnly)
       : new Date(Date.now() + 86400000);
 
-    // ใช้รหัสเดียวกับที่บอทสร้างในแชทเป๊ะๆ (ถ้าไม่มีจริงๆ หรือซ้ำในระบบจึงสุ่มใหม่)
+    // ใช้รหัสเดียวกับที่บอทสร้างในแชทเป๊ะๆ
     let trackingCode = codeMatch
       ? codeMatch[1].toUpperCase()
       : await generateUniqueCode();
@@ -502,7 +509,7 @@ export async function createTicketFromBotnoi(
       const t = await tx.ticket.create({
         data: {
           trackingCode,
-          service: "REPAIR",
+          service: detectedService,
           brand,
           symptom,
           address,
