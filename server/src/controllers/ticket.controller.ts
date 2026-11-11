@@ -393,6 +393,56 @@ function parseBotnoiDate(raw: string): Date {
 }
 
 // ===========================
+// Helper แยก อุปกรณ์(brand), อาการเสีย(symptom), และที่อยู่(address) ออกจาก <info>
+// ===========================
+function parseBotnoiInfo(rawInfo: string): {
+  brand: string;
+  symptom: string;
+  address: string;
+} {
+  const text = rawInfo.trim();
+
+  // 1. กรณีบอทส่งมาคั่นด้วย | เช่น "PS4 | เปิดไม่ติด | backroom"
+  if (text.includes("|")) {
+    const parts = text.split("|").map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 3) {
+      return {
+        brand: parts[0],
+        symptom: parts[1],
+        address: parts.slice(2).join(" "),
+      };
+    }
+    if (parts.length === 2) {
+      return {
+        brand: "แจ้งผ่าน AI Chatbot",
+        symptom: parts[0],
+        address: parts[1],
+      };
+    }
+  }
+
+  // 2. กรณีบอทเขียนรวมกัน เช่น "PS4 เปิดไม่ติด, ที่อยู่หน้างาน: backroom" หรือ "อยู่ที่ ..."
+  const addrRegex = /(?:,|\s)*(?:ที่อยู่หน้างาน|ที่อยู่|สถานที่|อยู่ที่)\s*[:：]?\s*(.+)$/i;
+  const match = text.match(addrRegex);
+  if (match && match.index !== undefined) {
+    const symptomPart = text.slice(0, match.index).replace(/[,\s]+$/, "").trim();
+    const addressPart = match[1].trim();
+    return {
+      brand: "แจ้งผ่าน AI Chatbot",
+      symptom: symptomPart || text,
+      address: addressPart || "-",
+    };
+  }
+
+  // 3. Fallback กรณีไม่มีคำบอกที่อยู่ชัดเจน
+  return {
+    brand: "แจ้งผ่าน AI Chatbot",
+    symptom: text,
+    address: "ตามที่แจ้งในแชทบอท",
+  };
+}
+
+// ===========================
 // POST /api/tickets/botnoi-webhook
 // ===========================
 export async function createTicketFromBotnoi(
@@ -417,6 +467,9 @@ export async function createTicketFromBotnoi(
       ? "แจ้งซ่อมผ่านแชทบอท Plasom"
       : String(info).trim();
 
+    // แยก brand, symptom, address ไม่ให้ทับกัน
+    const { brand, symptom, address } = parseBotnoiInfo(cleanInfo);
+
     const cleanDateText = isPlaceholder(date) ? "ตามนัดหมายในแชท" : String(date).trim();
 
     // สร้างรหัสติดตาม
@@ -439,9 +492,9 @@ export async function createTicketFromBotnoi(
         data: {
           trackingCode,
           service: "REPAIR",
-          brand: "แจ้งผ่าน AI Chatbot",
-          symptom: cleanInfo,
-          address: cleanInfo,
+          brand,
+          symptom,
+          address,
           preferredDate,
           note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${cleanDateText}`,
           customerName: cleanName,
@@ -471,5 +524,4 @@ export async function createTicketFromBotnoi(
     next(err);
   }
 }
-
 
