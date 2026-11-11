@@ -97,34 +97,18 @@ export const HomePage: React.FC = () => {
   const navigate = useNavigate()
 
   // ฟังก์ชันสั่งให้เบราว์เซอร์พูดภาษาไทย (Text-to-Speech ฟรี 0 เครดิต)
+    // ฟังก์ชันพูดเสียงผู้หญิงไทย (ดึงไฟล์ MP3 จากเซิร์ฟเวอร์ /api/tickets/tts เท่านั้น เพื่อให้ทุกเครื่องเสียงเหมือนกัน 100%)
   const speakThai = (text: string, mode: 'voicebot' | 'avatar', onEndCallback?: () => void) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    if (typeof window === 'undefined') {
       onEndCallback?.()
       return
     }
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'th-TH'
-    utterance.rate = 1.02
-    utterance.pitch = 1.05
 
-    const voices = window.speechSynthesis.getVoices()
-    const thaiVoice = voices.find((v) => v.lang.includes('th') || v.lang.includes('TH'))
-    if (thaiVoice) utterance.voice = thaiVoice
-
-    utterance.onstart = () => {
-      if (mode === 'voicebot') setIsPlayingVoice(true)
-      if (mode === 'avatar') setIsAvatarSpeaking(true)
-    }
-    utterance.onend = () => {
-      if (mode === 'voicebot') setIsPlayingVoice(false)
-      if (mode === 'avatar') setIsAvatarSpeaking(false)
-      onEndCallback?.()
-    }
-    utterance.onerror = () => {
-      if (mode === 'voicebot') setIsPlayingVoice(false)
-      if (mode === 'avatar') setIsAvatarSpeaking(false)
-      onEndCallback?.()
+    // หยุดเสียงเก่าที่กำลังเล่นอยู่ก่อนเสมอ
+    const existingAudio = (window as any).__currentTtsAudio as HTMLAudioElement | undefined
+    if (existingAudio) {
+      existingAudio.pause()
+      existingAudio.currentTime = 0
     }
 
     if (mode === 'voicebot') {
@@ -134,8 +118,22 @@ export const HomePage: React.FC = () => {
       setAvatarSubtitle(text)
       setIsAvatarSpeaking(true)
     }
-    window.speechSynthesis.speak(utterance)
+
+    const finish = () => {
+      if (mode === 'voicebot') setIsPlayingVoice(false)
+      if (mode === 'avatar') setIsAvatarSpeaking(false)
+      onEndCallback?.()
+    }
+
+    const cleanText = text.replace(/["“”]/g, '').trim().slice(0, 190)
+    const audio = new Audio(`/api/tickets/tts?text=${encodeURIComponent(cleanText)}`)
+    ;(window as any).__currentTtsAudio = audio
+
+    audio.onended = finish
+    audio.onerror = finish
+    audio.play().catch(finish)
   }
+
 
   // หยุดเสียงเมื่อสลับแท็บหรือออกจากหน้า
   useEffect(() => {

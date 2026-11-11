@@ -542,3 +542,43 @@ export async function createTicketFromBotnoi(
     next(err);
   }
 }
+
+// ===========================
+// GET /api/tickets/tts?text=...
+// ดึงเสียงผู้หญิงภาษาไทยธรรมชาติ (Google Thai Female TTS) ส่งกลับเป็น MP3
+// ===========================
+export async function getThaiFemaleVoice(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const text = String(req.query.text || "").trim().slice(0, 200);
+    if (!text) {
+      res.status(400).json({ success: false, error: "กรุณาระบุข้อความ" });
+      return;
+    }
+
+    const ttsUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
+      text
+    )}&tl=th&client=tw-ob`;
+
+    const response = await fetch(ttsUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
+
+    if (!response.ok) {
+      res.status(502).json({ success: false, error: "ไม่สามารถสร้างเสียงพูดได้" });
+      return;
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    res.setHeader("Content-Type", "audio/mpeg");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(Buffer.from(arrayBuffer));
+  } catch (err) {
+    next(err);
+  }
+}

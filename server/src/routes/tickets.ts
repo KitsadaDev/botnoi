@@ -7,6 +7,7 @@ import {
   createCustomerMessage,
   getMyTickets,
   createTicketFromBotnoi,
+  getThaiFemaleVoice,
 } from "../controllers/ticket.controller";
 import { uploadImages } from "../middleware/upload";
 import { optionalAuth, authRequired } from "../middleware/auth";
@@ -63,6 +64,8 @@ router.post(
 
 // POST /api/tickets/botnoi-webhook (สำหรับให้ Botnoi AI Agent ยิงมาเปิดเคส)
 router.post("/botnoi-webhook", createTicketFromBotnoi);
+router.get("/tts", getThaiFemaleVoice);
+
 
 
 // ==========================================
