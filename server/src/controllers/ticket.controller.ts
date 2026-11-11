@@ -470,47 +470,32 @@ export async function createTicketFromBotnoi(
     // แยก brand, symptom, address ไม่ให้ทับกัน
     const { brand, symptom, address } = parseBotnoiInfo(cleanInfo);
 
-    const cleanDateText = isPlaceholder(date) ? "ตามนัดหมายในแชท" : String(date).trim();
+    // ดึงรหัส CC-YYYYMMDD-XXXX ที่บอทแนบมาใน <date> หรือ <ticket> หรือ <info>
+    const combinedRaw = `${botTicketCode || ""} ${date || ""} ${info || ""}`;
+    const codeMatch = combinedRaw.match(/(CC-[0-9]{8}-[A-Z0-9]{4,}|TCK-[A-Z0-9-]+)/i);
 
-    // แปลงวันที่นัดหมายด้วย parseBotnoiDate ก่อน เพื่อเอามาสร้างรหัสให้ตรงกับบอท 100%
-    const preferredDate = !isPlaceholder(date)
-      ? parseBotnoiDate(String(date))
+    // ตัดรหัส CC-... ออกจากข้อความวันที่ เพื่อให้เหลือแต่วันที่สะอาดๆ
+    const rawDateOnly = !isPlaceholder(date)
+      ? String(date)
+          .replace(/\|?\s*(CC-[0-9]{8}-[A-Z0-9]{4,}|TCK-[A-Z0-9-]+)/gi, "")
+          .trim()
+      : "";
+
+    const cleanDateText = rawDateOnly || "ตามนัดหมายในแชท";
+
+    // แปลงวันที่นัดหมายด้วย parseBotnoiDate
+    const preferredDate = rawDateOnly
+      ? parseBotnoiDate(rawDateOnly)
       : new Date(Date.now() + 86400000);
 
-    // สูตรสร้างรหัสเดียวกับบอท: CC-YYYYMMDD-เลขท้ายเบอร์โทร4ตัว (เช่น CC-20270110-6719)
-    const y = preferredDate.getUTCFullYear();
-    const m = String(preferredDate.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(preferredDate.getUTCDate()).padStart(2, "0");
-    const last4Phone = cleanPhone.slice(-4);
-    const deterministicCode = `CC-${y}${m}${d}-${last4Phone}`;
+    // ใช้รหัสเดียวกับที่บอทสร้างในแชทเป๊ะๆ (ถ้าไม่มีจริงๆ หรือซ้ำในระบบจึงสุ่มใหม่)
+    let trackingCode = codeMatch
+      ? codeMatch[1].toUpperCase()
+      : await generateUniqueCode();
 
-    // ถ้าบอทส่งรหัสมาให้ใช้ของบอท แต่ถ้าไม่ได้ส่งมาให้ใช้สูตร deterministicCode ที่ตรงกับในแชทเป๊ะๆ!
-    const trackingCode = !isPlaceholder(botTicketCode)
-      ? String(botTicketCode).trim().toUpperCase()
-      : deterministicCode;
-
-    // ถ้ามีรหัสนี้ในระบบแล้ว (เช่น ลูกค้าคนเดิมแจ้งซ้ำในวันนัดเดิม) ให้อัปเดตข้อมูลเคสเดิมแทนการสร้างซ้ำ
     const existing = await prisma.ticket.findUnique({ where: { trackingCode } });
     if (existing) {
-      const updated = await prisma.ticket.update({
-        where: { trackingCode },
-        data: {
-          brand,
-          symptom,
-          address,
-          preferredDate,
-          note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${cleanDateText}`,
-          customerName: cleanName,
-          customerPhone: cleanPhone,
-        },
-      });
-      res.status(200).json({
-        success: true,
-        trackingCode: updated.trackingCode,
-        message: "อัปเดตใบงานจาก Botnoi AI สำเร็จ",
-        data: updated,
-      });
-      return;
+      trackingCode = await generateUniqueCode();
     }
 
     const createdTicket = await prisma.$transaction(async (tx) => {
