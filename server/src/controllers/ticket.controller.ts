@@ -624,3 +624,75 @@ export async function getThaiFemaleVoice(
     next(err);
   }
 }
+
+
+// ===========================
+// POST /api/tickets/voicebot-token
+// ขอ ephemeral_token ชั่วคราวจาก Botnoi Voicebot เพื่อให้หน้าเว็บคุยสดผ่าน WSS
+// ===========================
+export async function createVoicebotCallToken(
+  _req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const accessToken = process.env.BOTNOI_VOICEBOT_ACCESS_TOKEN?.trim();
+    const agentId = (process.env.BOTNOI_VOICEBOT_AGENT_ID || "agt_393eec992097").trim();
+    const mintUrl = (
+      process.env.BOTNOI_VOICEBOT_MINT_URL ||
+      "https://backend-voicebot-stg.botnoigroup.com/call/tokens"
+    ).trim();
+    const wsUrl = (
+      process.env.BOTNOI_VOICEBOT_WS_URL ||
+      "wss://voicebot-serverless-stg.botnoigroup.com/v1/call"
+    ).trim();
+
+    if (!accessToken) {
+      res.status(500).json({
+        success: false,
+        error: "ยังไม่ได้ตั้งค่า BOTNOI_VOICEBOT_ACCESS_TOKEN บนเซิร์ฟเวอร์",
+      });
+      return;
+    }
+
+    const response = await fetch(mintUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        agent_id: agentId,
+        channel: "web",
+      }),
+    });
+
+    const body = (await response.json().catch(() => ({}))) as {
+      ephemeral_token?: string;
+      session_id?: string | null;
+      detail?: string;
+    };
+
+    if (!response.ok || typeof body.ephemeral_token !== "string") {
+      const reason =
+        response.status === 401
+          ? "โทเคนฝั่งเซิร์ฟเวอร์หมดอายุหรือไม่ถูกต้อง กรุณาอัปเดตค่าจากหน้า Developers"
+          : body.detail || `HTTP ${response.status}`;
+      res.status(502).json({
+        success: false,
+        error: `ไม่สามารถขอสิทธิ์เชื่อมต่อ Voicebot ได้ (${reason})`,
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ephemeralToken: body.ephemeral_token,
+        wsUrl,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}

@@ -25,9 +25,16 @@ import {
   Volume2,
   Play,
   User as UserIcon,
+  PhoneCall as VcPhoneIcon,
+  PhoneOff as VcHangupIcon,
+  Volume2 as VcVolumeIcon,
+  Copy as VcCopyIcon,
+  Check as VcCheckIcon,
 } from 'lucide-react'
+import { BotnoiVoiceClient, type VoiceCallStatus } from '../lib/botnoiVoiceClient'
 import { ScrollReveal, Tilt3DCard, MagneticButton, NumberTicker } from '../components/InteractiveUI'
 import { SAMPLE_TRACKING_CODES } from '../lib/constants'
+
 
 const SUPPORTED_BRANDS = [
   'CARRIER',
@@ -76,15 +83,16 @@ export const HomePage: React.FC = () => {
   // ============================================================================
   // State สำหรับระบบ Voicebot & AI Avatar ใช้งานจริง (Web Speech API + Webhook)
   // ============================================================================
-  const [isListening, setIsListening] = useState(false)
-  const [voiceStep, setVoiceStep] = useState<number>(0) // 0=พร้อมเริ่ม, 1=ถามชื่อ/เบอร์, 2=ถามอาการ/ที่อยู่, 3=ถามวันนัด, 4=เสร็จสิ้น
-  const [voiceData, setVoiceData] = useState({ namePhone: '', info: '', date: '' })
+    const [voiceCallStatus, setVoiceCallStatus] = useState<VoiceCallStatus>('idle')
+  const [copiedCode, setCopiedCode] = useState(false)
+  const [voiceStep, setVoiceStep] = useState<number>(0)
   const [voiceBotText, setVoiceBotText] = useState(
-    'กดปุ่ม "เริ่มสนทนาแจ้งซ่อมด้วยเสียง" หรือกดปุ่มไมโครโฟนเพื่อพูดคุยกับ AI Voicebot ได้เลยค่ะ'
+    'กดปุ่ม "โทรคุยนัดช่างกับน้องปลาส้ม" เพื่อเปิดสายสนทนาสดแบบโต้ตอบอัตโนมัติ (พูดคุยต่อเนื่องได้เหมือนคุยโทรศัพท์จริง ไม่ต้องคอยกดปุ่มไมค์ซ้ำค่ะ)'
   )
   const [voiceUserText, setVoiceUserText] = useState('')
   const [createdVoiceCode, setCreatedVoiceCode] = useState<string | null>(null)
   const [isSubmittingVoice, setIsSubmittingVoice] = useState(false)
+  const voiceClientRef = useRef<BotnoiVoiceClient | null>(null)
 
   // State สำหรับ AI Avatar
   const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false)
@@ -96,9 +104,6 @@ export const HomePage: React.FC = () => {
 
   const navigate = useNavigate()
 
-  // ฟังก์ชันสั่งให้เบราว์เซอร์พูดภาษาไทย (Text-to-Speech ฟรี 0 เครดิต)
-    // ฟังก์ชันพูดเสียงผู้หญิงไทย (ดึงไฟล์ MP3 จากเซิร์ฟเวอร์ /api/tickets/tts เท่านั้น เพื่อให้ทุกเครื่องเสียงเหมือนกัน 100%)
-    // ฟังก์ชันหยุดเสียงบอททันที (กดข้ามเสียงพูดได้)
   const stopBotSpeaking = () => {
     const existingAudio = (window as any).__currentTtsAudio as HTMLAudioElement | undefined
     if (existingAudio) {
@@ -110,7 +115,6 @@ export const HomePage: React.FC = () => {
     setIsAvatarSpeaking(false)
   }
 
-  // ฟังก์ชันพูดเสียงผู้หญิงไทย (เร่งความเร็ว 1.25x ให้พูดกระชับทันใจ + กดหยุดข้ามได้)
   const speakThai = (text: string, mode: 'voicebot' | 'avatar', onEndCallback?: () => void) => {
     if (typeof window === 'undefined') {
       onEndCallback?.()
@@ -135,7 +139,7 @@ export const HomePage: React.FC = () => {
 
     const cleanText = text.replace(/["“”]/g, '').trim().slice(0, 190)
     const audio = new Audio(`/api/tickets/tts?text=${encodeURIComponent(cleanText)}`)
-    audio.playbackRate = 1.25 // เร่งจังหวะการพูดให้ไวและกระชับขึ้น 25%
+    audio.playbackRate = 1.25
     ;(window as any).__currentTtsAudio = audio
 
     audio.onended = finish
@@ -143,9 +147,72 @@ export const HomePage: React.FC = () => {
     audio.play().catch(finish)
   }
 
-  // หยุดเสียงเมื่อสลับแท็บหรือออกจากหน้า
+  // เริ่มโทร / วางสาย Realtime Voicebot (Agent Plasom)
+  const toggleRealtimeVoiceCall = async () => {
+    if (voiceCallStatus === 'connecting' || voiceCallStatus === 'connected') {
+      voiceClientRef.current?.hangup()
+      voiceClientRef.current = null
+      setVoiceCallStatus('idle')
+      setIsPlayingVoice(false)
+      return
+    }
+
+    stopBotSpeaking()
+    setCreatedVoiceCode(null)
+    setCopiedCode(false)
+    setVoiceUserText('')
+    setVoiceStep(1)
+    setVoiceBotText('กำลังเชื่อมต่อสายสนทนากับน้องปลาส้ม กรุณารอสักครู่ค่ะ...')
+
+    const client = new BotnoiVoiceClient({
+      onStatusChange: (status) => {
+        setVoiceCallStatus(status)
+        if (status === 'idle') {
+          setIsPlayingVoice(false)
+        }
+      },
+      onBotSpeakingChange: (speaking) => {
+        setIsPlayingVoice(speaking)
+      },
+      onBotTranscript: (text) => {
+        setVoiceBotText(text)
+        if (text.includes('สรุปข้อมูล') || text.includes('วันนัดหมาย') || text.includes('วันที่สะดวก')) {
+          setVoiceStep(3)
+        } else if (text.includes('ที่อยู่') || text.includes('ยี่ห้อ') || text.includes('อาการ')) {
+          setVoiceStep((prev) => Math.max(prev, 2))
+        }
+      },
+      onUserTranscript: (text) => {
+        setVoiceUserText(text)
+      },
+      onTrackingCodeDetected: (code) => {
+        setCreatedVoiceCode(code)
+        setVoiceStep(4)
+      },
+      onError: (errMsg) => {
+        setVoiceBotText(`⚠️ ${errMsg}`)
+      },
+    })
+
+    voiceClientRef.current = client
+    await client.connect()
+  }
+
+  const handleCopyVoiceCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedCode(true)
+      setTimeout(() => setCopiedCode(false), 2000)
+    } catch {
+      // ignore
+    }
+  }
+
+  // หยุดสายและเสียงเมื่อสลับแท็บหรือออกจากหน้า
   useEffect(() => {
     return () => {
+      voiceClientRef.current?.hangup()
+      voiceClientRef.current = null
       stopBotSpeaking()
       if (recognitionRef.current) {
         try {
@@ -157,110 +224,61 @@ export const HomePage: React.FC = () => {
     }
   }, [activeAiTab])
 
-  // ฟังก์ชันส่งข้อมูลจาก Voicebot เข้า Database จริง (ผ่าน /api/tickets/botnoi-webhook)
+  // เก็บไว้รองรับปุ่มเปิดใบงานด่วนในแท็บ AI Avatar เดิม
   const submitVoiceTicketToDb = async (namePhone: string, infoText: string, dateText: string) => {
     setIsSubmittingVoice(true)
     try {
-      const phoneMatch = namePhone.replace(/\D/g, '').match(/0\d{9}/)
-      const phone = phoneMatch ? phoneMatch[0] : '0899999999'
+      const digits = namePhone.replace(/\D/g, '').slice(0, 10)
+      const phone = digits.length === 10 ? digits : '0'.repeat(10)
       const cleanName =
         namePhone
           .replace(/[0-9-]/g, '')
           .replace(/ชื่อ|เบอร์|โทร|ครับ|ค่ะ/g, '')
-          .trim() || 'ลูกค้าแจ้งผ่าน AI Voicebot'
+          .trim() || 'ลูกค้าแจ้งผ่าน AI Avatar'
 
       const res = await fetch('/api/tickets/botnoi-webhook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_name: `${cleanName} (Voicebot)`,
+          customer_name: cleanName,
           phone,
-          info: `AI Voicebot | ${infoText} | แจ้งผ่านระบบเสียง`,
+          info: `AI Avatar | ${infoText} | แจ้งผ่านระบบเสียง`,
           date: dateText,
         }),
       })
       const json = await res.json()
-      const code = json?.trackingCode || 'CC-20261110-VOIC'
-      setCreatedVoiceCode(code)
+      const code = json?.trackingCode || ''
+      if (code) setCreatedVoiceCode(code)
       setVoiceStep(4)
       speakThai(
         `บันทึกข้อมูลเรียบร้อยแล้วค่ะ รหัสติดตามงานซ่อมของคุณคือ ${code} สามารถตรวจสอบสถานะบนหน้าเว็บได้เลยนะคะ ขอบคุณที่ใช้บริการค่ะ`,
-        'voicebot'
+        'avatar'
       )
     } catch {
-      speakThai('ขออภัยค่ะ ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งนะคะ', 'voicebot')
+      speakThai('ขออภัยค่ะ ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งนะคะ', 'avatar')
     } finally {
       setIsSubmittingVoice(false)
     }
   }
 
-  // จัดการคำพูดของลูกค้าในโหมด Voicebot ทีละขั้นตอน
-  const handleVoicebotUserSpeech = (transcript: string, currentStep: number) => {
-    setVoiceUserText(transcript)
-    if (currentStep <= 1) {
-      setVoiceData((prev) => ({ ...prev, namePhone: transcript }))
-      setVoiceStep(2)
-      speakThai('ขอบคุณค่ะ รบกวนแจ้งยี่ห้อแอร์ อาการเสีย และที่อยู่หน้างานได้เลยค่ะ', 'voicebot')
-    } else if (currentStep === 2) {
-      setVoiceData((prev) => ({ ...prev, info: transcript }))
-      setVoiceStep(3)
-      speakThai('รับทราบอาการเสียค่ะ สะดวกนัดหมายช่างเข้าดูแลเป็นวันและเวลาไหนคะ?', 'voicebot')
-    } else if (currentStep === 3) {
-      const updatedDate = transcript
-      setVoiceData((prev) => {
-        submitVoiceTicketToDb(prev.namePhone, prev.info, updatedDate)
-        return { ...prev, date: updatedDate }
-      })
-    }
-  }
-
-  // เริ่มต้นคุยกับ Voicebot
-  const startVoicebotFlow = () => {
-    setCreatedVoiceCode(null)
-    setVoiceUserText('')
-    setVoiceData({ namePhone: '', info: '', date: '' })
-    setVoiceStep(1)
-    speakThai(
-      'สวัสดีค่ะ ศูนย์บริการปลาส้มยินดีให้บริการค่ะ รบกวนแจ้งชื่อและเบอร์โทรศัพท์ 10 หลักของคุณลูกค้าได้เลยค่ะ',
-      'voicebot'
-    )
-  }
-
-  // กดปุ่มไมโครโฟนเพื่อพูดภาษาไทย (สะสมประโยคต่อเนื่อง รอหยุดพูด 2.5 วินาที หรือกดซ้ำเพื่อส่งทันที ไม่มี Alert กวนใจ)
-  const startMicListening = (mode: 'voicebot' | 'avatar') => {
-    // 1. ถ้าบอทกำลังพูดอยู่ พอกดปุ่มไมค์ปุ๊บ จะตัดเสียงบอททันทีเพื่อให้เราพูดได้เลย!
+  // ไมโครโฟนสำหรับแท็บ AI Avatar เดิม
+  const startMicListening = (_mode: 'voicebot' | 'avatar') => {
     stopBotSpeaking()
-
     const win = window as any
 
-    // 2. ถ้ากำลังเปิดไมค์ฟังอยู่ แล้วกดปุ่มไมค์ซ้ำ = สั่งส่งข้อความที่พูดค้างไว้ทันที!
-    if ((mode === 'voicebot' && isListening) || (mode === 'avatar' && isAvatarListening)) {
+    if (isAvatarListening) {
       if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
       try {
         recognitionRef.current?.stop()
       } catch {
         // ignore
       }
-      setIsListening(false)
       setIsAvatarListening(false)
-
-      const accumulated = String(win.__accumulatedSpeech || '').trim()
-      if (accumulated) {
-        win.__accumulatedSpeech = ''
-        if (mode === 'voicebot') {
-          const activeStep = voiceStep === 0 || voiceStep === 4 ? 1 : voiceStep
-          if (voiceStep === 0 || voiceStep === 4) setVoiceStep(1)
-          handleVoicebotUserSpeech(accumulated, activeStep)
-        }
-      }
       return
     }
 
     const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition
-    if (!SpeechRec) {
-      setVoiceUserText('เบราว์เซอร์นี้ไม่รองรับไมโครโฟน กรุณากดปุ่มจำลองพูดแทนครับ')
-      return
-    }
+    if (!SpeechRec) return
 
     if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
     win.__accumulatedSpeech = ''
@@ -280,55 +298,46 @@ export const HomePage: React.FC = () => {
       } catch {
         // ignore
       }
-      setIsListening(false)
       setIsAvatarListening(false)
 
       const cleanTranscript = finalText.trim()
       if (!cleanTranscript) return
 
-      if (mode === 'voicebot') {
-        const activeStep = voiceStep === 0 || voiceStep === 4 ? 1 : voiceStep
-        if (voiceStep === 0 || voiceStep === 4) setVoiceStep(1)
-        handleVoicebotUserSpeech(cleanTranscript, activeStep)
+      setVoiceUserText(cleanTranscript)
+      if (
+        cleanTranscript.includes('ราคา') ||
+        cleanTranscript.includes('เท่าไหร่') ||
+        cleanTranscript.includes('ล้าง')
+      ) {
+        speakThai(
+          'บริการล้างแอร์ปลอดเชื้อราคา 590 บาทต่อเครื่อง พิเศษถ้าล้าง 2 เครื่องขึ้นไปเหลือเครื่องละ 500 บาทค่ะ ส่วนตรวจเช็คแอร์เสียเริ่มต้น 400 บาทค่ะ',
+          'avatar'
+        )
+      } else if (
+        cleanTranscript.includes('ไม่เย็น') ||
+        cleanTranscript.includes('เสีย') ||
+        cleanTranscript.includes('น้ำหยด')
+      ) {
+        speakThai(
+          'หากแอร์ไม่เย็นหรือมีน้ำหยด แนะนำให้ลองเช็คแผ่นกรองฝุ่นและตั้งโหมดความเย็นที่รีโมตนะคะ หากยังไม่หาย กดปุ่มเปิดใบงานด่วนให้ช่างเข้าตรวจได้เลยค่ะ',
+          'avatar'
+        )
+      } else if (
+        cleanTranscript.includes('ซ่อม') ||
+        cleanTranscript.includes('ช่าง') ||
+        cleanTranscript.includes('จอง')
+      ) {
+        void submitVoiceTicketToDb('คุณลูกค้าผ่าน Avatar', cleanTranscript, 'พรุ่งนี้ 10 โมง')
       } else {
-        setVoiceUserText(cleanTranscript)
-        if (
-          cleanTranscript.includes('ราคา') ||
-          cleanTranscript.includes('เท่าไหร่') ||
-          cleanTranscript.includes('ล้าง')
-        ) {
-          speakThai(
-            'บริการล้างแอร์ปลอดเชื้อราคา 590 บาทต่อเครื่อง พิเศษถ้าล้าง 2 เครื่องขึ้นไปเหลือเครื่องละ 500 บาทค่ะ ส่วนตรวจเช็คแอร์เสียเริ่มต้น 400 บาทค่ะ',
-            'avatar'
-          )
-        } else if (
-          cleanTranscript.includes('ไม่เย็น') ||
-          cleanTranscript.includes('เสีย') ||
-          cleanTranscript.includes('น้ำหยด')
-        ) {
-          speakThai(
-            'หากแอร์ไม่เย็นหรือมีน้ำหยด แนะนำให้ลองเช็คแผ่นกรองฝุ่นและตั้งโหมดความเย็นที่รีโมตนะคะ หากยังไม่หาย กดปุ่มเปิดใบงานด่วนให้ช่างเข้าตรวจได้เลยค่ะ',
-            'avatar'
-          )
-        } else if (
-          cleanTranscript.includes('ซ่อม') ||
-          cleanTranscript.includes('ช่าง') ||
-          cleanTranscript.includes('จอง')
-        ) {
-          submitVoiceTicketToDb('คุณลูกค้าผ่าน Avatar 0802366719', cleanTranscript, 'พรุ่งนี้ 10 โมง')
-        } else {
-          speakThai(
-            `คุณลูกค้าพูดว่า ${cleanTranscript} ใช่ไหมคะ หากต้องการให้ดิฉันเปิดใบงานซ่อมแอร์ด่วน สามารถกดปุ่มเปิดใบงานด้านซ้ายมือได้เลยนะคะ`,
-            'avatar'
-          )
-        }
+        speakThai(
+          `คุณลูกค้าพูดว่า ${cleanTranscript} ใช่ไหมคะ หากต้องการให้ดิฉันเปิดใบงานซ่อมแอร์ด่วน สามารถสลับไปแท็บ Voicebot ด้านบนเพื่อคุยสดได้เลยนะคะ`,
+          'avatar'
+        )
       }
     }
 
     recognition.onstart = () => {
-      if (mode === 'voicebot') setIsListening(true)
-      if (mode === 'avatar') setIsAvatarListening(true)
-      setVoiceUserText('🎙️ กำลังฟัง... (พูดจนจบประโยคแล้วหยุด 2.5 วินาที หรือกดปุ่มไมค์ซ้ำเพื่อส่งทันที)')
+      setIsAvatarListening(true)
     }
 
     recognition.onresult = (event: any) => {
@@ -337,12 +346,8 @@ export const HomePage: React.FC = () => {
         fullText += event.results[i][0].transcript + ' '
       }
       const cleanFullText = fullText.trim()
-
       if (cleanFullText) {
         win.__accumulatedSpeech = cleanFullText
-        setVoiceUserText(cleanFullText)
-
-        // รีเซ็ตเวลารอทุกครั้งที่มีคำพูดใหม่เข้ามา (รอจนกว่าจะหยุดพูดครบ 2.5 วินาทีถึงจะส่ง!)
         if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
         win.__silenceTimer = setTimeout(() => {
           submitAccumulatedSpeech(cleanFullText)
@@ -351,10 +356,7 @@ export const HomePage: React.FC = () => {
     }
 
     recognition.onerror = () => {
-      if (!win.__accumulatedSpeech) {
-        setIsListening(false)
-        setIsAvatarListening(false)
-      }
+      if (!win.__accumulatedSpeech) setIsAvatarListening(false)
     }
 
     recognition.onend = () => {
@@ -362,7 +364,6 @@ export const HomePage: React.FC = () => {
       if (remaining) {
         submitAccumulatedSpeech(remaining)
       } else {
-        setIsListening(false)
         setIsAvatarListening(false)
       }
     }
@@ -370,11 +371,11 @@ export const HomePage: React.FC = () => {
     try {
       recognition.start()
     } catch {
-      setIsListening(false)
       setIsAvatarListening(false)
     }
   }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
   const handleQuickTrack = (e: React.FormEvent) => {
@@ -1004,21 +1005,20 @@ export const HomePage: React.FC = () => {
             )}
 
             {/* เนื้อหา TAB 2: VOICEBOT (คุยผ่านเสียงจริง + สร้างใบงานเข้า Admin Dashboard ได้จริง) */}
-            {activeAiTab === 'voicebot' && (
+                        {activeAiTab === 'voicebot' && (
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-zinc-950 text-white rounded-2xl p-6 sm:p-8">
                 <div className="md:col-span-6 space-y-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
-                    <PhoneCall className="w-3.5 h-3.5" />
-                    <span>Interactive Speech AI ภาษาไทย</span>
+                    <VcPhoneIcon className="w-3.5 h-3.5" />
+                    <span>Botnoi Realtime Voice AI (Live Call)</span>
                   </div>
                   <h4 className="text-xl sm:text-2xl font-extrabold">
-                    สนทนาแจ้งซ่อมผ่านเสียง (Live Voicebot)
+                    สายด่วนแจ้งซ่อมอัจฉริยะ (คุยสดกับน้องปลาส้ม)
                   </h4>
                   <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                    ทดสอบพูดคุยด้วยเสียงภาษาไทยผ่านไมโครโฟนได้จริง! ระบบจะรับเสียงพูด แปลงเป็นข้อความ ตอบโต้ด้วยเสียงภาษาไทย และสร้างใบงาน (Ticket) ส่งเข้าหน้า Admin Dashboard อัตโนมัติ
+                    กดปุ่มเริ่มโทรเพียงครั้งเดียวแล้วพูดคุยโต้ตอบตามธรรมชาติได้ทันทีเหมือนคุยโทรศัพท์จริง! รองรับการพูดแทรก สรุปทวนข้อมูล และออกรหัสใบงานเข้าหน้า Admin Dashboard อัตโนมัติ
                   </p>
 
-                  {/* แสดงสถานะขั้นตอนการรับแจ้งซ่อมด้วยเสียง */}
                   <div className="grid grid-cols-3 gap-2 pt-2 text-[11px]">
                     <div
                       className={`p-2.5 rounded-xl border ${
@@ -1027,7 +1027,7 @@ export const HomePage: React.FC = () => {
                           : 'bg-zinc-900 border-zinc-800 text-zinc-500'
                       }`}
                     >
-                      1. ชื่อ & เบอร์โทร
+                      1. รับเรื่อง & อาการ
                     </div>
                     <div
                       className={`p-2.5 rounded-xl border ${
@@ -1036,7 +1036,7 @@ export const HomePage: React.FC = () => {
                           : 'bg-zinc-900 border-zinc-800 text-zinc-500'
                       }`}
                     >
-                      2. อาการ & ที่อยู่
+                      2. ที่อยู่ & ข้อมูลติดต่อ
                     </div>
                     <div
                       className={`p-2.5 rounded-xl border ${
@@ -1045,104 +1045,145 @@ export const HomePage: React.FC = () => {
                           : 'bg-zinc-900 border-zinc-800 text-zinc-500'
                       }`}
                     >
-                      3. วันนัด & ออกรหัส
+                      3. ยืนยัน & ออกรหัส
                     </div>
                   </div>
 
                   {createdVoiceCode && (
-                    <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
-                      <div>
-                        <span className="font-bold">✅ สร้างใบงานเข้า Admin สำเร็จ: </span>
-                        <span className="font-mono font-bold text-white">{createdVoiceCode}</span>
+                    <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">✅ รหัสใบงาน:</span>
+                        <span className="font-mono font-bold text-sm text-white bg-zinc-900 px-2.5 py-1 rounded-lg border border-emerald-500/40 select-all">
+                          {createdVoiceCode}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/track/${createdVoiceCode}`)}
-                        className="px-3 py-1 rounded-lg bg-emerald-500 text-zinc-950 font-bold text-[11px] hover:bg-emerald-400 cursor-pointer"
-                      >
-                        ดูสถานะเคส
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyVoiceCode(createdVoiceCode)}
+                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition"
+                        >
+                          {copiedCode ? (
+                            <VcCheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : (
+                            <VcCopyIcon className="w-3.5 h-3.5" />
+                          )}
+                          <span>{copiedCode ? 'คัดลอกแล้ว!' : 'คัดลอกรหัส'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/track/${createdVoiceCode}`)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500 text-zinc-950 font-bold text-[11px] hover:bg-emerald-400 cursor-pointer transition"
+                        >
+                          ดูสถานะเคส
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 <div className="md:col-span-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center space-y-4">
-                  {/* คลื่นเสียง Equalizer */}
+                  <div className="flex items-center justify-between text-[11px] font-mono px-1">
+                    <span className="text-zinc-400">AGENT: PLASOM (BIO V2)</span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold ${
+                        voiceCallStatus === 'connected'
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                          : voiceCallStatus === 'connecting'
+                          ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          voiceCallStatus === 'connected'
+                            ? 'bg-emerald-400 animate-ping'
+                            : voiceCallStatus === 'connecting'
+                            ? 'bg-amber-400 animate-pulse'
+                            : 'bg-zinc-500'
+                        }`}
+                      />
+                      {voiceCallStatus === 'connected'
+                        ? isPlayingVoice
+                          ? 'PLASOM SPEAKING'
+                          : 'LISTENING TO YOU'
+                        : voiceCallStatus === 'connecting'
+                        ? 'CONNECTING...'
+                        : 'READY'}
+                    </span>
+                  </div>
+
                   <div className="flex items-center justify-center gap-1.5 h-12">
                     {[35, 75, 45, 95, 60, 100, 50, 85, 30, 90, 55, 80, 40, 70].map((h, i) => (
                       <span
                         key={i}
                         className={`w-1.5 rounded-full transition-all duration-300 ${
-                          isListening
-                            ? 'bg-rose-400 animate-ping'
-                            : isPlayingVoice
+                          isPlayingVoice
                             ? 'bg-indigo-400 animate-pulse'
+                            : voiceCallStatus === 'connected'
+                            ? 'bg-emerald-400 animate-pulse'
                             : 'bg-indigo-400 opacity-30'
                         }`}
-                        style={{ height: isPlayingVoice || isListening ? `${h}%` : '25%' }}
+                        style={{
+                          height: isPlayingVoice
+                            ? `${h}%`
+                            : voiceCallStatus === 'connected'
+                            ? `${Math.max(25, Math.round(h * 0.45))}%`
+                            : '25%',
+                        }}
                       />
                     ))}
                   </div>
 
-                  {/* กล่องแสดงคำพูดของ AI และลูกค้า */}
-                  <div className="text-left space-y-2 bg-zinc-950/90 p-3.5 rounded-xl border border-zinc-800 text-xs">
-                    <p className="text-indigo-300 font-medium leading-relaxed">
-                      🔊 <strong>AI Voicebot:</strong> &ldquo;{voiceBotText}&rdquo;
+                  <div className="text-left space-y-2 bg-zinc-950/90 p-3.5 rounded-xl border border-zinc-800 text-xs min-h-[84px]">
+                    <p className="text-indigo-300 font-medium leading-relaxed select-text">
+                      🔊 <strong>น้องปลาส้ม:</strong> &ldquo;{voiceBotText}&rdquo;
                     </p>
                     {voiceUserText && (
                       <p className="text-emerald-300 font-mono text-[11px] pt-1.5 border-t border-zinc-800/80">
-                        🎙️ <strong>เสียงของคุณ:</strong> &ldquo;{voiceUserText}&rdquo;
+                        🎙️ <strong>คุณลูกค้า:</strong> &ldquo;{voiceUserText}&rdquo;
                       </p>
                     )}
                   </div>
 
-                  {/* ปุ่มควบคุมการสนทนาด้วยเสียง */}
-                  <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                     <button
                       type="button"
-                      onClick={startVoicebotFlow}
-                      disabled={isSubmittingVoice}
-                      className="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs inline-flex items-center gap-2 transition cursor-pointer"
-                    >
-                      {isPlayingVoice ? <Volume2 className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      <span>{voiceStep === 0 ? '1. เริ่มสนทนาด้วยเสียง' : 'เริ่มใหม่'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => startMicListening('voicebot')}
-                      disabled={isSubmittingVoice}
-                      className={`px-4 py-2.5 rounded-xl font-bold text-xs inline-flex items-center gap-2 transition cursor-pointer ${
-                        isListening
-                          ? 'bg-rose-500 text-white animate-pulse'
-                          : 'bg-white text-zinc-950 hover:bg-zinc-200'
+                      onClick={toggleRealtimeVoiceCall}
+                      disabled={voiceCallStatus === 'connecting' || isSubmittingVoice}
+                      className={`px-6 py-3 rounded-xl font-bold text-xs inline-flex items-center gap-2 transition shadow-lg cursor-pointer ${
+                        voiceCallStatus === 'connected'
+                          ? 'bg-rose-500 hover:bg-rose-400 text-white shadow-rose-500/25'
+                          : voiceCallStatus === 'connecting'
+                          ? 'bg-zinc-700 text-zinc-300 cursor-wait'
+                          : 'bg-indigo-500 hover:bg-indigo-400 text-white shadow-indigo-500/25'
                       }`}
                     >
-                      <Mic className="w-4 h-4" />
-                      <span>{isListening ? 'กำลังฟังเสียงพูด...' : '2. กดพูดใส่ไมค์ (ภาษาไทย)'}</span>
+                      {voiceCallStatus === 'connected' ? (
+                        <>
+                          <VcHangupIcon className="w-4 h-4" />
+                          <span>วางสายสนทนา</span>
+                        </>
+                      ) : (
+                        <>
+                          {isPlayingVoice ? (
+                            <VcVolumeIcon className="w-4 h-4" />
+                          ) : (
+                            <VcPhoneIcon className="w-4 h-4" />
+                          )}
+                          <span>
+                            {voiceCallStatus === 'connecting'
+                              ? 'กำลังต่อสาย...'
+                              : 'โทรคุยนัดช่างกับน้องปลาส้ม (Live)'}
+                          </span>
+                        </>
+                      )}
                     </button>
-
-                    {/* ปุ่มจำลองพูดอัตโนมัติ (เผื่อตอนพรีเซนต์ไม่สะดวกเปิดไมค์) */}
-                    {voiceStep >= 1 && voiceStep <= 3 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (voiceStep === 1)
-                            handleVoicebotUserSpeech('ชื่อกลัฟ เบอร์ 0802366719', 1)
-                          else if (voiceStep === 2)
-                            handleVoicebotUserSpeech('แอร์ Daikin ไม่เย็น ซอยสุขุมวิท 101', 2)
-                          else if (voiceStep === 3)
-                            handleVoicebotUserSpeech('พรุ่งนี้ 10 โมงเช้า', 3)
-                        }}
-                        className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-semibold transition cursor-pointer"
-                      >
-                        ⚡ จำลองส่งคำพูดขั้นที่ {voiceStep}
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
             )}
+
 
             {/* เนื้อหา TAB 3: AI AVATAR (ตัวละครเสมือนจริง พูดออกเสียงและขยับตามจังหวะพูดได้จริง) */}
             {activeAiTab === 'avatar' && (
