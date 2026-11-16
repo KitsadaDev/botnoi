@@ -36,3 +36,5 @@ server/uploads/*
 .turbo
 .cache
 *.tsbuildinfo
+
+/generated/prisma

@@ -247,34 +247,6 @@ export const LoginPage: React.FC = () => {
             )}
           </button>
         </form>
-
-        {/* Demo Simulator สำหรับเวลาพี่โมโนเปิดเดโมโชว์ลูกค้า */}
-        <div className="pt-4 border-t border-zinc-100 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider uppercase">
-              ⚡ LIVE DEMO PRESETS
-            </span>
-            <span className="text-[10px] text-zinc-400">สำหรับนำเสนอระบบ</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => fillRole('admin')}
-              className="py-2 px-3 rounded-xl text-xs font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-              <span>แดชบอร์ดแอดมิน</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillRole('staff')}
-              className="py-2 px-3 rounded-xl text-xs font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-orange-600" />
-              <span>ทีมช่าง/เจ้าหน้าที่</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   )
