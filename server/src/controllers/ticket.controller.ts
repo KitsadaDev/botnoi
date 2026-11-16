@@ -342,6 +342,47 @@ export const getMyTickets = async (req: any, res: any) => {
   }
 }
 
+
+// ===========================
+// Helper แปลงคำอ่านตัวเลขไทยและคำว่า "ทับ" ในบ้านเลขที่/วันที่ ให้เป็นเลขอารบิก
+// ===========================
+function normalizeThaiSpokenNumbers(input: string): string {
+  const thaiDigits = "๐๑๒๓๔๕๖๗๘๙";
+  const unitMap: Record<string, string> = {
+    ศูนย์: "0", หนึ่ง: "1", เอ็ด: "1", สอง: "2", ยี่: "2",
+    สาม: "3", สี่: "4", ห้า: "5", หก: "6", เจ็ด: "7", แปด: "8", เก้า: "9",
+  };
+
+  let out = input.replace(/[๐-๙]/g, (d) => String(thaiDigits.indexOf(d)));
+
+  // แปลงหลักสิบ เช่น สิบสี่ -> 14, ยี่สิบเอ็ด -> 21, สามสิบ -> 30
+  out = out.replace(
+    /(ยี่|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)?สิบ(เอ็ด|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)?/g,
+    (_match, tens, unit) => {
+      const t = tens ? unitMap[tens] : "1";
+      const u = unit ? unitMap[unit] : "0";
+      return `${t}${u}`;
+    }
+  );
+
+  // แปลงตัวเลขเดี่ยว เช่น ศูนย์ ศูนย์ หนึ่ง -> 0 0 1
+  out = out.replace(
+    /(ศูนย์|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)/g,
+    (m) => unitMap[m] ?? m
+  );
+
+  // รวมตัวเลขที่เว้นวรรคติดกัน (เช่น 0 0 1 -> 001) และแปลงคำว่า "ทับ" ระหว่างตัวเลขเป็น "/"
+  out = out.replace(/(\d)\s+(?=\d)/g, "$1");
+  out = out.replace(/(\d)\s*(?=\d)/g, "$1");
+  out = out.replace(/(\d)\s*ทับ\s*(\d)/g, "$1/$2");
+
+  return out;
+}
+
+
+
+
+
 // ===========================
 // POST /api/tickets/botnoi-webhook
 // รับข้อมูลแจ้งซ่อมจาก Botnoi AI Agent (<customer_name>, <phone>, <info>, <date>, <ticket>)
@@ -353,7 +394,7 @@ function parseBotnoiDate(raw: string): Date {
   const fallback = new Date(Date.now() + 86400000);
   if (!raw) return fallback;
 
-  const text = raw.trim();
+  const text = normalizeThaiSpokenNumbers(raw.trim());
 
   // 1. กรณีส่งมาเป็น YYYY-MM-DD
   const isoMatch = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -400,7 +441,7 @@ function parseBotnoiInfo(rawInfo: string): {
   symptom: string;
   address: string;
 } {
-  const text = rawInfo.trim();
+  const text = normalizeThaiSpokenNumbers(rawInfo.trim());
 
   // 1. กรณีบอทส่งมาคั่นด้วย | เช่น "PS4 | เปิดไม่ติด | backroom"
   if (text.includes("|")) {
@@ -534,9 +575,10 @@ export async function createTicketFromBotnoi(
     res.status(201).json({
       success: true,
       trackingCode: createdTicket.trackingCode,
-      message: "บันทึกใบงานจาก Botnoi AI สำเร็จ",
+      message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${createdTicket.trackingCode}`,
       data: createdTicket,
     });
+
   } catch (err) {
     console.error("❌ [Botnoi Webhook Error]:", err);
     next(err);
