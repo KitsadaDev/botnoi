@@ -483,6 +483,9 @@ function parseBotnoiInfo(rawInfo: string): {
   };
 }
 
+
+
+
 // ===========================
 // POST /api/tickets/botnoi-webhook
 // ===========================
@@ -502,7 +505,8 @@ export async function createTicketFromBotnoi(
       : String(customer_name).trim();
 
     const digitsOnly = String(phone || "").replace(/\D/g, "").slice(0, 10);
-    const cleanPhone = digitsOnly.length === 10 ? digitsOnly : "0800000000";
+    const hasRealPhone = digitsOnly.length === 10;
+    const cleanPhone = hasRealPhone ? digitsOnly : `08${"0".repeat(8)}`;
 
     const cleanInfo = isPlaceholder(info)
       ? "แจ้งซ่อมผ่านแชทบอท Plasom"
@@ -520,7 +524,58 @@ export async function createTicketFromBotnoi(
 
     // ดึงรหัส CC-YYYYMMDD-XXXX ที่บอทแนบมาใน <date> หรือ <ticket> หรือ <info>
     const combinedRaw = `${botTicketCode || ""} ${date || ""} ${info || ""}`;
-    const codeMatch = combinedRaw.match(/(CC-[0-9]{8}-[A-Z0-9]{4,}|TCK-[A-Z0-9-]+)/i);
+    const [matchedCode] = combinedRaw.match(/(CC-[0-9]{8}-[A-Z0-9]{4,}|TCK-[A-Z0-9-]+)/i) ?? [];
+    const botCode = matchedCode ? matchedCode.toUpperCase() : null;
+
+
+    // ===========================
+    // ด่านที่ 1: ถ้ารหัสใบงานที่บอทส่งมามีอยู่แล้ว และเป็นของเบอร์เดียวกันหรือเพิ่งสร้างไม่เกิน 2 นาที
+    // แปลว่าบอทยิงซ้ำจากสายสนทนาเดิม -> คืนใบงานเดิมกลับไปทันที ห้ามสุ่มรหัสใหม่มาสร้างซ้ำ
+    // ===========================
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+
+    if (botCode) {
+      const existingByCode = await prisma.ticket.findUnique({
+        where: { trackingCode: botCode },
+      });
+
+      if (
+        existingByCode &&
+        (existingByCode.customerPhone === cleanPhone || existingByCode.createdAt >= twoMinutesAgo)
+      ) {
+        res.status(200).json({
+          success: true,
+          trackingCode: existingByCode.trackingCode,
+          message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${existingByCode.trackingCode}`,
+          data: existingByCode,
+        });
+        return;
+      }
+    }
+
+    // ===========================
+    // ด่านที่ 2: ป้องกัน AI เผลอสุ่มรหัสใหม่แล้วยิงซ้ำตอนลูกค้าพูดขอบคุณ/บอกลา (ภายใน 2 นาที)
+    // ===========================
+    const recentDuplicate = await prisma.ticket.findFirst({
+      where: {
+        service: detectedService,
+        createdAt: { gte: twoMinutesAgo },
+        ...(hasRealPhone
+          ? { customerPhone: cleanPhone }
+          : { customerName: cleanName, symptom }),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (recentDuplicate) {
+      res.status(200).json({
+        success: true,
+        trackingCode: recentDuplicate.trackingCode,
+        message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${recentDuplicate.trackingCode}`,
+        data: recentDuplicate,
+      });
+      return;
+    }
 
     // ตัดรหัส CC-... ออกจากข้อความวันที่ เพื่อให้เหลือแต่วันที่สะอาดๆ
     const rawDateOnly = !isPlaceholder(date)
@@ -536,10 +591,8 @@ export async function createTicketFromBotnoi(
       ? parseBotnoiDate(rawDateOnly)
       : new Date(Date.now() + 86400000);
 
-    // ใช้รหัสเดียวกับที่บอทสร้างในแชทเป๊ะๆ
-    let trackingCode = codeMatch
-      ? codeMatch[1].toUpperCase()
-      : await generateUniqueCode();
+    // ใช้รหัสเดียวกับที่บอทสร้างในแชท (สุ่มใหม่เฉพาะกรณีชนกับเคสเก่าของคนอื่นจริงๆ เท่านั้น)
+    let trackingCode = botCode || (await generateUniqueCode());
 
     const existing = await prisma.ticket.findUnique({ where: { trackingCode } });
     if (existing) {
@@ -578,12 +631,12 @@ export async function createTicketFromBotnoi(
       message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${createdTicket.trackingCode}`,
       data: createdTicket,
     });
-
   } catch (err) {
     console.error("❌ [Botnoi Webhook Error]:", err);
     next(err);
   }
 }
+
 
 // ===========================
 // GET /api/tickets/tts?text=...
