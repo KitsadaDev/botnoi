@@ -363,12 +363,13 @@ export const ScrollProgressAndFab: React.FC = () => {
         />
       </div>
 
-      {/* Floating Back-to-Top Orb with Circular Progress */}
+            {/* Floating Back-to-Top Orb (อยู่ฝั่งขวาเหนือปุ่มสีเขียวของ Avatar พอดี ไม่บังกัน) */}
       <button
         type="button"
         onClick={scrollToTop}
         aria-label="เลื่อนกลับด้านบน"
-        className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-2xl bg-zinc-950/90 backdrop-blur-xl text-white border border-zinc-800 shadow-2xl flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-90 hover:border-orange-500/50 group ${
+        style={{ position: 'fixed', bottom: '108px', right: '24px', left: 'auto', zIndex: 50 }}
+        className={`w-12 h-12 rounded-2xl bg-zinc-950/90 backdrop-blur-xl text-white border border-zinc-800 shadow-2xl flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-90 hover:border-orange-500/50 group ${
           showTopBtn ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0 pointer-events-none'
         }`}
       >
@@ -376,6 +377,7 @@ export const ScrollProgressAndFab: React.FC = () => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
         </svg>
       </button>
+
     </>
   )
 }

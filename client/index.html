@@ -6,19 +6,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Plasom - ระบบแจ้งซ่อมและติดตามสถานะแอร์ครบวงจร</title>
 
-    <!-- Google Fonts: Prompt (Thai Modern Sans) + Plus Jakarta Sans + JetBrains Mono -->
+    <!-- Google Fonts: Prompt + Plus Jakarta Sans + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
       rel="stylesheet"
     />
+
+    <!-- ย้ายเฉพาะ Botnoi Customer Chat (bn-) ไปมุมซ้ายล่าง โดยไม่แตะ WebAvatar -->
+    <style>
+      #bn-root,
+      .bn-customerchat,
+      [id^="bn-"]:not(#webavatar-jssdk),
+      [class^="bn-"],
+      [class*=" bn-"],
+      iframe[src*="console.botnoi.ai"] {
+        left: 24px !important;
+        right: auto !important;
+      }
+      @media (max-width: 640px) {
+        #bn-root,
+        .bn-customerchat,
+        [id^="bn-"]:not(#webavatar-jssdk),
+        [class^="bn-"],
+        [class*=" bn-"],
+        iframe[src*="console.botnoi.ai"] {
+          left: 14px !important;
+          right: auto !important;
+        }
+      }
+    </style>
   </head>
   <body class="font-sans antialiased text-slate-800 bg-slate-50 selection:bg-orange-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-        <!-- =========================== -->
-    <!-- Botnoi AI Customer Chat Widget (Plasom) -->
+
+    <!-- =========================== -->
+    <!-- 1. Botnoi AI Customer Chat Widget (ฝั่งซ้ายล่าง) -->
     <!-- =========================== -->
     <div id="bn-root"></div>
     <script>
@@ -27,6 +52,65 @@
           window.BN.init({ version: '1.0' });
         }
       });
+
+      (function () {
+        function moveNodeLeft(node) {
+          if (!node || !node.style) return;
+          var cs = window.getComputedStyle(node);
+          if (cs.position === 'fixed' || cs.position === 'absolute') {
+            if (cs.right !== 'auto' && parseFloat(cs.right) < 120) {
+              node.style.setProperty('left', '24px', 'important');
+              node.style.setProperty('right', 'auto', 'important');
+            }
+          }
+        }
+
+        function scanTree(root) {
+          if (!root) return;
+          if (root.nodeType === 1) moveNodeLeft(root);
+
+          if (root.shadowRoot) {
+            if (!root.shadowRoot.getElementById('bn-left-override')) {
+              var st = document.createElement('style');
+              st.id = 'bn-left-override';
+              st.textContent =
+                '*, :host { } [style*="right"], .chat-btn, .chat-box, .bn-chat, button, iframe { left: 24px !important; right: auto !important; }';
+              root.shadowRoot.appendChild(st);
+            }
+            var shadowEls = root.shadowRoot.querySelectorAll('*');
+            for (var s = 0; s < shadowEls.length; s++) {
+              moveNodeLeft(shadowEls[s]);
+            }
+          }
+
+          if (root.querySelectorAll) {
+            var all = root.querySelectorAll('*');
+            for (var k = 0; k < all.length; k++) {
+              moveNodeLeft(all[k]);
+              if (all[k].shadowRoot) scanTree(all[k]);
+            }
+          }
+        }
+
+        function relocateOnlyBotnoiChat() {
+          var targets = document.querySelectorAll(
+            '#bn-root, .bn-customerchat, [id^="bn-"], [class^="bn-"], [class*=" bn-"], botnoi-livechat'
+          );
+          for (var i = 0; i < targets.length; i++) {
+            scanTree(targets[i]);
+          }
+
+          var iframes = document.querySelectorAll('iframe[src*="console.botnoi.ai"]');
+          for (var j = 0; j < iframes.length; j++) {
+            moveNodeLeft(iframes[j]);
+            if (iframes[j].parentElement && iframes[j].parentElement !== document.body) {
+              moveNodeLeft(iframes[j].parentElement);
+            }
+          }
+        }
+
+        setInterval(relocateOnlyBotnoiChat, 600);
+      })();
     </script>
     <script>
       (function (d, s, id) {
@@ -51,5 +135,21 @@
       default_open="false"
     ></div>
 
+    <!-- =========================== -->
+    <!-- 2. WebAvatar 3D Realtime Widget (ยืนเด่นมุมขวาล่าง) -->
+    <!-- =========================== -->
+    <script>
+      window.ChatWidgetConfig = {
+        widgetId: "oq79iv10"
+      };
+      (function () {
+        if (document.getElementById("webavatar-jssdk")) return;
+        var s = document.createElement("script");
+        s.id = "webavatar-jssdk";
+        s.src = "https://webavatar.didthat.cc/chat-widget.js";
+        s.async = true;
+        (document.head || document.body).appendChild(s);
+      })();
+    </script>
   </body>
 </html>
