@@ -61,7 +61,8 @@ export const AdminDashboardPage: React.FC = () => {
         : { tickets: [], counts: null }
     },
     enabled: isStaff,
-    refetchInterval: 6000,
+    // กระดิ่งแจ้งเตือนเรียก refetch ทันทีเมื่อมีเคสใหม่อยู่แล้ว จึง poll รายการเต็มห่างขึ้นได้
+    refetchInterval: 15000,
   })
   const tickets = ticketData?.tickets ?? []
   const ticketCounts = ticketData?.counts
@@ -93,7 +94,7 @@ export const AdminDashboardPage: React.FC = () => {
       return res.data.success ? res.data.data : []
     },
     enabled: Boolean(activeTicket?.trackingCode),
-    refetchInterval: 3000,
+    refetchInterval: 5000,
   })
 
   const updateTicketMutation = useMutation({

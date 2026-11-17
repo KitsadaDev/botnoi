@@ -35,10 +35,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .then((res) => {
           if (res.data.success) setUser(res.data.data)
         })
-        .catch(() => {
-          // Token หมดอายุหรือไม่ถูกต้อง
-          localStorage.removeItem('coolcare_token')
-          setToken(null)
+        .catch((err) => {
+          // ล้าง token เฉพาะเมื่อ server ยืนยันว่า token ใช้ไม่ได้ (401)
+          // ถ้าเป็นเน็ตหลุด/server ล่ม/timeout ให้เก็บ token ไว้ ไม่งั้นผู้ใช้จะโดนเด้งออกจากระบบโดยไม่จำเป็น
+          if (err?.response?.status === 401) {
+            localStorage.removeItem('coolcare_token')
+            setToken(null)
+          }
         })
         .finally(() => setIsLoading(false))
     } else {

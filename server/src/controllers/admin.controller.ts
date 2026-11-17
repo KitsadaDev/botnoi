@@ -3,6 +3,28 @@ import { prisma } from "../lib/prisma";
 import { updateTicketSchema, createMessageSchema } from "../validations/ticket.validation";
 import { AuthRequest } from "../middleware/auth";
 import { Prisma, TicketStatus, Role } from "@prisma/client";
+import path from "path";
+import fs from "fs";
+import { uploadDir } from "../middleware/upload";
+
+// ===========================
+// ลบไฟล์รูปของเคสออกจากโฟลเดอร์ uploads
+// - ข้ามรูปที่เก็บเป็น data URL (โหมด serverless)
+// - ใช้ basename เท่านั้น ป้องกัน path traversal จาก url ที่ผิดรูปแบบ
+// ===========================
+export async function removeTicketImageFiles(urls: string[]): Promise<void> {
+  await Promise.all(
+    urls
+      .filter((url) => url.startsWith("/uploads/"))
+      .map(async (url) => {
+        try {
+          await fs.promises.unlink(path.join(uploadDir, path.basename(url)));
+        } catch {
+          // ไฟล์อาจถูกลบไปแล้วหรือไม่มีอยู่ ไม่ต้องทำให้การลบเคสล้มเหลว
+        }
+      })
+  );
+}
 
 // ===========================
 // ฟังก์ชัน mask เบอร์โทร เช่น 0891111111 → 089-xxx-1111
@@ -243,7 +265,10 @@ export async function deleteTicket(
   try {
     const id = String(req.params.id);
 
-    const existing = await prisma.ticket.findUnique({ where: { id } });
+    const existing = await prisma.ticket.findUnique({
+      where: { id },
+      include: { images: { select: { url: true } } },
+    });
     if (!existing) {
       res.status(404).json({
         success: false,
@@ -255,6 +280,9 @@ export async function deleteTicket(
     await prisma.ticket.delete({
       where: { id },
     });
+
+    // ลบไฟล์รูปบนดิสก์ด้วย (DB ลบ TicketImage แบบ cascade แต่ไฟล์จริงจะค้างอยู่ใน uploads/)
+    await removeTicketImageFiles(existing.images.map((img) => img.url));
 
     res.json({
       success: true,

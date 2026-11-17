@@ -64,7 +64,10 @@ export function dataUrlToUint8Array(dataUrl: string): Uint8Array {
     }
     return bytes
   }
-  return new Uint8Array(Buffer.from(base64, 'base64'))
+  // fallback สำหรับ Node (ใช้ตอนรันเทส) — ในเบราว์เซอร์จะเข้า atob ด้านบนเสมอ
+  const NodeBuffer = (globalThis as unknown as { Buffer?: { from(data: string, encoding: string): Uint8Array } }).Buffer
+  if (!NodeBuffer) throw new Error('ไม่สามารถถอดรหัส base64 ได้ในสภาพแวดล้อมนี้')
+  return new Uint8Array(NodeBuffer.from(base64, 'base64'))
 }
 
 /**

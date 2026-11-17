@@ -136,7 +136,8 @@ export const BookServicePage: React.FC = () => {
     input.value = ''
     if (files.length === 0) return
 
-    const { accepted, errors: rejected } = selectValidImages(images.length, files)
+    const existingBytes = images.reduce((sum, file) => sum + file.size, 0)
+    const { accepted, errors: rejected } = selectValidImages(images.length, files, existingBytes)
     if (rejected.length > 0) {
       alert(rejected.join('\n'))
     }
@@ -671,7 +672,7 @@ export const BookServicePage: React.FC = () => {
                   <UploadCloud className="w-6 h-6" />
                 </div>
                 <p className="text-sm font-bold text-zinc-800">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวางที่นี่</p>
-                <p className="text-xs text-zinc-400 mt-1">รองรับ JPG, PNG, WEBP (สูงสุด {MAX_IMAGES} รูป รูปละไม่เกิน 5MB)</p>
+                <p className="text-xs text-zinc-400 mt-1">รองรับ JPG, PNG, WEBP (สูงสุด {MAX_IMAGES} รูป ขนาดรวมไม่เกิน 4MB)</p>
               </div>
 
               {imagePreviews.length > 0 && (

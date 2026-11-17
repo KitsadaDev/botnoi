@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Bell,
   CheckCheck,
@@ -91,6 +91,15 @@ export default function AdminNotificationBell({
   const knownTicketIdsRef = useRef<Set<string>>(new Set())
   const isInitializedRef = useRef<boolean>(false)
 
+  // เก็บค่าล่าสุดไว้ใน ref เพื่อให้ effect polling ด้านล่างไม่ต้องผูก dependency กับ callback/isMuted
+  // (parent ส่ง callback แบบ inline มา ถ้าใส่ใน deps effect จะรีสตาร์ทและยิง API ซ้ำทุกครั้งที่ parent render)
+  const onNewTicketDetectedRef = useRef(onNewTicketDetected)
+  const isMutedRef = useRef(isMuted)
+  useEffect(() => {
+    onNewTicketDetectedRef.current = onNewTicketDetected
+    isMutedRef.current = isMuted
+  })
+
   // บันทึกรายการที่อ่านแล้วลง localStorage
   const saveReadIds = (nextSet: Set<string>) => {
     setReadIds(new Set(nextSet))
@@ -155,13 +164,11 @@ export default function AdminNotificationBell({
           const latestTicket = newIncoming[0]
           setToastTicket(latestTicket)
 
-          if (!isMuted) {
+          if (!isMutedRef.current) {
             playNotificationSound()
           }
 
-          if (onNewTicketDetected) {
-            onNewTicketDetected(latestTicket)
-          }
+          onNewTicketDetectedRef.current?.(latestTicket)
 
           setTimeout(() => {
             setToastTicket((current) => (current?.id === latestTicket.id ? null : current))
@@ -173,9 +180,9 @@ export default function AdminNotificationBell({
     }
 
     checkTickets()
-    const interval = setInterval(checkTickets, 8000)
+    const interval = setInterval(checkTickets, 20000)
     return () => clearInterval(interval)
-  }, [isMuted, onNewTicketDetected])
+  }, [])
 
   const unreadTickets = recentTickets.filter((t) => !readIds.has(t.id))
   const displayedTickets = activeTab === 'unread' ? unreadTickets : recentTickets

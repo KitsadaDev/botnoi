@@ -38,11 +38,12 @@ const messageLimiter = rateLimit({
 });
 
 // ===========================
-// Rate Limit: ค้นหาเคส/ดูข้อความ ไม่เกิน 30 ครั้ง/นาที ต่อ IP เพื่อป้องกันการสุ่ม Tracking Code
+// Rate Limit: ค้นหาเคส/ดูข้อความ ไม่เกิน 60 ครั้ง/นาที ต่อ IP เพื่อป้องกันการสุ่ม Tracking Code
+// (หน้า /track ที่เปิดค้างไว้ใช้ราว 16 ครั้ง/นาที — เผื่อหลายแท็บ/หลายเครื่องใน NAT เดียวกัน)
 // ===========================
 export const trackingLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 60,
   message: { success: false, error: "ค้นหาข้อมูลบ่อยเกินไป กรุณารอสักครู่" },
   standardHeaders: true,
   legacyHeaders: false,
@@ -63,10 +64,37 @@ router.post(
   createTicket
 );
 
+// ===========================
+// Rate Limit สำหรับ endpoint ฝั่ง AI (public) ป้องกันการยิงสร้างเคสขยะ/ใช้โควตา TTS & Voicebot
+// ===========================
+const botnoiWebhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30, // บอทเรียกจาก IP ของ Botnoi เอง เผื่อหลายบทสนทนาพร้อมกัน
+  message: { success: false, error: "เรียกใช้งาน webhook บ่อยเกินไป" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const ttsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { success: false, error: "ขอเสียงพูดบ่อยเกินไป กรุณารอสักครู่" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const voicebotTokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { success: false, error: "เริ่มสายสนทนาบ่อยเกินไป กรุณารอสักครู่" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // POST /api/tickets/botnoi-webhook (สำหรับให้ Botnoi AI Agent ยิงมาเปิดเคส)
-router.post("/botnoi-webhook", createTicketFromBotnoi);
-router.post("/voicebot-token", createVoicebotCallToken);
-router.get("/tts", getThaiFemaleVoice);
+router.post("/botnoi-webhook", botnoiWebhookLimiter, createTicketFromBotnoi);
+router.post("/voicebot-token", voicebotTokenLimiter, createVoicebotCallToken);
+router.get("/tts", ttsLimiter, getThaiFemaleVoice);
 
 
 

@@ -8,7 +8,7 @@ import { Request } from "express";
 // สร้างโฟลเดอร์ uploads ถ้ายังไม่มี (รองรับทั้งโหมดปกติและ Vercel Serverless)
 // ===========================
 const isServerless = Boolean(process.env.VERCEL);
-const uploadDir = isServerless
+export const uploadDir = isServerless
   ? path.join(os.tmpdir(), "uploads")
   : path.join(__dirname, "../../uploads");
 

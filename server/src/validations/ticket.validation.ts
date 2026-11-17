@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { ServiceType } from "@prisma/client";
+import { startOfTodayBangkokAsUtc } from "../lib/date";
 
 // ===========================
 // Regex เบอร์โทรไทย 10 หลัก (shared กับ auth.validation)
 // ===========================
 export const thaiPhoneSchema = z
-  .string()
+  .string({ required_error: "กรุณากรอกเบอร์โทรศัพท์" })
   .regex(/^0[0-9]{9}$/, "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0");
 
 // ===========================
@@ -19,24 +20,24 @@ export const trackingCodeSchema = z
 // ===========================
 // Schema สำหรับสร้าง Ticket (POST /api/tickets)
 // ===========================
+// ข้อความเมื่อไม่ได้ส่ง field มาเลย (ค่าเริ่มต้นของ zod คือ "Required" ภาษาอังกฤษ)
+const requiredString = (message: string) =>
+  z.string({ required_error: message, invalid_type_error: message });
+
 export const createTicketSchema = z.object({
   service: z.nativeEnum(ServiceType, { errorMap: () => ({ message: "ประเภทบริการไม่ถูกต้อง" }) }),
-  brand: z.string().min(1, "กรุณากรอกยี่ห้อแอร์").max(100),
-  symptom: z.string().min(1, "กรุณากรอกอาการเสีย").max(500),
-  address: z.string().min(10, "กรุณากรอกที่อยู่ให้ครบถ้วน").max(500),
+  brand: requiredString("กรุณากรอกยี่ห้อแอร์").min(1, "กรุณากรอกยี่ห้อแอร์").max(100),
+  symptom: requiredString("กรุณากรอกอาการเสีย").min(1, "กรุณากรอกอาการเสีย").max(500),
+  address: requiredString("กรุณากรอกที่อยู่ให้ครบถ้วน").min(10, "กรุณากรอกที่อยู่ให้ครบถ้วน").max(500),
   lat: z.coerce.number().min(-90, "พิกัด lat ไม่ถูกต้อง").max(90, "พิกัด lat ไม่ถูกต้อง").optional(),
   lng: z.coerce.number().min(-180, "พิกัด lng ไม่ถูกต้อง").max(180, "พิกัด lng ไม่ถูกต้อง").optional(),
-  // วันนัดต้องไม่ย้อนหลัง (เปรียบเทียบกับ "เริ่มต้นของวันนี้")
-  preferredDate: z
-    .string()
-    .refine((val) => {
-      const date = new Date(val);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return !isNaN(date.getTime()) && date >= today;
-    }, "วันนัดต้องไม่เป็นวันที่ผ่านมาแล้ว"),
+  // วันนัดต้องไม่ย้อนหลัง (เปรียบเทียบกับ "เริ่มต้นของวันนี้" ตามเวลาไทย ไม่ใช่เวลาของเครื่อง server ที่เป็น UTC)
+  preferredDate: requiredString("กรุณาเลือกวันที่ต้องการรับบริการ").refine((val) => {
+    const date = new Date(val);
+    return !isNaN(date.getTime()) && date >= startOfTodayBangkokAsUtc();
+  }, "วันนัดต้องไม่เป็นวันที่ผ่านมาแล้ว"),
   note: z.string().max(1000).optional(),
-  customerName: z.string().min(2, "กรุณากรอกชื่อ-สกุล").max(100),
+  customerName: requiredString("กรุณากรอกชื่อ-สกุล").min(2, "กรุณากรอกชื่อ-สกุล").max(100),
   customerPhone: thaiPhoneSchema,
 });
 

@@ -50,7 +50,8 @@ export const TrackTicketPage: React.FC = () => {
       return res.data.data
     },
     enabled: Boolean(code),
-    refetchInterval: 5000,
+    // 15 วิ/ครั้ง (4 req/นาที) — รวมกับแชตแล้วต้องต่ำกว่า trackingLimiter ฝั่ง server
+    refetchInterval: 15000,
   })
 
   const { data: messages = [] } = useQuery<Message[]>({
@@ -61,7 +62,8 @@ export const TrackTicketPage: React.FC = () => {
       return res.data.success ? res.data.data : []
     },
     enabled: Boolean(code),
-    refetchInterval: 3000,
+    // 5 วิ/ครั้ง (12 req/นาที) — รวมทั้งหน้าราว 16 req/นาที ไม่ชน limit 60/นาที
+    refetchInterval: 5000,
   })
 
   const sendMessageMutation = useMutation({

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Wrench, Calendar, MapPin, ArrowRight, Clock, PlusCircle, AlertCircle, Loader2 } from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -7,12 +7,15 @@ import type { Ticket, ApiResponse } from '../lib/types'
 import { STATUS_LABELS, STATUS_COLORS, SERVICE_LABELS } from '../lib/types'
 
 export const MyTicketsPage: React.FC = () => {
-  const { user } = useAuth()
+  const { user, token, isLoading: isAuthLoading } = useAuth()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // ยังไม่ได้ล็อกอิน: ไม่ต้องยิง API (จะถูกพาไปหน้า login ด้านล่าง)
+    if (isAuthLoading || !token) return
+
     const fetchMyTickets = async () => {
       try {
         setIsLoading(true)
@@ -29,7 +32,12 @@ export const MyTicketsPage: React.FC = () => {
     }
 
     fetchMyTickets()
-  }, [])
+  }, [isAuthLoading, token])
+
+  // ตรวจสิทธิ์เสร็จแล้วแต่ไม่มี token -> พาไปหน้าเข้าสู่ระบบ แทนการโชว์ error โหลดข้อมูลไม่ได้
+  if (!isAuthLoading && !token) {
+    return <Navigate to="/login" replace />
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">

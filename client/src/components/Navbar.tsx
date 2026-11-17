@@ -7,7 +7,6 @@ import {
   X,
   LogIn,
   LogOut,
-  User as UserIcon,
   Sparkles,
   PhoneCall,
   LayoutDashboard,

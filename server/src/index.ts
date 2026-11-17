@@ -52,9 +52,15 @@ app.use(
   })
 );
 
+// CORS: บน production ต้องระบุ CLIENT_URL เสมอ ถ้าลืมตั้งจะปิด cross-origin แทนการเปิดให้ทุกโดเมน
+// (เว็บหลักเรียก API ผ่าน rewrite ของ Vercel เป็น same-origin อยู่แล้ว จึงไม่กระทบการใช้งานปกติ)
+const isProduction = process.env.NODE_ENV === "production";
+if (isProduction && !process.env.CLIENT_URL) {
+  console.error("⚠️ [CONFIG] ไม่ได้ตั้งค่า CLIENT_URL บน production — ปิด CORS สำหรับโดเมนอื่นทั้งหมด");
+}
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || true,
+    origin: process.env.CLIENT_URL || (isProduction ? false : true),
     credentials: true,
   })
 );
@@ -64,9 +70,11 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 // Rate Limit รวมสำหรับ /api (ป้องกัน API Abuse / DoS)
+// หน้าแอดมิน/หน้าติดตามสถานะ poll ข้อมูลเป็นระยะ ใช้ราว 300-400 req ต่อ 15 นาทีเมื่อเปิดค้างไว้
+// จึงต้องตั้งเพดานให้สูงกว่านั้นพอสมควร (endpoint ที่อ่อนไหวมี limiter เฉพาะของตัวเองอยู่แล้ว)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 นาที
-  max: 300, // 300 requests ต่อ IP
+  max: 1000, // 1000 requests ต่อ IP
   message: { success: false, error: "เรียกใช้งาน API บ่อยเกินไป กรุณารอสักครู่" },
   standardHeaders: true,
   legacyHeaders: false,

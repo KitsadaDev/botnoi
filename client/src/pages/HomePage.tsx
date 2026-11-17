@@ -21,10 +21,6 @@ import {
   Sliders,
   Mic,
   Bot,
-  PhoneCall,
-  Volume2,
-  Play,
-  User as UserIcon,
   PhoneCall as VcPhoneIcon,
   PhoneOff as VcHangupIcon,
   Volume2 as VcVolumeIcon,
@@ -91,15 +87,11 @@ export const HomePage: React.FC = () => {
   )
   const [voiceUserText, setVoiceUserText] = useState('')
   const [createdVoiceCode, setCreatedVoiceCode] = useState<string | null>(null)
-  const [isSubmittingVoice, setIsSubmittingVoice] = useState(false)
+  const [isSubmittingVoice] = useState(false)
   const voiceClientRef = useRef<BotnoiVoiceClient | null>(null)
 
   // State สำหรับ AI Avatar
-  const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false)
-  const [isAvatarListening, setIsAvatarListening] = useState(false)
-  const [avatarSubtitle, setAvatarSubtitle] = useState(
-    'สวัสดีค่ะ! ดิฉันปลาส้ม AI Specialist กดเลือกหัวข้อด้านซ้าย หรือกดปุ่มไมค์เพื่อพูดคุยกับดิฉันได้เลยนะคะ'
-  )
+  const [, setIsAvatarSpeaking] = useState(false)
   const recognitionRef = useRef<any>(null)
 
   const navigate = useNavigate()
@@ -228,38 +220,6 @@ export const HomePage: React.FC = () => {
     setIsAvatarSpeaking(false)
   }
 
-  const speakThai = (text: string, mode: 'voicebot' | 'avatar', onEndCallback?: () => void) => {
-    if (typeof window === 'undefined') {
-      onEndCallback?.()
-      return
-    }
-
-    stopBotSpeaking()
-
-    if (mode === 'voicebot') {
-      setVoiceBotText(text)
-      setIsPlayingVoice(true)
-    } else {
-      setAvatarSubtitle(text)
-      setIsAvatarSpeaking(true)
-    }
-
-    const finish = () => {
-      if (mode === 'voicebot') setIsPlayingVoice(false)
-      if (mode === 'avatar') setIsAvatarSpeaking(false)
-      onEndCallback?.()
-    }
-
-    const cleanText = text.replace(/["“”]/g, '').trim().slice(0, 190)
-    const audio = new Audio(`/api/tickets/tts?text=${encodeURIComponent(cleanText)}`)
-    audio.playbackRate = 1.25
-      ; (window as any).__currentTtsAudio = audio
-
-    audio.onended = finish
-    audio.onerror = finish
-    audio.play().catch(finish)
-  }
-
   // เริ่มโทร / วางสาย Realtime Voicebot (Agent Plasom)
   const toggleRealtimeVoiceCall = async () => {
     if (voiceCallStatus === 'connecting' || voiceCallStatus === 'connected') {
@@ -337,156 +297,7 @@ export const HomePage: React.FC = () => {
     }
   }, [activeAiTab])
 
-  // เก็บไว้รองรับปุ่มเปิดใบงานด่วนในแท็บ AI Avatar เดิม
-  const submitVoiceTicketToDb = async (namePhone: string, infoText: string, dateText: string) => {
-    setIsSubmittingVoice(true)
-    try {
-      const digits = namePhone.replace(/\D/g, '').slice(0, 10)
-      const phone = digits.length === 10 ? digits : '0'.repeat(10)
-      const cleanName =
-        namePhone
-          .replace(/[0-9-]/g, '')
-          .replace(/ชื่อ|เบอร์|โทร|ครับ|ค่ะ/g, '')
-          .trim() || 'ลูกค้าแจ้งผ่าน AI Avatar'
 
-      const res = await fetch('/api/tickets/botnoi-webhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_name: cleanName,
-          phone,
-          info: `AI Avatar | ${infoText} | แจ้งผ่านระบบเสียง`,
-          date: dateText,
-        }),
-      })
-      const json = await res.json()
-      const code = json?.trackingCode || ''
-      if (code) setCreatedVoiceCode(code)
-      setVoiceStep(4)
-      speakThai(
-        `บันทึกข้อมูลเรียบร้อยแล้วค่ะ รหัสติดตามงานซ่อมของคุณคือ ${code} สามารถตรวจสอบสถานะบนหน้าเว็บได้เลยนะคะ ขอบคุณที่ใช้บริการค่ะ`,
-        'avatar'
-      )
-    } catch {
-      speakThai('ขออภัยค่ะ ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้งนะคะ', 'avatar')
-    } finally {
-      setIsSubmittingVoice(false)
-    }
-  }
-
-  // ไมโครโฟนสำหรับแท็บ AI Avatar เดิม
-  const startMicListening = (_mode: 'voicebot' | 'avatar') => {
-    stopBotSpeaking()
-    const win = window as any
-
-    if (isAvatarListening) {
-      if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
-      try {
-        recognitionRef.current?.stop()
-      } catch {
-        // ignore
-      }
-      setIsAvatarListening(false)
-      return
-    }
-
-    const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition
-    if (!SpeechRec) return
-
-    if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
-    win.__accumulatedSpeech = ''
-
-    const recognition = new SpeechRec()
-    recognitionRef.current = recognition
-    recognition.lang = 'th-TH'
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.maxAlternatives = 1
-
-    const submitAccumulatedSpeech = (finalText: string) => {
-      if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
-      win.__accumulatedSpeech = ''
-      try {
-        recognition.stop()
-      } catch {
-        // ignore
-      }
-      setIsAvatarListening(false)
-
-      const cleanTranscript = finalText.trim()
-      if (!cleanTranscript) return
-
-      setVoiceUserText(cleanTranscript)
-      if (
-        cleanTranscript.includes('ราคา') ||
-        cleanTranscript.includes('เท่าไหร่') ||
-        cleanTranscript.includes('ล้าง')
-      ) {
-        speakThai(
-          'บริการล้างแอร์ปลอดเชื้อราคา 590 บาทต่อเครื่อง พิเศษถ้าล้าง 2 เครื่องขึ้นไปเหลือเครื่องละ 500 บาทค่ะ ส่วนตรวจเช็คแอร์เสียเริ่มต้น 400 บาทค่ะ',
-          'avatar'
-        )
-      } else if (
-        cleanTranscript.includes('ไม่เย็น') ||
-        cleanTranscript.includes('เสีย') ||
-        cleanTranscript.includes('น้ำหยด')
-      ) {
-        speakThai(
-          'หากแอร์ไม่เย็นหรือมีน้ำหยด แนะนำให้ลองเช็คแผ่นกรองฝุ่นและตั้งโหมดความเย็นที่รีโมตนะคะ หากยังไม่หาย กดปุ่มเปิดใบงานด่วนให้ช่างเข้าตรวจได้เลยค่ะ',
-          'avatar'
-        )
-      } else if (
-        cleanTranscript.includes('ซ่อม') ||
-        cleanTranscript.includes('ช่าง') ||
-        cleanTranscript.includes('จอง')
-      ) {
-        void submitVoiceTicketToDb('คุณลูกค้าผ่าน Avatar', cleanTranscript, 'พรุ่งนี้ 10 โมง')
-      } else {
-        speakThai(
-          `คุณลูกค้าพูดว่า ${cleanTranscript} ใช่ไหมคะ หากต้องการให้ดิฉันเปิดใบงานซ่อมแอร์ด่วน สามารถสลับไปแท็บ Voicebot ด้านบนเพื่อคุยสดได้เลยนะคะ`,
-          'avatar'
-        )
-      }
-    }
-
-    recognition.onstart = () => {
-      setIsAvatarListening(true)
-    }
-
-    recognition.onresult = (event: any) => {
-      let fullText = ''
-      for (let i = 0; i < event.results.length; i++) {
-        fullText += event.results[i][0].transcript + ' '
-      }
-      const cleanFullText = fullText.trim()
-      if (cleanFullText) {
-        win.__accumulatedSpeech = cleanFullText
-        if (win.__silenceTimer) clearTimeout(win.__silenceTimer)
-        win.__silenceTimer = setTimeout(() => {
-          submitAccumulatedSpeech(cleanFullText)
-        }, 2500)
-      }
-    }
-
-    recognition.onerror = () => {
-      if (!win.__accumulatedSpeech) setIsAvatarListening(false)
-    }
-
-    recognition.onend = () => {
-      const remaining = String(win.__accumulatedSpeech || '').trim()
-      if (remaining) {
-        submitAccumulatedSpeech(remaining)
-      } else {
-        setIsAvatarListening(false)
-      }
-    }
-
-    try {
-      recognition.start()
-    } catch {
-      setIsAvatarListening(false)
-    }
-  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

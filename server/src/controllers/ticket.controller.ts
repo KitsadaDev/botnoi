@@ -8,8 +8,8 @@ import {
 import { AuthRequest } from "../middleware/auth";
 import { TicketStatus } from "@prisma/client";
 import crypto from "crypto";
-import path from "path";
 import fs from "fs";
+import { bangkokDateString } from "../lib/date";
 
 // ===========================
 // nanoid: ตัวพิมพ์ใหญ่ + ตัวเลข 4 ตัว
@@ -29,14 +29,12 @@ const nanoid = (length = 4): string => {
 // ===========================
 const MAX_CODE_ATTEMPTS = 10;
 
-export async function generateUniqueCode(): Promise<string> {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
+export async function generateUniqueCode(now: Date = new Date()): Promise<string> {
+  // ใช้วันที่ตามเวลาไทยเสมอ (server บน Vercel/Render เป็น UTC ทำให้เคสช่วง 00:00-07:00 ได้วันที่ของเมื่อวาน)
+  const ymd = bangkokDateString(now).replace(/-/g, "");
 
   for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt++) {
-    const code = `CC-${y}${m}${d}-${nanoid()}`;
+    const code = `CC-${ymd}-${nanoid()}`;
     const exists = await prisma.ticket.findUnique({ where: { trackingCode: code } });
     if (!exists) return code;
   }
@@ -346,34 +344,52 @@ export const getMyTickets = async (req: any, res: any) => {
 // ===========================
 // Helper แปลงคำอ่านตัวเลขไทยและคำว่า "ทับ" ในบ้านเลขที่/วันที่ ให้เป็นเลขอารบิก
 // ===========================
-function normalizeThaiSpokenNumbers(input: string): string {
-  const thaiDigits = "๐๑๒๓๔๕๖๗๘๙";
-  const unitMap: Record<string, string> = {
-    ศูนย์: "0", หนึ่ง: "1", เอ็ด: "1", สอง: "2", ยี่: "2",
-    สาม: "3", สี่: "4", ห้า: "5", หก: "6", เจ็ด: "7", แปด: "8", เก้า: "9",
-  };
+const THAI_UNIT_MAP: Record<string, string> = {
+  ศูนย์: "0", หนึ่ง: "1", เอ็ด: "1", สอง: "2", ยี่: "2",
+  สาม: "3", สี่: "4", ห้า: "5", หก: "6", เจ็ด: "7", แปด: "8", เก้า: "9",
+};
 
+// แปลงกลุ่มคำอ่านตัวเลขที่ติดกัน เช่น "ยี่สิบเอ็ด" -> "21", "สามสิบ" -> "30", "สี่" -> "4"
+function convertThaiNumberRun(run: string): string {
+  const tensRe =
+    /^(ยี่|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)?สิบ(เอ็ด|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)?/;
+  const unitRe = /^(ศูนย์|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)/;
+  let rest = run;
+  let out = "";
+  while (rest.length > 0) {
+    const tens = rest.match(tensRe);
+    if (tens) {
+      out += `${tens[1] ? THAI_UNIT_MAP[tens[1]] : "1"}${tens[2] ? THAI_UNIT_MAP[tens[2]] : "0"}`;
+      rest = rest.slice(tens[0].length);
+      continue;
+    }
+    const unit = rest.match(unitRe);
+    if (unit) {
+      out += THAI_UNIT_MAP[unit[1]];
+      rest = rest.slice(unit[0].length);
+      continue;
+    }
+    // ไม่ใช่รูปแบบตัวเลขที่รู้จัก (เช่น "เอ็ด"/"ยี่" ลอยๆ) -> คืนค่าเดิมทั้งก้อน
+    return run;
+  }
+  return out;
+}
+
+export function normalizeThaiSpokenNumbers(input: string): string {
+  const thaiDigits = "๐๑๒๓๔๕๖๗๘๙";
   let out = input.replace(/[๐-๙]/g, (d) => String(thaiDigits.indexOf(d)));
 
-  // แปลงหลักสิบ เช่น สิบสี่ -> 14, ยี่สิบเอ็ด -> 21, สามสิบ -> 30
+  // แปลงเฉพาะคำอ่านตัวเลขที่ "จบคำ" จริงๆ คือถัดไปเป็นช่องว่าง/ตัวเลข/เครื่องหมาย/คำว่า "ทับ"/จบข้อความ
+  // เพื่อไม่ให้คำทั่วไปที่ขึ้นต้นด้วยคำอ่านตัวเลขเพี้ยน เช่น สามเสน, ห้าแยก, เก้าอี้, สองแคว
   out = out.replace(
-    /(ยี่|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)?สิบ(เอ็ด|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)?/g,
-    (_match, tens, unit) => {
-      const t = tens ? unitMap[tens] : "1";
-      const u = unit ? unitMap[unit] : "0";
-      return `${t}${u}`;
-    }
+    /(?:ศูนย์|หนึ่ง|เอ็ด|สอง|ยี่|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า|สิบ)+(?=$|[\s\d/.,:;()\-|]|ทับ)/g,
+    (run) => convertThaiNumberRun(run)
   );
 
-  // แปลงตัวเลขเดี่ยว เช่น ศูนย์ ศูนย์ หนึ่ง -> 0 0 1
-  out = out.replace(
-    /(ศูนย์|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)/g,
-    (m) => unitMap[m] ?? m
-  );
+  // รวมเลขหลักเดียวที่เว้นวรรคติดกัน (เช่น 0 8 1 -> 081) แต่ไม่ยุ่งกับตัวเลขหลายหลัก เช่น "ซอย 5 10400"
+  out = out.replace(/(?<!\d)\d(?:\s+\d(?!\d))+(?!\d)/g, (m) => m.replace(/\s+/g, ""));
 
-  // รวมตัวเลขที่เว้นวรรคติดกัน (เช่น 0 0 1 -> 001) และแปลงคำว่า "ทับ" ระหว่างตัวเลขเป็น "/"
-  out = out.replace(/(\d)\s+(?=\d)/g, "$1");
-  out = out.replace(/(\d)\s*(?=\d)/g, "$1");
+  // แปลงคำว่า "ทับ" ระหว่างตัวเลขเป็น "/"
   out = out.replace(/(\d)\s*ทับ\s*(\d)/g, "$1/$2");
 
   return out;
@@ -487,6 +503,42 @@ function parseBotnoiInfo(rawInfo: string): {
 
 
 // ===========================
+// response ของ webhook: ส่งเฉพาะสิ่งที่บอทต้องใช้ตอบลูกค้า
+// (endpoint นี้เป็น public จึงห้ามคืนข้อมูลส่วนตัว เช่น ชื่อ/เบอร์/ที่อยู่ ของเคส)
+// ===========================
+export function botnoiTicketResponse(ticket: {
+  trackingCode: string;
+  status: TicketStatus;
+  service: string;
+  preferredDate: Date;
+}) {
+  return {
+    success: true,
+    trackingCode: ticket.trackingCode,
+    message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${ticket.trackingCode}`,
+    data: {
+      trackingCode: ticket.trackingCode,
+      status: ticket.status,
+      service: ticket.service,
+      preferredDate: ticket.preferredDate,
+    },
+  };
+}
+
+// ===========================
+// ตรวจ shared secret ของ webhook (เปิดใช้เมื่อตั้งค่า BOTNOI_WEBHOOK_SECRET บนเซิร์ฟเวอร์)
+// ให้ตั้งค่าเดียวกันเป็น header "x-webhook-secret" ในฝั่ง Botnoi
+// ===========================
+export function isBotnoiWebhookAuthorized(req: Request): boolean {
+  const secret = process.env.BOTNOI_WEBHOOK_SECRET?.trim();
+  if (!secret) return true; // ยังไม่ได้ตั้งค่า -> ทำงานแบบเดิม (เข้ากันได้ย้อนหลัง)
+  const provided = String(req.headers["x-webhook-secret"] ?? "");
+  const a = Buffer.from(provided);
+  const b = Buffer.from(secret);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+// ===========================
 // POST /api/tickets/botnoi-webhook
 // ===========================
 export async function createTicketFromBotnoi(
@@ -495,6 +547,11 @@ export async function createTicketFromBotnoi(
   next: NextFunction
 ): Promise<void> {
   try {
+    if (!isBotnoiWebhookAuthorized(req)) {
+      res.status(401).json({ success: false, error: "webhook secret ไม่ถูกต้อง" });
+      return;
+    }
+
     const { customer_name, phone, info, date, ticket: botTicketCode } = req.body || {};
 
     const isPlaceholder = (val: unknown) =>
@@ -539,16 +596,11 @@ export async function createTicketFromBotnoi(
         where: { trackingCode: botCode },
       });
 
-      if (
-        existingByCode &&
-        (existingByCode.customerPhone === cleanPhone || existingByCode.createdAt >= twoMinutesAgo)
-      ) {
-        res.status(200).json({
-          success: true,
-          trackingCode: existingByCode.trackingCode,
-          message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${existingByCode.trackingCode}`,
-          data: existingByCode,
-        });
+      // เทียบเบอร์เฉพาะเมื่อบอทส่งเบอร์จริงมา — เบอร์ placeholder (0800000000) ใช้ร่วมกันทุกเคสที่ไม่มีเบอร์
+      // ถ้าเอามาเทียบ ใครก็ส่งรหัสของเคสอื่นมาแล้วได้ข้อมูลเคสนั้นกลับไปได้
+      const samePhone = hasRealPhone && existingByCode?.customerPhone === cleanPhone;
+      if (existingByCode && (samePhone || existingByCode.createdAt >= twoMinutesAgo)) {
+        res.status(200).json(botnoiTicketResponse(existingByCode));
         return;
       }
     }
@@ -568,12 +620,7 @@ export async function createTicketFromBotnoi(
     });
 
     if (recentDuplicate) {
-      res.status(200).json({
-        success: true,
-        trackingCode: recentDuplicate.trackingCode,
-        message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${recentDuplicate.trackingCode}`,
-        data: recentDuplicate,
-      });
+      res.status(200).json(botnoiTicketResponse(recentDuplicate));
       return;
     }
 
@@ -625,12 +672,7 @@ export async function createTicketFromBotnoi(
       return t;
     });
 
-    res.status(201).json({
-      success: true,
-      trackingCode: createdTicket.trackingCode,
-      message: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${createdTicket.trackingCode}`,
-      data: createdTicket,
-    });
+    res.status(201).json(botnoiTicketResponse(createdTicket));
   } catch (err) {
     console.error("❌ [Botnoi Webhook Error]:", err);
     next(err);

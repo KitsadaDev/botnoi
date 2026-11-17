@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { formatDate, getMinBookingDate, toLocalDateInputValue, sanitizePhoneInput } from '../src/lib/format.ts'
-import { selectValidImages, MAX_IMAGES, MAX_IMAGE_BYTES } from '../src/lib/images.ts'
+import { selectValidImages, MAX_IMAGES, MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES } from '../src/lib/images.ts'
 import {
   getDashboardPdfFilename,
   dataUrlToUint8Array,
@@ -147,3 +147,16 @@ test('buildDashboardExcelBytes: สร้างไฟล์ ZIP/OpenXML (.xlsx) 
 })
 
 
+
+// Bug: รูปรวมเกินขีดจำกัด request body ของ Vercel (~4.5MB) แล้วอัปโหลดพังด้วย 413
+test('selectValidImages: ขนาดรูปรวม (รวมรูปที่เลือกไว้แล้ว) ต้องไม่เกิน MAX_TOTAL_IMAGE_BYTES', () => {
+  const twoMB = 2 * 1024 * 1024
+  const first = selectValidImages(0, [img('a.jpg', 'image/jpeg', twoMB), img('b.jpg', 'image/jpeg', twoMB)])
+  assert.equal(first.accepted.length, 2)
+  assert.equal(first.errors.length, 0)
+
+  const second = selectValidImages(2, [img('c.jpg', 'image/jpeg', 1000)], twoMB * 2)
+  assert.equal(second.accepted.length, 0)
+  assert.equal(second.errors.length, 1)
+  assert.ok(MAX_TOTAL_IMAGE_BYTES < 4.5 * 1024 * 1024)
+})

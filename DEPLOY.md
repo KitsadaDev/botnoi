@@ -4,6 +4,10 @@
 - **Backend** (`server/`) → Render
 - **Database** → Supabase (PostgreSQL)
 
+> 📌 **สถานะปัจจุบัน:** `client/vercel.json` ชี้ `/api/*` ไปที่ `https://coolcare-api.vercel.app` (Backend รันบน **Vercel Serverless** ไม่ใช่ Render)
+> ข้อจำกัดของโหมดนี้: request body สูงสุดราว 4.5MB (หน้าเว็บจำกัดรูปรวมไม่เกิน 4MB แล้ว), รูปถูกเก็บเป็น base64 ในฐานข้อมูล,
+> และ rate limit แยกนับตาม instance ของ serverless — ถ้าย้ายไป Render ตามคู่มือนี้ ให้แก้ URL ใน `client/vercel.json` ตามขั้นตอนที่ 2
+
 ---
 
 ## ขั้นตอนที่ 1: Deploy Backend (`server`) บน Render
@@ -29,10 +33,14 @@
    |---|---|
    | `NODE_VERSION` | `22.12.0` |
    | `NODE_ENV` | `production` |
-   | `DATABASE_URL` | `postgresql://postgres.ejziwqakreowjblwqrlf:0624216512yhnmju@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true` |
-   | `DIRECT_URL` | `postgresql://postgres.ejziwqakreowjblwqrlf:0624216512yhnmju@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres` |
-   | `JWT_SECRET` | `c8f9a2b4d6e8f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5` |
-   | `CLIENT_URL` | `https://botnoi-lilac.vercel.app` *(ใส่โดเมน Vercel ของคุณ แบบไม่มี `/` ปิดท้าย)* |
+   | `DATABASE_URL` | Connection string แบบ pooler (พอร์ต 6543, ต่อท้าย `?pgbouncer=true`) จาก Supabase → Project Settings → Database |
+   | `DIRECT_URL` | Connection string แบบ direct (พอร์ต 5432) จาก Supabase |
+   | `JWT_SECRET` | สุ่มใหม่อย่างน้อย 32 ตัวอักษร เช่น `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+   | `CLIENT_URL` | `https://botnoi-lilac.vercel.app` *(ใส่โดเมน Vercel ของคุณ แบบไม่มี `/` ปิดท้าย — ถ้าไม่ตั้ง production จะปิด CORS ข้ามโดเมน)* |
+   | `BOTNOI_WEBHOOK_SECRET` | *(แนะนำ)* สุ่มค่าลับ แล้วตั้งเป็น header `x-webhook-secret` ใน Botnoi เพื่อกันคนนอกยิง `/api/tickets/botnoi-webhook` |
+   | `BOTNOI_VOICEBOT_ACCESS_TOKEN` | Access token จากหน้า Developers ของ Botnoi Voicebot |
+
+   > ⚠️ ห้ามใส่ค่าจริงของรหัสผ่าน/secret ลงในไฟล์ที่ commit ขึ้น git — ตั้งค่าในหน้า Environment Variables ของ platform เท่านั้น
 
 5. กด **Create Web Service** รอจนขึ้นสถานะสีเขียว **`Live`**
 6. คัดลอก URL ของ Render ด้านบนซ้าย (เช่น `https://coolcare-api.onrender.com`)
