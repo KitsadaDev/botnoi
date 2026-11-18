@@ -6,9 +6,9 @@ import { useAuth } from '../context/AuthContext'
 import type { ApiResponse, User } from '../lib/types'
 import { sanitizePhoneInput } from '../lib/format'
 
-// ปุ่มกรอกบัญชีทดสอบอัตโนมัติ: เปิดเฉพาะโหมด dev หรือ deployment ที่ตั้งใจใช้สำหรับเดโม
-const SHOW_DEMO_PRESETS =
-  import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true'
+// ปุ่มกรอกบัญชีทดสอบอัตโนมัติ (แอดมิน / ช่าง / ลูกค้า) สำหรับเดโม: แสดงเป็นค่าเริ่มต้น
+// ถ้าจะปิดบนเว็บจริงภายหลัง ให้ตั้ง VITE_ENABLE_DEMO_LOGIN=false ใน Vercel แล้ว redeploy
+const SHOW_DEMO_PRESETS = import.meta.env.VITE_ENABLE_DEMO_LOGIN !== 'false'
 
 export const LoginPage: React.FC = () => {
   // สลับโหมด เข้าสู่ระบบ / สมัครสมาชิก
@@ -253,8 +253,7 @@ export const LoginPage: React.FC = () => {
         </form>
 
         {/* Demo Simulator สำหรับเวลาพี่โมโนเปิดเดโมโชว์ลูกค้า
-            แสดงเฉพาะตอนรันในเครื่อง (dev) หรือเมื่อตั้ง VITE_ENABLE_DEMO_LOGIN=true เท่านั้น
-            ห้ามเปิดบนเว็บจริง เพราะเป็นการแจกรหัสผ่านแอดมินให้ทุกคนที่เปิดหน้านี้ */}
+            หมายเหตุ: ปุ่มนี้กรอกรหัสผ่านแอดมินให้ทุกคนที่เปิดหน้านี้ ปิดได้ด้วย VITE_ENABLE_DEMO_LOGIN=false */}
         {SHOW_DEMO_PRESETS && (
         <div className="pt-4 border-t border-zinc-100 space-y-2">
           <div className="flex items-center justify-between">
