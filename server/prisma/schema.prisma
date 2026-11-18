@@ -27,6 +27,7 @@ enum ServiceType {
   CLEANING     // ล้างแอร์
   REPAIR       // ซ่อมแอร์
   INSTALLATION // ติดตั้ง/ย้ายแอร์
+  IT_REPAIR    // ซ่อมอุปกรณ์ไอที (คอม/โน้ตบุ๊ก/การ์ดจอ/เครื่องเกม/ปริ้นเตอร์)
 }
 
 enum Role {
@@ -64,7 +65,7 @@ model Ticket {
   id            String      @id @default(cuid())
   trackingCode  String      @unique  // รหัสติดตาม รูปแบบ CC-YYYYMMDD-XXXX
   service       ServiceType
-  brand         String      // ยี่ห้อแอร์
+  brand         String      // ยี่ห้อ/อุปกรณ์ (แอร์หรืออุปกรณ์ไอที)
   symptom       String      // อาการเสีย
   address       String      // ที่อยู่
   lat           Float?      // พิกัด latitude (optional)

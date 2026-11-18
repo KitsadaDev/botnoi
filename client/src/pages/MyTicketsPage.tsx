@@ -82,7 +82,13 @@ export const MyTicketsPage: React.FC = () => {
           </div>
           <div>
             <h3 className="text-base font-bold text-zinc-800">ยังไม่มีประวัติการแจ้งซ่อม</h3>
-            <p className="text-xs text-zinc-500 mt-1">คุณยังไม่ได้ส่งคำขอแจ้งซ่อมหรือล้างแอร์ในระบบ</p>
+            <p className="text-xs text-zinc-500 mt-1">คุณยังไม่ได้ส่งคำขอแจ้งซ่อมในระบบขณะเข้าสู่ระบบ</p>
+            <p className="text-[11px] text-zinc-400 mt-1">
+              เคสที่แจ้งก่อนสมัครสมาชิกหรือแจ้งผ่านแชทบอท ตรวจสอบได้ด้วยรหัสติดตามที่หน้า{' '}
+              <Link to="/track" className="font-semibold text-orange-600 hover:underline">
+                ติดตามสถานะ
+              </Link>
+            </p>
           </div>
           <Link
             to="/book"

@@ -321,12 +321,18 @@ export const TrackTicketPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* เบอร์ช่างในหน้า public ถูกปิดบัง (089-xxx-1111) จึงโทรตรงไม่ได้ ให้โทรผ่านเบอร์ศูนย์บริการแทน */}
                   <a
-                    href={`tel:${ticket.technician.phone}`}
-                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-orange-400 hover:bg-orange-300 text-zinc-950 font-bold text-xs transition shadow-sm"
+                    href="tel:021234567"
+                    className="inline-flex flex-col items-center justify-center gap-0.5 px-5 py-3 rounded-2xl bg-orange-400 hover:bg-orange-300 text-zinc-950 font-bold text-xs transition shadow-sm"
                   >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span className="font-mono">{ticket.technician.phone}</span>
+                    <span className="inline-flex items-center gap-2">
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>โทรติดต่อผ่านศูนย์บริการ</span>
+                    </span>
+                    <span className="font-mono text-[10px] font-medium opacity-80">
+                      ช่าง {ticket.technician.phone}
+                    </span>
                   </a>
                 </div>
               ) : (
@@ -509,7 +515,15 @@ export const TrackTicketPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Send Message Input */}
+                {/* Send Message Input — เคสที่เสร็จสิ้น/ยกเลิกแล้ว server ไม่รับข้อความจากลูกค้า จึงไม่แสดงช่องพิมพ์ */}
+                {ticket.status === 'COMPLETED' || ticket.status === 'CANCELLED' ? (
+                  <div className="p-3.5 border-t border-zinc-100 bg-zinc-50 text-[11px] text-zinc-500 text-center">
+                    เคสนี้ปิดแล้ว ไม่สามารถส่งข้อความเพิ่มได้ หากต้องการความช่วยเหลือ โทร{' '}
+                    <a href="tel:021234567" className="font-bold text-orange-600 hover:underline">
+                      02-123-4567
+                    </a>
+                  </div>
+                ) : (
                 <form onSubmit={handleSendMessage} className="p-3.5 border-t border-zinc-100 bg-white">
                   {sendError && <p className="text-[11px] text-rose-500 mb-2 px-1">{sendError}</p>}
                   <div className="flex gap-2">
@@ -529,6 +543,7 @@ export const TrackTicketPage: React.FC = () => {
                     </button>
                   </div>
                 </form>
+                )}
               </div>
             </div>
           </div>

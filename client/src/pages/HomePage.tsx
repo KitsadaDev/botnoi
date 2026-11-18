@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import type { ServiceType } from '../lib/types'
 import {
+  Monitor,
   Wrench,
   Search,
   CheckCircle2,
@@ -68,7 +70,7 @@ const FAQ_ITEMS = [
 export const HomePage: React.FC = () => {
   const [quickCode, setQuickCode] = useState('')
   // Interactive Price Estimator Tabs & BTU Selector (ของเดิมแคน)
-  const [activeCalcTab, setActiveCalcTab] = useState<'CLEANING' | 'REPAIR' | 'INSTALLATION'>('CLEANING')
+  const [activeCalcTab, setActiveCalcTab] = useState<ServiceType>('CLEANING')
   const [unitCount, setUnitCount] = useState<number>(1)
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0)
 
@@ -308,7 +310,8 @@ export const HomePage: React.FC = () => {
     navigate(`/track/${encodeURIComponent(quickCode.trim().toUpperCase())}`)
   }
 
-  const basePrice = activeCalcTab === 'CLEANING' ? 590 : activeCalcTab === 'REPAIR' ? 400 : 2500
+  // ราคาเริ่มต้นต่อหน่วย ต้องตรงกับการ์ดในหน้า /book และ prompt ของบอท
+  const basePrice = { CLEANING: 590, REPAIR: 400, INSTALLATION: 2500, IT_REPAIR: 400 }[activeCalcTab]
   const estimatedTotal =
     activeCalcTab === 'CLEANING' && unitCount >= 2
       ? unitCount * 500 // multi-unit discount
@@ -1191,11 +1194,12 @@ export const HomePage: React.FC = () => {
                 </p>
 
                 {/* Interactive Segmented Control */}
-                <div className="grid grid-cols-3 gap-2 p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800">
                   {[
                     { id: 'CLEANING', label: 'ล้างแอร์', icon: Wind },
                     { id: 'REPAIR', label: 'ซ่อมแอร์', icon: Wrench },
                     { id: 'INSTALLATION', label: 'ติดตั้ง/ย้าย', icon: PenTool },
+                    { id: 'IT_REPAIR', label: 'ซ่อมไอที', icon: Monitor },
                   ].map((tab) => {
                     const Icon = tab.icon
                     const isSelected = activeCalcTab === tab.id
@@ -1203,7 +1207,7 @@ export const HomePage: React.FC = () => {
                       <button
                         key={tab.id}
                         type="button"
-                        onClick={() => setActiveCalcTab(tab.id as any)}
+                        onClick={() => setActiveCalcTab(tab.id as ServiceType)}
                         className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${isSelected
                             ? 'bg-orange-400 text-zinc-950 shadow-md scale-[1.02]'
                             : 'text-zinc-400 hover:text-white'

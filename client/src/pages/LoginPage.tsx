@@ -6,6 +6,10 @@ import { useAuth } from '../context/AuthContext'
 import type { ApiResponse, User } from '../lib/types'
 import { sanitizePhoneInput } from '../lib/format'
 
+// ปุ่มกรอกบัญชีทดสอบอัตโนมัติ: เปิดเฉพาะโหมด dev หรือ deployment ที่ตั้งใจใช้สำหรับเดโม
+const SHOW_DEMO_PRESETS =
+  import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO_LOGIN === 'true'
+
 export const LoginPage: React.FC = () => {
   // สลับโหมด เข้าสู่ระบบ / สมัครสมาชิก
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -93,7 +97,7 @@ export const LoginPage: React.FC = () => {
     } else {
       // บัญชีลูกค้าจำลอง (หรือใส่เบอร์ที่เคยสมัครไว้)
       setPhone('0812345678')
-      setPassword('user1234')
+      setPassword('customer1234') // ต้องตรงกับ server/prisma/seed.ts
     }
   }
 
@@ -248,7 +252,10 @@ export const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Demo Simulator สำหรับเวลาพี่โมโนเปิดเดโมโชว์ลูกค้า */}
+        {/* Demo Simulator สำหรับเวลาพี่โมโนเปิดเดโมโชว์ลูกค้า
+            แสดงเฉพาะตอนรันในเครื่อง (dev) หรือเมื่อตั้ง VITE_ENABLE_DEMO_LOGIN=true เท่านั้น
+            ห้ามเปิดบนเว็บจริง เพราะเป็นการแจกรหัสผ่านแอดมินให้ทุกคนที่เปิดหน้านี้ */}
+        {SHOW_DEMO_PRESETS && (
         <div className="pt-4 border-t border-zinc-100 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider uppercase">
@@ -275,6 +282,7 @@ export const LoginPage: React.FC = () => {
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   )

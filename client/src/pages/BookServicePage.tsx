@@ -22,18 +22,20 @@ import {
   Sparkles,
   ShieldCheck,
   Wand2,
+  Monitor,
 } from 'lucide-react'
 import api from '../lib/api'
 import type { ApiResponse, Ticket, ServiceType } from '../lib/types'
+import { SERVICE_TYPES } from '../lib/types'
 import { formatDate, getMinBookingDate, sanitizePhoneInput } from '../lib/format'
 import { MAX_IMAGES, selectValidImages } from '../lib/images'
 import { ScrollReveal, Tilt3DCard, MagneticButton } from '../components/InteractiveUI'
 
 const bookingSchema = z.object({
-  service: z.enum(['CLEANING', 'REPAIR', 'INSTALLATION'], {
+  service: z.enum(['CLEANING', 'REPAIR', 'INSTALLATION', 'IT_REPAIR'], {
     errorMap: () => ({ message: 'กรุณาเลือกประเภทบริการ' }),
   }),
-  brand: z.string().min(1, 'กรุณาระบุยี่ห้อแอร์'),
+  brand: z.string().min(1, 'กรุณาระบุยี่ห้อ/อุปกรณ์'),
   symptom: z.string().min(5, 'กรุณาระบุอาการเบื้องต้นอย่างน้อย 5 ตัวอักษร'),
   preferredDate: z.string().min(1, 'กรุณาเลือกวันที่ต้องการรับบริการ'),
   customerName: z.string().min(2, 'กรุณาระบุชื่อ-นามสกุล'),
@@ -60,6 +62,21 @@ const BRAND_OPTIONS = [
   'อื่นๆ (Other)',
 ]
 
+// ตัวเลือกอุปกรณ์สำหรับงานซ่อมไอที (แทนรายชื่อยี่ห้อแอร์เมื่อเลือกบริการ IT_REPAIR)
+const IT_DEVICE_OPTIONS = [
+  'คอมพิวเตอร์ตั้งโต๊ะ (PC)',
+  'โน้ตบุ๊ก (Notebook)',
+  'การ์ดจอ / อุปกรณ์ในเคส',
+  'จอมอนิเตอร์',
+  'ปริ้นเตอร์ / เครื่องพิมพ์',
+  'เครื่องเกม (PlayStation / Xbox / Nintendo)',
+  'เราเตอร์ / อุปกรณ์เครือข่าย',
+  'อื่นๆ (Other)',
+]
+
+const getBrandOptions = (service: ServiceType) =>
+  service === 'IT_REPAIR' ? IT_DEVICE_OPTIONS : BRAND_OPTIONS
+
 const QUICK_SYMPTOMS: Record<ServiceType, string[]> = {
   CLEANING: [
     'ล้างแอร์ประจำปี 1 เครื่อง มีฝุ่นสะสมและกลิ่นอับ',
@@ -76,6 +93,12 @@ const QUICK_SYMPTOMS: Record<ServiceType, string[]> = {
     'ติดตั้งแอร์ใหม่ขนาด 12,000 BTU พร้อมเดินท่อ',
     'รื้อถอนแอร์เดิมและย้ายจุดติดตั้งไปห้องใหม่',
     'ติดตั้งแอร์ใหม่แทนเครื่องเก่าในตำแหน่งเดิม',
+  ],
+  IT_REPAIR: [
+    'คอมเปิดไม่ติด กดปุ่มแล้วไม่มีไฟเข้า',
+    'เครื่องช้าผิดปกติ ค้างบ่อย สงสัยติดไวรัส',
+    'จอไม่แสดงภาพ แต่พัดลมยังหมุน',
+    'เครื่องร้อนจัดและดับเอง พัดลมเสียงดัง',
   ],
 }
 
@@ -100,8 +123,8 @@ export const BookServicePage: React.FC = () => {
   } = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      service: ['CLEANING', 'REPAIR', 'INSTALLATION'].includes(initialService) ? initialService : 'CLEANING',
-      brand: 'Carrier (แคเรียร์)',
+      service: SERVICE_TYPES.includes(initialService) ? initialService : 'CLEANING',
+      brand: getBrandOptions(SERVICE_TYPES.includes(initialService) ? initialService : 'CLEANING')[0],
       symptom: '',
       preferredDate: '',
       customerName: '',
@@ -114,6 +137,15 @@ export const BookServicePage: React.FC = () => {
   })
 
   const selectedService = watch('service')
+  const isItService = selectedService === 'IT_REPAIR'
+
+  // เปลี่ยนประเภทบริการ: ถ้าข้ามกลุ่ม แอร์ <-> ไอที ให้รีเซ็ตยี่ห้อ/อุปกรณ์เป็นตัวเลือกแรกของกลุ่มใหม่
+  // (กันกรณีเลือก "ซ่อมอุปกรณ์ไอที" แต่ยี่ห้อยังค้างเป็น "Carrier (แคเรียร์)")
+  const handleSelectService = (service: ServiceType) => {
+    const switchingGroup = (service === 'IT_REPAIR') !== (selectedService === 'IT_REPAIR')
+    setValue('service', service, { shouldValidate: true })
+    if (switchingGroup) setValue('brand', getBrandOptions(service)[0])
+  }
   const currentSymptom = watch('symptom')
   const currentLat = watch('lat')
   const currentLng = watch('lng')
@@ -352,7 +384,7 @@ export const BookServicePage: React.FC = () => {
           <span>INTERACTIVE BOOKING FORM</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
-          แจ้งซ่อมและนัดหมายช่างแอร์
+          แจ้งซ่อมและนัดหมายช่าง
         </h1>
         <p className="text-zinc-500 text-sm mt-2 max-w-lg mx-auto">
           คลิกเลือกการ์ดประเภทบริการ หรือกดปุ่มลัดอาการเสียเพื่อให้กรอกข้อมูลได้สะดวกรวดเร็วขึ้น
@@ -383,7 +415,7 @@ export const BookServicePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 {
                   id: 'CLEANING',
@@ -406,6 +438,13 @@ export const BookServicePage: React.FC = () => {
                   price: 'เริ่มต้น ฿2,500 / ชุด',
                   icon: PenTool,
                 },
+                {
+                  id: 'IT_REPAIR',
+                  title: 'ซ่อมอุปกรณ์ไอที',
+                  desc: 'คอม โน้ตบุ๊ก การ์ดจอ เครื่องเกม ปริ้นเตอร์',
+                  price: 'ตรวจเช็คเริ่มต้น ฿400',
+                  icon: Monitor,
+                },
               ].map((item) => {
                 const Icon = item.icon
                 const isSelected = selectedService === item.id
@@ -413,7 +452,7 @@ export const BookServicePage: React.FC = () => {
                   <Tilt3DCard
                     key={item.id}
                     maxTilt={6}
-                    onClick={() => setValue('service', item.id as ServiceType)}
+                    onClick={() => handleSelectService(item.id as ServiceType)}
                     className={`rounded-2xl border-2 cursor-pointer transition-all p-5 ${
                       isSelected
                         ? 'border-zinc-950 bg-zinc-950 text-white shadow-xl'
@@ -458,21 +497,25 @@ export const BookServicePage: React.FC = () => {
                 02
               </span>
               <div>
-                <h2 className="text-base font-extrabold text-zinc-950">ข้อมูลเครื่องปรับอากาศและอาการ</h2>
-                <p className="text-xs text-zinc-400">ระบุยี่ห้อแอร์ หรือกดปุ่มลัดเพื่อกรอกอาการอัตโนมัติ</p>
+                <h2 className="text-base font-extrabold text-zinc-950">
+                  {isItService ? 'ข้อมูลอุปกรณ์และอาการ' : 'ข้อมูลเครื่องปรับอากาศและอาการ'}
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  {isItService ? 'เลือกประเภทอุปกรณ์' : 'ระบุยี่ห้อแอร์'} หรือกดปุ่มลัดเพื่อกรอกอาการอัตโนมัติ
+                </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1.5">
-                  ยี่ห้อเครื่องปรับอากาศ <span className="text-rose-500">*</span>
+                  {isItService ? 'ประเภทอุปกรณ์' : 'ยี่ห้อเครื่องปรับอากาศ'} <span className="text-rose-500">*</span>
                 </label>
                 <select
                   {...register('brand')}
                   className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 >
-                  {BRAND_OPTIONS.map((b) => (
+                  {getBrandOptions(selectedService).map((b) => (
                     <option key={b} value={b}>
                       {b}
                     </option>

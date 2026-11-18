@@ -6,10 +6,10 @@ import {
   trackingCodeSchema,
 } from "../validations/ticket.validation";
 import { AuthRequest } from "../middleware/auth";
-import { TicketStatus } from "@prisma/client";
+import { TicketStatus, ServiceType } from "@prisma/client";
 import crypto from "crypto";
 import fs from "fs";
-import { bangkokDateString } from "../lib/date";
+import { bangkokDateString, startOfTodayBangkokAsUtc } from "../lib/date";
 
 // ===========================
 // nanoid: ตัวพิมพ์ใหญ่ + ตัวเลข 4 ตัว
@@ -166,7 +166,8 @@ export async function getTicketByCode(
     }
 
     const ticket = await prisma.ticket.findUnique({
-      where: { trackingCode: code },
+      // รหัสในฐานข้อมูลเป็นตัวพิมพ์ใหญ่เสมอ (validation รับตัวพิมพ์เล็กด้วย) จึงต้องแปลงก่อนค้น
+      where: { trackingCode: code.toUpperCase() },
       include: {
         images: { select: { id: true, url: true } },
         statusLogs: { orderBy: { createdAt: "asc" } },
@@ -219,7 +220,8 @@ export async function getMessages(
 
     // ตรวจสอบว่าเคสมีอยู่จริง
     const ticket = await prisma.ticket.findUnique({
-      where: { trackingCode: code },
+      // รหัสในฐานข้อมูลเป็นตัวพิมพ์ใหญ่เสมอ (validation รับตัวพิมพ์เล็กด้วย) จึงต้องแปลงก่อนค้น
+      where: { trackingCode: code.toUpperCase() },
       select: { id: true },
     });
 
@@ -268,7 +270,8 @@ export async function createCustomerMessage(
 
     // ตรวจสอบว่าเคสมีอยู่จริง
     const ticket = await prisma.ticket.findUnique({
-      where: { trackingCode: code },
+      // รหัสในฐานข้อมูลเป็นตัวพิมพ์ใหญ่เสมอ (validation รับตัวพิมพ์เล็กด้วย) จึงต้องแปลงก่อนค้น
+      where: { trackingCode: code.toUpperCase() },
       select: { id: true, status: true },
     });
 
@@ -311,20 +314,17 @@ export async function createCustomerMessage(
 export const getMyTickets = async (req: any, res: any) => {
   try {
     const userId = req.user?.id
-    const userPhone = req.user?.phone
 
-    if (!userId && !userPhone) {
+    if (!userId) {
       return res.status(401).json({ success: false, error: 'กรุณาเข้าสู่ระบบก่อน' })
     }
 
-    // ค้นหาทั้งจาก userId และเบอร์โทรศัพท์ (ครอบคลุมทั้งเคสสมัครใหม่และเบอร์ตรงกัน)
+    // ดึงเฉพาะเคสที่ผูกกับบัญชีนี้จริง (userId) เท่านั้น
+    // ห้ามค้นจากเบอร์โทร: การสมัครสมาชิกไม่ได้ยืนยันว่าเป็นเจ้าของเบอร์ (ไม่มี OTP)
+    // ถ้าค้นจากเบอร์ ใครเอาเบอร์คนอื่นมาสมัครก็จะเห็นเคสและข้อมูลของเจ้าของเบอร์ได้
+    // (รวมถึงเคสจากแชทบอทที่ไม่มีเบอร์ซึ่งถูกบันทึกเป็น 0800000000 ทั้งหมด)
     const tickets = await prisma.ticket.findMany({
-      where: {
-        OR: [
-          ...(userId ? [{ userId }] : []),
-          ...(userPhone ? [{ customerPhone: userPhone }] : []),
-        ],
-      },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {
         technician: true,
@@ -406,11 +406,44 @@ export function normalizeThaiSpokenNumbers(input: string): string {
 // ===========================
 // Helper แปลงวันที่จากแชทบอท (รองรับทั้ง YYYY-MM-DD และภาษาไทย เช่น "7 กันยายน 2570")
 // ===========================
-function parseBotnoiDate(raw: string): Date {
-  const fallback = new Date(Date.now() + 86400000);
+// วันในสัปดาห์ (0 = อาทิตย์) สำหรับคำพูดอย่าง "วันเสาร์นี้"
+const THAI_WEEKDAYS: [RegExp, number][] = [
+  [/อาทิตย์/, 0], [/จันทร์/, 1], [/อังคาร/, 2], [/พุธ/, 3],
+  [/พฤหัส/, 4], [/ศุกร์/, 5], [/เสาร์/, 6],
+];
+
+// แปลงคำบอกวันแบบสัมพัทธ์ (Voicebot ส่งมาตามที่ลูกค้าพูด) เป็นวันที่ (UTC midnight ของวันตามเวลาไทย)
+// คืน null ถ้าไม่ใช่คำแบบสัมพัทธ์ที่รู้จัก
+function parseRelativeThaiDate(text: string, now: Date): Date | null {
+  const today = startOfTodayBangkokAsUtc(now);
+  const addDays = (n: number) => new Date(today.getTime() + n * 86400000);
+
+  if (/มะรืน/.test(text)) return addDays(2);
+  if (/พรุ่งนี้/.test(text)) return addDays(1);
+  if (/วันนี้/.test(text)) return today;
+
+  for (const [re, weekday] of THAI_WEEKDAYS) {
+    if (re.test(text) && /(วัน|นี้|หน้า)/.test(text)) {
+      let diff = (weekday - today.getUTCDay() + 7) % 7;
+      if (diff === 0) diff = 7; // "วันเสาร์นี้" เมื่อวันนี้เป็นวันเสาร์ = เสาร์ถัดไป
+      if (/หน้า/.test(text) && diff < 7) diff += 7; // "เสาร์หน้า" = สัปดาห์ถัดไป
+      return addDays(diff);
+    }
+  }
+  return null;
+}
+
+export function parseBotnoiDate(raw: string, now: Date = new Date()): Date {
+  const fallback = new Date(startOfTodayBangkokAsUtc(now).getTime() + 86400000);
   if (!raw) return fallback;
 
   const text = normalizeThaiSpokenNumbers(raw.trim());
+
+  // 0. คำบอกวันแบบสัมพัทธ์ เช่น "พรุ่งนี้", "มะรืนนี้", "วันเสาร์นี้" (ใช้เมื่อไม่มีวันที่เป็นตัวเลขกำกับ)
+  if (!/\d/.test(text)) {
+    const relative = parseRelativeThaiDate(text, now);
+    if (relative) return relative;
+  }
 
   // 1. กรณีส่งมาเป็น YYYY-MM-DD
   const isoMatch = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
@@ -503,6 +536,41 @@ function parseBotnoiInfo(rawInfo: string): {
 
 
 // ===========================
+// หาประเภทบริการของเคสจากแชทบอท
+// 1) ใช้ค่า <service> ที่บอทส่งมาตรงๆ (รับทั้งรหัส CLEANING/REPAIR/INSTALLATION/IT_REPAIR และคำภาษาไทย)
+// 2) ถ้าไม่มี -> เดาจากข้อความ โดยเช็กงานไอทีก่อน เพื่อไม่ให้ "ล้างไวรัส" กลายเป็นล้างแอร์
+//    หรือ "ติดตั้งโปรแกรม" กลายเป็นติดตั้งแอร์
+// ===========================
+const IT_KEYWORDS =
+  // "คอม" ต้องไม่ใช่ "คอมเพรสเซอร์"/"คอมแอร์" ซึ่งเป็นอะไหล่ของแอร์
+  /คอม(?!เพรส|แอร์)|โน้ตบุ๊ก|โน๊ตบุ๊ก|โน้ตบุ๊ค|โน๊ตบุ๊ค|notebook|laptop|\bpc\b|การ์ดจอ|\bgpu\b|เมนบอร์ด|ซีพียู|\bcpu\b|\bram\b|\bssd\b|\bhdd\b|ฮาร์ดดิสก์|ปริ้นเตอร์|ปริ้นท์เตอร์|printer|เครื่องพิมพ์|ps4|ps5|playstation|xbox|nintendo|เครื่องเกม|มือถือ|โทรศัพท์มือถือ|iphone|ipad|แท็บเล็ต|tablet|เราเตอร์|router|ไวไฟ|wi-?fi|วินโดว์|windows|โปรแกรม|ไวรัส|มอนิเตอร์|monitor/i;
+
+const SERVICE_ALIASES: Record<string, ServiceType> = {
+  CLEANING: ServiceType.CLEANING,
+  REPAIR: ServiceType.REPAIR,
+  INSTALLATION: ServiceType.INSTALLATION,
+  IT_REPAIR: ServiceType.IT_REPAIR,
+  ล้างแอร์: ServiceType.CLEANING,
+  ซ่อมแอร์: ServiceType.REPAIR,
+  ติดตั้งแอร์: ServiceType.INSTALLATION,
+  ย้ายแอร์: ServiceType.INSTALLATION,
+  "ติดตั้ง/ย้ายแอร์": ServiceType.INSTALLATION,
+  ซ่อมไอที: ServiceType.IT_REPAIR,
+  ซ่อมอุปกรณ์ไอที: ServiceType.IT_REPAIR,
+};
+
+export function resolveBotnoiService(serviceRaw: string | undefined, info: string): ServiceType {
+  const key = (serviceRaw ?? "").trim().replace(/\s+/g, "");
+  const explicit = SERVICE_ALIASES[key.toUpperCase()] ?? SERVICE_ALIASES[key];
+  if (explicit) return explicit;
+
+  if (IT_KEYWORDS.test(info)) return ServiceType.IT_REPAIR;
+  if (/ล้างแอร์|ล้าง|ทำความสะอาด/.test(info)) return ServiceType.CLEANING;
+  if (/ติดตั้ง|ย้ายแอร์|ย้ายจุด|ติดแอร์/.test(info)) return ServiceType.INSTALLATION;
+  return ServiceType.REPAIR;
+}
+
+// ===========================
 // response ของ webhook: ส่งเฉพาะสิ่งที่บอทต้องใช้ตอบลูกค้า
 // (endpoint นี้เป็น public จึงห้ามคืนข้อมูลส่วนตัว เช่น ชื่อ/เบอร์/ที่อยู่ ของเคส)
 // ===========================
@@ -552,7 +620,14 @@ export async function createTicketFromBotnoi(
       return;
     }
 
-    const { customer_name, phone, info, date, ticket: botTicketCode } = req.body || {};
+    const {
+      customer_name,
+      phone,
+      info,
+      date,
+      ticket: botTicketCode,
+      service: botService,
+    } = req.body || {};
 
     const isPlaceholder = (val: unknown) =>
       !val || String(val).includes("<") || String(val).includes(">");
@@ -572,12 +647,11 @@ export async function createTicketFromBotnoi(
     // แยก brand, symptom, address ไม่ให้ทับกัน
     const { brand, symptom, address } = parseBotnoiInfo(cleanInfo);
 
-    // ตรวจสอบประเภทบริการอัตโนมัติจากสิ่งที่ลูกค้าแจ้งในแชท
-    const detectedService = /ล้าง|ทำความสะอาด/.test(cleanInfo)
-      ? "CLEANING"
-      : /ติดตั้ง|ย้ายแอร์|ย้ายจุด|ติดแอร์/.test(cleanInfo)
-      ? "INSTALLATION"
-      : "REPAIR";
+    // ประเภทบริการ: ใช้ค่า <service> ที่บอทส่งมาก่อน ถ้าไม่มี/ไม่ถูกต้องค่อยเดาจากข้อความ
+    const detectedService = resolveBotnoiService(
+      isPlaceholder(botService) ? undefined : String(botService),
+      cleanInfo
+    );
 
     // ดึงรหัส CC-YYYYMMDD-XXXX ที่บอทแนบมาใน <date> หรือ <ticket> หรือ <info>
     const combinedRaw = `${botTicketCode || ""} ${date || ""} ${info || ""}`;
@@ -637,6 +711,15 @@ export async function createTicketFromBotnoi(
     const preferredDate = rawDateOnly
       ? parseBotnoiDate(rawDateOnly)
       : new Date(Date.now() + 86400000);
+
+    // กฎวันนัดเดียวกับฟอร์มบนเว็บ: ห้ามนัดย้อนหลัง (เทียบกับวันนี้ตามเวลาไทย)
+    if (preferredDate < startOfTodayBangkokAsUtc()) {
+      res.status(400).json({
+        success: false,
+        error: "วันนัดหมายเป็นวันที่ผ่านมาแล้ว กรุณาเลือกวันตั้งแต่พรุ่งนี้เป็นต้นไป",
+      });
+      return;
+    }
 
     // ใช้รหัสเดียวกับที่บอทสร้างในแชท (สุ่มใหม่เฉพาะกรณีชนกับเคสเก่าของคนอื่นจริงๆ เท่านั้น)
     let trackingCode = botCode || (await generateUniqueCode());

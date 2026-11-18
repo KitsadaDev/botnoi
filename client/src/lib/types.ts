@@ -3,7 +3,10 @@
 // ===========================
 
 export type TicketStatus = 'SUBMITTED' | 'RECEIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
-export type ServiceType = 'CLEANING' | 'REPAIR' | 'INSTALLATION'
+export type ServiceType = 'CLEANING' | 'REPAIR' | 'INSTALLATION' | 'IT_REPAIR'
+
+// ลำดับประเภทบริการทั้งหมด (ใช้ตรวจค่าจาก URL / สร้างตัวเลือก) ต้องตรงกับ enum ServiceType ใน server/prisma/schema.prisma
+export const SERVICE_TYPES: ServiceType[] = ['CLEANING', 'REPAIR', 'INSTALLATION', 'IT_REPAIR']
 export type Role = 'CUSTOMER' | 'STAFF' | 'ADMIN'
 
 export interface User {
@@ -77,8 +80,9 @@ export type TicketCounts = Record<TicketStatus | 'total', number>
 // Label สำหรับแสดงผลภาษาไทย
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   CLEANING: 'ล้างแอร์',
-  REPAIR: 'ซ่อมบำรุง',
-  INSTALLATION: 'ติดตั้ง/ย้าย',
+  REPAIR: 'ซ่อมแอร์',
+  INSTALLATION: 'ติดตั้ง/ย้ายแอร์',
+  IT_REPAIR: 'ซ่อมอุปกรณ์ไอที',
 }
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {

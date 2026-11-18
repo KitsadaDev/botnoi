@@ -69,6 +69,12 @@ export const Footer: React.FC = () => {
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
+              <li>
+                <Link to="/book?service=IT_REPAIR" className="hover:text-white transition-colors flex items-center justify-between group">
+                  <span>ซ่อมคอมพิวเตอร์และอุปกรณ์ไอที</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
+                </Link>
+              </li>
             </ul>
           </div>
 
