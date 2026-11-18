@@ -21,6 +21,9 @@ const router = Router();
 const createTicketLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  // นับเฉพาะคำขอที่สร้างเคสสำเร็จ: ลูกค้ากรอกผิด (400) หรือ server ขัดข้อง (500) ไม่ควรเสียโควตา
+  // (ยังมี apiLimiter รวมกันการยิงถี่ ๆ อยู่อีกชั้น)
+  skipFailedRequests: true,
   message: { success: false, error: "ส่งคำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่" },
   standardHeaders: true,
   legacyHeaders: false,
