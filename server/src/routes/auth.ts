@@ -22,6 +22,10 @@ export const loginLimiter = rateLimit({
 export const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  // ลูกค้ากรอกฟอร์มผิด (400) ไม่ควรเสียโควตา แต่ยังนับครั้งที่สมัครสำเร็จ
+  // และครั้งที่เจอเบอร์ซ้ำ (409) เพื่อกันการไล่เช็กว่าเบอร์ไหนมีบัญชีแล้ว
+  skipFailedRequests: true,
+  requestWasSuccessful: (_req, res) => res.statusCode < 400 || res.statusCode === 409,
   message: { success: false, error: "สมัครสมาชิกบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่" },
   standardHeaders: true,
   legacyHeaders: false,
