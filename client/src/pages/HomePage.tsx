@@ -1194,7 +1194,7 @@ export const HomePage: React.FC = () => {
                 </p>
 
                 {/* Interactive Segmented Control */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800">
+                <div className="grid grid-cols-4 gap-2 p-1.5 bg-zinc-900 rounded-2xl border border-zinc-800">
                   {[
                     { id: 'CLEANING', label: 'ล้างแอร์', icon: Wind },
                     { id: 'REPAIR', label: 'ซ่อมแอร์', icon: Wrench },

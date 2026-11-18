@@ -324,15 +324,10 @@ export const TrackTicketPage: React.FC = () => {
                   {/* เบอร์ช่างในหน้า public ถูกปิดบัง (089-xxx-1111) จึงโทรตรงไม่ได้ ให้โทรผ่านเบอร์ศูนย์บริการแทน */}
                   <a
                     href="tel:021234567"
-                    className="inline-flex flex-col items-center justify-center gap-0.5 px-5 py-3 rounded-2xl bg-orange-400 hover:bg-orange-300 text-zinc-950 font-bold text-xs transition shadow-sm"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-orange-400 hover:bg-orange-300 text-zinc-950 font-bold text-xs transition shadow-sm"
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>โทรติดต่อผ่านศูนย์บริการ</span>
-                    </span>
-                    <span className="font-mono text-[10px] font-medium opacity-80">
-                      ช่าง {ticket.technician.phone}
-                    </span>
+                    <Phone className="w-3.5 h-3.5" />
+                    <span className="font-mono">02-123-4567</span>
                   </a>
                 </div>
               ) : (
@@ -517,11 +512,13 @@ export const TrackTicketPage: React.FC = () => {
 
                 {/* Send Message Input — เคสที่เสร็จสิ้น/ยกเลิกแล้ว server ไม่รับข้อความจากลูกค้า จึงไม่แสดงช่องพิมพ์ */}
                 {ticket.status === 'COMPLETED' || ticket.status === 'CANCELLED' ? (
-                  <div className="p-3.5 border-t border-zinc-100 bg-zinc-50 text-[11px] text-zinc-500 text-center">
-                    เคสนี้ปิดแล้ว ไม่สามารถส่งข้อความเพิ่มได้ หากต้องการความช่วยเหลือ โทร{' '}
-                    <a href="tel:021234567" className="font-bold text-orange-600 hover:underline">
-                      02-123-4567
-                    </a>
+                  <div className="p-3.5 border-t border-zinc-100 bg-white">
+                    <div className="px-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl text-zinc-400">
+                      เคสนี้ปิดแล้ว ไม่สามารถส่งข้อความเพิ่มได้ หากต้องการความช่วยเหลือ โทร{' '}
+                      <a href="tel:021234567" className="font-mono font-bold text-orange-600 hover:underline">
+                        02-123-4567
+                      </a>
+                    </div>
                   </div>
                 ) : (
                 <form onSubmit={handleSendMessage} className="p-3.5 border-t border-zinc-100 bg-white">

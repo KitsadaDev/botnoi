@@ -415,7 +415,7 @@ export const BookServicePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 {
                   id: 'CLEANING',
@@ -444,22 +444,53 @@ export const BookServicePage: React.FC = () => {
                   desc: 'คอม โน้ตบุ๊ก การ์ดจอ เครื่องเกม ปริ้นเตอร์',
                   price: 'ตรวจเช็คเริ่มต้น ฿400',
                   icon: Monitor,
+                  // การ์ดงานไอทีวางเป็นแถวเต็มความกว้างใต้การ์ดแอร์ 3 ใบ เพื่อคงขนาด/สัดส่วนการ์ดเดิมไว้
+                  wide: true,
                 },
               ].map((item) => {
                 const Icon = item.icon
                 const isSelected = selectedService === item.id
+                const isWide = 'wide' in item && item.wide
                 return (
                   <Tilt3DCard
                     key={item.id}
-                    maxTilt={6}
+                    maxTilt={isWide ? 2 : 6}
                     onClick={() => handleSelectService(item.id as ServiceType)}
                     className={`rounded-2xl border-2 cursor-pointer transition-all p-5 ${
+                      isWide ? 'sm:col-span-3' : ''
+                    } ${
                       isSelected
                         ? 'border-zinc-950 bg-zinc-950 text-white shadow-xl'
                         : 'border-zinc-200 hover:border-zinc-300 bg-zinc-50/50 text-zinc-900'
                     }`}
                   >
                     <input type="radio" value={item.id} {...register('service')} className="sr-only" />
+                    {isWide ? (
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div
+                          className={`p-2.5 rounded-xl transition-colors self-start sm:self-center ${
+                            isSelected ? 'bg-orange-400 text-zinc-950' : 'bg-orange-100/80 text-orange-600'
+                          }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-base">{item.title}</h3>
+                          <p className={`text-xs mt-1 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                            {item.desc}
+                          </p>
+                        </div>
+                        <p
+                          className={`text-xs font-mono font-bold ${
+                            isSelected ? 'text-orange-400' : 'text-zinc-900'
+                          }`}
+                        >
+                          {item.price}
+                        </p>
+                        {isSelected && <CheckCircle2 className="hidden sm:block w-5 h-5 text-orange-400" />}
+                      </div>
+                    ) : (
+                    <>
                     <div className="flex items-center justify-between mb-4">
                       <div
                         className={`p-2.5 rounded-xl transition-colors ${
@@ -481,6 +512,8 @@ export const BookServicePage: React.FC = () => {
                     >
                       {item.price}
                     </p>
+                    </>
+                    )}
                   </Tilt3DCard>
                 )
               })}
