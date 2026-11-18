@@ -243,7 +243,7 @@ export function buildDashboardExcelBytes(params: DashboardExcelExportParams): Ui
     'ชื่อลูกค้า',
     'เบอร์ติดต่อ',
     'ประเภทบริการ',
-    'ยี่ห้อแอร์',
+    'ยี่ห้อ / อุปกรณ์',
     'อาการ / รายละเอียด',
     'ที่อยู่หน้างาน',
     'วันนัดหมาย',

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react'
 import api from '../lib/api'
 import type { ApiResponse, Ticket, ServiceType } from '../lib/types'
-import { SERVICE_TYPES } from '../lib/types'
+import { SERVICE_TYPES, SERVICE_LABELS } from '../lib/types'
 import { formatDate, getMinBookingDate, sanitizePhoneInput } from '../lib/format'
 import { MAX_IMAGES, selectValidImages } from '../lib/images'
 import { ScrollReveal, Tilt3DCard, MagneticButton } from '../components/InteractiveUI'
@@ -323,15 +323,13 @@ export const BookServicePage: React.FC = () => {
               <div className="flex justify-between py-1 border-b border-zinc-200/70">
                 <span className="text-zinc-500">ประเภทบริการ:</span>
                 <span className="font-bold text-zinc-900">
-                  {createdTicket.service === 'CLEANING'
-                    ? 'ล้างแอร์'
-                    : createdTicket.service === 'REPAIR'
-                    ? 'ซ่อมแอร์'
-                    : 'ติดตั้ง/ย้ายแอร์'}
+                  {SERVICE_LABELS[createdTicket.service] ?? createdTicket.service}
                 </span>
               </div>
               <div className="flex justify-between py-1 border-b border-zinc-200/70">
-                <span className="text-zinc-500">ยี่ห้อแอร์:</span>
+                <span className="text-zinc-500">
+                  {createdTicket.service === 'IT_REPAIR' ? 'อุปกรณ์:' : 'ยี่ห้อแอร์:'}
+                </span>
                 <span className="font-semibold text-zinc-900">{createdTicket.brand}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-zinc-200/70">
@@ -604,7 +602,11 @@ export const BookServicePage: React.FC = () => {
 
                 <textarea
                   rows={3}
-                  placeholder="เช่น แอร์ไม่เย็น มีแต่ลมธรรมดาออกมา มีน้ำหยดตรงคอยล์เย็น หรือต้องการล้างแอร์ 2 เครื่อง..."
+                  placeholder={
+                    isItService
+                      ? 'เช่น โน้ตบุ๊กเปิดไม่ติด จอไม่แสดงภาพ เครื่องช้าค้างบ่อย หรือต้องการลงวินโดวส์ใหม่...'
+                      : 'เช่น แอร์ไม่เย็น มีแต่ลมธรรมดาออกมา มีน้ำหยดตรงคอยล์เย็น หรือต้องการล้างแอร์ 2 เครื่อง...'
+                  }
                   {...register('symptom')}
                   className="w-full px-4 py-3 text-sm bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-hidden transition"
                 />

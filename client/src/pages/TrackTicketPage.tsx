@@ -123,7 +123,7 @@ export const TrackTicketPage: React.FC = () => {
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            ติดตามสถานะงานซ่อมเครื่องปรับอากาศ
+            ติดตามสถานะงานซ่อมแอร์และอุปกรณ์ไอที
           </h1>
           <p className="text-zinc-400 text-xs sm:text-sm">
             กรอกรหัสติดตามงานซ่อมของคุณเพื่อดูความคืบหน้า รายละเอียดช่าง และการสนทนาสด
@@ -355,7 +355,9 @@ export const TrackTicketPage: React.FC = () => {
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-100">
-                    <span className="text-zinc-400 block mb-1">ยี่ห้อแอร์</span>
+                    <span className="text-zinc-400 block mb-1">
+                      {ticket.service === 'IT_REPAIR' ? 'อุปกรณ์' : 'ยี่ห้อแอร์'}
+                    </span>
                     <span className="font-extrabold text-zinc-900 text-sm">{ticket.brand}</span>
                   </div>
 
