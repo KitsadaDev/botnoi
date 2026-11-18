@@ -345,7 +345,7 @@ export const HomePage: React.FC = () => {
                 <span className="px-2 py-0.5 rounded-full bg-orange-500 text-zinc-950 font-bold text-[10px] uppercase tracking-wider">
                   AI After-Sales Service
                 </span>
-                <span className="text-zinc-300">ระบบแจ้งซ่อมแอร์อัจฉริยะ มาตรฐาน Carrier Style</span>
+                <span className="text-zinc-300">ระบบแจ้งซ่อมแอร์และไอทีอัจฉริยะ มาตรฐาน Carrier Style</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-orange-400" />
               </div>
 
@@ -358,7 +358,7 @@ export const HomePage: React.FC = () => {
               </h1>
 
               <p className="text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed font-normal">
-                บริการล้าง ซ่อม และติดตั้งแอร์ครบวงจร พร้อมแพลตฟอร์ม AI บริการหลังการขายครบทั้ง{' '}
+                บริการล้าง ซ่อม และติดตั้งแอร์ครบวงจร รวมถึงซ่อมคอมพิวเตอร์และอุปกรณ์ไอที พร้อมแพลตฟอร์ม AI บริการหลังการขายครบทั้ง{' '}
                 <strong className="text-zinc-200">3 Products (ข้อความ, เสียง และ AI Avatar)</strong>{' '}
                 ช่วยรับแจ้งซ่อม ตอบคำถาม และติดตามสถานะกับทีมช่างแบบ Real-time
               </p>
@@ -602,7 +602,7 @@ export const HomePage: React.FC = () => {
               <span>AFTERCARE AI PRODUCTS</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
-              3 โซลูชัน AI ผู้ช่วยดูแลงานซ่อมแอร์
+              3 โซลูชัน AI ผู้ช่วยดูแลงานซ่อมแอร์และไอที
             </h2>
             <p className="text-zinc-500 text-sm">
               เลือกสัมผัสประสบการณ์จริงได้ทั้ง 3 รูปแบบ: แชทบอทมุมซ้ายล่าง, สายด่วนเสียงตรงกลาง และผู้ช่วย 3D มุมขวาล่าง
@@ -1169,6 +1169,59 @@ export const HomePage: React.FC = () => {
               </div>
             </Tilt3DCard>
           </ScrollReveal>
+
+          {/* Card 4: IT Repair — แถวเต็มความกว้างใต้การ์ดแอร์ 3 ใบ (สไตล์เดียวกับ Card 1/3) */}
+          <ScrollReveal delay={350} className="md:col-span-3">
+            <Tilt3DCard
+              maxTilt={2}
+              spotlightColor="rgba(249, 115, 22, 0.14)"
+              className="bg-white rounded-3xl border border-zinc-200/90 shadow-xs hover:shadow-2xl hover:border-orange-300 p-8 h-full"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_auto] gap-8 items-center">
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600 flex items-center justify-center">
+                      <Monitor className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 ring-1 ring-orange-500/20">
+                      บริการใหม่
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-extrabold text-zinc-950 mb-1.5">ซ่อมคอมพิวเตอร์และอุปกรณ์ไอที</h3>
+                  <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+                    คอมพิวเตอร์ โน้ตบุ๊ก การ์ดจอ จอมอนิเตอร์ ปริ้นเตอร์ เครื่องเกม และเราเตอร์ ตรวจเช็คอาการและแจ้งราคาก่อนซ่อมทุกครั้ง
+                  </p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xs text-zinc-400 font-medium">ตรวจเช็คเริ่มต้น</span>
+                    <span className="text-3xl font-black text-zinc-950 tracking-tight">฿400</span>
+                  </div>
+                </div>
+
+                <ul className="space-y-3 text-xs text-zinc-600">
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
+                    <span>เปิดไม่ติด จอดับ เครื่องช้า ค้าง หรือติดไวรัส</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
+                    <span>ลงวินโดวส์ ติดตั้งโปรแกรม อัปเกรดแรม/SSD</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-orange-500 shrink-0" />
+                    <span>ประเมินราคาก่อนซ่อม รับประกันงานซ่อม 90 วัน</span>
+                  </li>
+                </ul>
+
+                <Link
+                  to="/book?service=IT_REPAIR"
+                  className="w-full lg:w-auto flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl text-xs font-bold text-zinc-900 bg-zinc-100 hover:bg-zinc-950 hover:text-white transition-all"
+                >
+                  <span>แจ้งซ่อมอุปกรณ์ไอที</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </Tilt3DCard>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -1223,7 +1276,7 @@ export const HomePage: React.FC = () => {
                 {/* Unit Counter Pills */}
                 <div className="space-y-2 pt-1">
                   <div className="flex justify-between text-xs">
-                    <span className="text-zinc-300 font-semibold">จำนวนเครื่องปรับอากาศ:</span>
+                    <span className="text-zinc-300 font-semibold">จำนวนเครื่อง:</span>
                     <span className="font-mono font-bold text-orange-400">{unitCount} เครื่อง</span>
                   </div>
                   <div className="flex gap-2">
