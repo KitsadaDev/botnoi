@@ -30,7 +30,7 @@ import { exportDashboardToExcel } from '../lib/excelExport'
 import AdminNotificationBell from '../components/AdminNotificationBell'
 
 export const AdminDashboardPage: React.FC = () => {
-  const { user, isStaff, isLoading: isAuthLoading } = useAuth()
+  const { user, isStaff, isAdmin, isLoading: isAuthLoading } = useAuth()
   const queryClient = useQueryClient()
 
   const [selectedStatus, setSelectedStatus] = useState<string>('')
@@ -86,14 +86,18 @@ export const AdminDashboardPage: React.FC = () => {
     enabled: Boolean(selectedTicketId),
   })
 
+  // แชตของเคสดึงผ่าน endpoint ของแอดมิน (ต้องล็อกอิน) ไม่ใช้ /tickets/:code/messages ที่เป็นของลูกค้า
+  // เพื่อไม่ให้หน้าแอดมินไปใช้โควตา rate limit สาธารณะร่วมกับลูกค้า
   const { data: activeMessages = [] } = useQuery<Message[]>({
-    queryKey: ['adminMessages', activeTicket?.trackingCode],
+    queryKey: ['adminMessages', selectedTicketId],
     queryFn: async () => {
-      if (!activeTicket?.trackingCode) return []
-      const res = await api.get<ApiResponse<Message[]>>(`/tickets/${activeTicket.trackingCode}/messages`)
-      return res.data.success ? res.data.data : []
+      if (!selectedTicketId) return []
+      const res = await api.get<ApiResponse<Ticket & { messages?: Message[] }>>(
+        `/admin/tickets/${selectedTicketId}`
+      )
+      return res.data.success ? res.data.data.messages ?? [] : []
     },
-    enabled: Boolean(activeTicket?.trackingCode),
+    enabled: Boolean(selectedTicketId),
     refetchInterval: 5000,
   })
 
@@ -157,7 +161,7 @@ export const AdminDashboardPage: React.FC = () => {
     },
     onSuccess: () => {
       setStaffMessageText('')
-      queryClient.invalidateQueries({ queryKey: ['adminMessages', activeTicket?.trackingCode] })
+      queryClient.invalidateQueries({ queryKey: ['adminMessages', selectedTicketId] })
     },
     onError: (err: any) => {
       alert(err.response?.data?.error || 'ส่งข้อความไม่สำเร็จ')
@@ -525,6 +529,8 @@ export const AdminDashboardPage: React.FC = () => {
                         >
                           จัดการเคส
                         </button>
+                        {/* ลบถาวรได้เฉพาะ ADMIN (server จำกัดสิทธิ์เดียวกัน) */}
+                        {isAdmin && (
                         <button
                           type="button"
                           onClick={() => handleDeleteTicket(t)}
@@ -534,6 +540,7 @@ export const AdminDashboardPage: React.FC = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -562,6 +569,7 @@ export const AdminDashboardPage: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {isAdmin && (
                 <button
                   type="button"
                   onClick={() => handleDeleteTicket(activeTicket)}
@@ -571,6 +579,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>ลบเคสนี้</span>
                 </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedTicketId(null)}
@@ -733,7 +742,15 @@ export const AdminDashboardPage: React.FC = () => {
                   )}
                 </div>
 
-                                <form onSubmit={handleSendStaffMessage} className="p-3 bg-zinc-50 border-t border-zinc-200 flex gap-2">
+                {/* เคสที่ปิดแล้ว (เสร็จสิ้น/ยกเลิก) server ไม่รับข้อความ ทั้งฝั่งลูกค้าและเจ้าหน้าที่ */}
+                {activeTicket.status === 'COMPLETED' || activeTicket.status === 'CANCELLED' ? (
+                  <div className="p-3 bg-zinc-50 border-t border-zinc-200">
+                    <div className="px-4 py-2 text-xs bg-white border border-zinc-200 rounded-xl text-zinc-400">
+                      เคสนี้ปิดแล้ว ไม่สามารถส่งข้อความได้ หากต้องการคุยต่อให้เปลี่ยนสถานะเคสก่อน
+                    </div>
+                  </div>
+                ) : (
+                <form onSubmit={handleSendStaffMessage} className="p-3 bg-zinc-50 border-t border-zinc-200 flex gap-2">
                   <input
                     type="text"
                     value={staffMessageText}
@@ -750,6 +767,7 @@ export const AdminDashboardPage: React.FC = () => {
                     <span>ส่งข้อความ</span>
                   </button>
                 </form>
+                )}
               </div>
             </div>
           </div>

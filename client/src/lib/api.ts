@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { TOKEN_KEY } from './storageKeys'
 
 // ===========================
 // Axios instance หลักของแอป
@@ -14,7 +15,7 @@ const api = axios.create({
 // Request interceptor: แนบ JWT token อัตโนมัติ
 // ===========================
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('coolcare_token')
+  const token = localStorage.getItem(TOKEN_KEY)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -28,7 +29,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('coolcare_token')
+      localStorage.removeItem(TOKEN_KEY)
       // redirect to login only if accessing admin or if on an admin path
       if (
         (window.location.pathname.startsWith('/admin') || error.config?.url?.includes('/admin')) &&

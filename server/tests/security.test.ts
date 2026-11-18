@@ -239,7 +239,8 @@ test("createTicketSchema: ป้องกัน Client กำหนด userId �
     brand: "Daikin",
     symptom: "ล้างแอร์ประจำปี",
     address: "123 ถ.สุขุมวิท พระโขนง กรุงเทพฯ",
-    preferredDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+    // +2 วัน: วันนัดต้องเป็นตั้งแต่พรุ่งนี้ตามเวลาไทย (+1 วันแบบ UTC อาจตรงกับ "วันนี้" ของไทยช่วงเช้ามืด)
+    preferredDate: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
     customerName: "สมหมาย",
     customerPhone: "0812345678",
     userId: "arbitrary-attacker-id",

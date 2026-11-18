@@ -1,4 +1,6 @@
-# คู่มือ Deploy CoolCare Pro (Frontend บน Vercel + Backend บน Render)
+# คู่มือ Deploy Plasom (Frontend บน Vercel + Backend บน Render)
+
+> ชื่อ `coolcare-api` / `coolcare-pro` ที่ยังเห็นในคู่มือนี้เป็นชื่อโปรเจกต์บน Vercel/Render และใน package.json เดิม (เปลี่ยนชื่อที่ platform แล้วต้องแก้ URL ใน `client/vercel.json` ตาม)
 
 - **Frontend** (`client/`) → Vercel
 - **Backend** (`server/`) → Render
@@ -44,7 +46,7 @@
 
 5. กด **Create Web Service** รอจนขึ้นสถานะสีเขียว **`Live`**
 6. คัดลอก URL ของ Render ด้านบนซ้าย (เช่น `https://coolcare-api.onrender.com`)
-   - ทดสอบเปิด `https://<ชื่อของคุณ>.onrender.com/api/health` ต้องขึ้น `{"success":true,"message":"CoolCare Pro API กำลังทำงาน 🆒"}`
+   - ทดสอบเปิด `https://<ชื่อของคุณ>.onrender.com/api/health` ต้องขึ้น `{"success":true,"message":"Plasom API กำลังทำงาน 🆒"}`
 
 ---
 

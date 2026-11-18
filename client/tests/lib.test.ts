@@ -160,3 +160,18 @@ test('selectValidImages: ขนาดรูปรวม (รวมรูปท�
   assert.equal(second.errors.length, 1)
   assert.ok(MAX_TOTAL_IMAGE_BYTES < 4.5 * 1024 * 1024)
 })
+
+// เปลี่ยนชื่อ key ใน localStorage จาก coolcare_* เป็น plasom_* โดยผู้ใช้ไม่หลุดจากระบบ
+import { migrateLegacyStorageKeys, TOKEN_KEY } from '../src/lib/storageKeys.ts'
+
+test('migrateLegacyStorageKeys: ย้าย token เดิมไป key ใหม่และลบ key เก่า', () => {
+  const store = new Map<string, string>([['coolcare_token', 'abc']])
+  const storage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  }
+  migrateLegacyStorageKeys(storage)
+  assert.equal(store.get(TOKEN_KEY), 'abc')
+  assert.equal(store.has('coolcare_token'), false)
+})

@@ -9,7 +9,11 @@ import { AuthRequest } from "../middleware/auth";
 import { TicketStatus, ServiceType } from "@prisma/client";
 import crypto from "crypto";
 import fs from "fs";
-import { bangkokDateString, startOfTodayBangkokAsUtc } from "../lib/date";
+import {
+  bangkokDateString,
+  startOfTodayBangkokAsUtc,
+  earliestBookingDateBangkok,
+} from "../lib/date";
 
 // ===========================
 // nanoid: ตัวพิมพ์ใหญ่ + ตัวเลข 4 ตัว
@@ -132,10 +136,12 @@ export async function createTicket(
     });
 
     // ส่งข้อมูลเคสครบ (หน้ายืนยันของ client ต้องใช้แสดงสรุป) พร้อมรหัสติดตาม
+    // ตัด userId ออกเหมือน GET /tickets/:code เพื่อไม่เปิดเผยรหัสผู้ใช้ภายใน
+    const { userId: _omittedUserId, ...publicTicket } = ticket;
     res.status(201).json({
       success: true,
       data: {
-        ...ticket,
+        ...publicTicket,
         message: "ส่งเรื่องสำเร็จ กรุณาบันทึกรหัสติดตามของท่าน",
       },
     });
@@ -238,7 +244,8 @@ export async function getMessages(
         text: true,
         fromStaff: true,
         createdAt: true,
-        user: { select: { id: true, name: true } },
+        // endpoint สาธารณะ: ส่งเฉพาะชื่อผู้ส่ง ไม่เปิดเผย id ภายในของผู้ใช้ (กฎเดียวกับ GET /tickets/:code)
+        user: { select: { name: true } },
       },
     });
 
@@ -298,7 +305,8 @@ export async function createCustomerMessage(
         text: true,
         fromStaff: true,
         createdAt: true,
-        user: { select: { id: true, name: true } },
+        // endpoint สาธารณะ: ส่งเฉพาะชื่อผู้ส่ง ไม่เปิดเผย id ภายในของผู้ใช้ (กฎเดียวกับ GET /tickets/:code)
+        user: { select: { name: true } },
       },
     });
 
@@ -712,11 +720,11 @@ export async function createTicketFromBotnoi(
       ? parseBotnoiDate(rawDateOnly)
       : new Date(Date.now() + 86400000);
 
-    // กฎวันนัดเดียวกับฟอร์มบนเว็บ: ห้ามนัดย้อนหลัง (เทียบกับวันนี้ตามเวลาไทย)
-    if (preferredDate < startOfTodayBangkokAsUtc()) {
+    // กฎวันนัดเดียวกับฟอร์มบนเว็บและ API สร้างเคส: ต้องเป็นตั้งแต่พรุ่งนี้ (ตามเวลาไทย)
+    if (preferredDate < earliestBookingDateBangkok()) {
       res.status(400).json({
         success: false,
-        error: "วันนัดหมายเป็นวันที่ผ่านมาแล้ว กรุณาเลือกวันตั้งแต่พรุ่งนี้เป็นต้นไป",
+        error: "วันนัดหมายต้องเป็นตั้งแต่พรุ่งนี้เป็นต้นไป กรุณาเลือกวันใหม่",
       });
       return;
     }

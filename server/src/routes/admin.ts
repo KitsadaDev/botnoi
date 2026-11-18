@@ -23,8 +23,8 @@ router.get("/tickets/:id", getTicketById);
 // PATCH /api/admin/tickets/:id
 router.patch("/tickets/:id", updateTicket);
 
-// DELETE /api/admin/tickets/:id (ลบใบงานถาวร)
-router.delete("/tickets/:id", deleteTicket);
+// DELETE /api/admin/tickets/:id (ลบใบงานถาวร — ย้อนกลับไม่ได้ จึงจำกัดเฉพาะ ADMIN)
+router.delete("/tickets/:id", roleRequired("ADMIN"), deleteTicket);
 
 // POST /api/admin/tickets/:id/messages
 router.post("/tickets/:id/messages", createStaffMessage);

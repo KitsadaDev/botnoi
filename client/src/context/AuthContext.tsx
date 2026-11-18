@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import api from '../lib/api'
+import { TOKEN_KEY } from '../lib/storageKeys'
 import type { User } from '../lib/types'
 
 // ===========================
@@ -27,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // โหลด user จาก localStorage เมื่อ app เริ่ม
   useEffect(() => {
-    const savedToken = localStorage.getItem('coolcare_token')
+    const savedToken = localStorage.getItem(TOKEN_KEY)
     if (savedToken) {
       setToken(savedToken)
       // ดึงข้อมูล user ล่าสุดจาก /api/auth/me
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // ล้าง token เฉพาะเมื่อ server ยืนยันว่า token ใช้ไม่ได้ (401)
           // ถ้าเป็นเน็ตหลุด/server ล่ม/timeout ให้เก็บ token ไว้ ไม่งั้นผู้ใช้จะโดนเด้งออกจากระบบโดยไม่จำเป็น
           if (err?.response?.status === 401) {
-            localStorage.removeItem('coolcare_token')
+            localStorage.removeItem(TOKEN_KEY)
             setToken(null)
           }
         })
@@ -50,13 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = (newToken: string, newUser: User) => {
-    localStorage.setItem('coolcare_token', newToken)
+    localStorage.setItem(TOKEN_KEY, newToken)
     setToken(newToken)
     setUser(newUser)
   }
 
   const logout = () => {
-    localStorage.removeItem('coolcare_token')
+    localStorage.removeItem(TOKEN_KEY)
     setToken(null)
     setUser(null)
   }

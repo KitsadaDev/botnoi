@@ -20,3 +20,11 @@ export function bangkokDateString(date: Date = new Date()): string {
 export function startOfTodayBangkokAsUtc(now: Date = new Date()): Date {
   return new Date(`${bangkokDateString(now)}T00:00:00.000Z`);
 }
+
+/**
+ * วันนัดที่เร็วที่สุดที่รับได้ = พรุ่งนี้ (ตามเวลาไทย)
+ * ใช้กฎเดียวกันทุกช่องทาง: ฟอร์มบนเว็บ (getMinBookingDate ฝั่ง client), API สร้างเคส และ webhook ของบอท
+ */
+export function earliestBookingDateBangkok(now: Date = new Date()): Date {
+  return new Date(startOfTodayBangkokAsUtc(now).getTime() + 86400000);
+}

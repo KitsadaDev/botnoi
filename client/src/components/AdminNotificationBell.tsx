@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import api from '../lib/api'
+import { ADMIN_READ_TICKETS_KEY, ADMIN_NOTIF_MUTED_KEY } from '../lib/storageKeys'
 import type { Ticket } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
 
@@ -19,8 +20,8 @@ interface AdminNotificationBellProps {
   onSelectTicket?: (ticket: Ticket) => void
 }
 
-const STORAGE_READ_KEY = 'coolcare_admin_read_ticket_ids'
-const STORAGE_MUTE_KEY = 'coolcare_admin_notif_muted'
+const STORAGE_READ_KEY = ADMIN_READ_TICKETS_KEY
+const STORAGE_MUTE_KEY = ADMIN_NOTIF_MUTED_KEY
 
 // ฟังก์ชันแปลงเวลาเป็น "เมื่อสักครู่", "X นาทีที่แล้ว"
 function formatTimeAgo(dateStr: string): string {

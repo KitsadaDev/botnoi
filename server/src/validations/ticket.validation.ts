@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ServiceType } from "@prisma/client";
-import { startOfTodayBangkokAsUtc } from "../lib/date";
+import { earliestBookingDateBangkok } from "../lib/date";
 
 // ===========================
 // Regex เบอร์โทรไทย 10 หลัก (shared กับ auth.validation)
@@ -26,16 +26,19 @@ const requiredString = (message: string) =>
 
 export const createTicketSchema = z.object({
   service: z.nativeEnum(ServiceType, { errorMap: () => ({ message: "ประเภทบริการไม่ถูกต้อง" }) }),
-  brand: requiredString("กรุณากรอกยี่ห้อแอร์").min(1, "กรุณากรอกยี่ห้อแอร์").max(100),
-  symptom: requiredString("กรุณากรอกอาการเสีย").min(1, "กรุณากรอกอาการเสีย").max(500),
+  brand: requiredString("กรุณาระบุยี่ห้อ/อุปกรณ์").min(1, "กรุณาระบุยี่ห้อ/อุปกรณ์").max(100),
+  // ขั้นต่ำ 5 ตัวอักษร ให้ตรงกับฟอร์มบนเว็บ (client/src/pages/BookServicePage.tsx)
+  symptom: requiredString("กรุณากรอกอาการเสีย")
+    .min(5, "กรุณาระบุอาการเบื้องต้นอย่างน้อย 5 ตัวอักษร")
+    .max(500),
   address: requiredString("กรุณากรอกที่อยู่ให้ครบถ้วน").min(10, "กรุณากรอกที่อยู่ให้ครบถ้วน").max(500),
   lat: z.coerce.number().min(-90, "พิกัด lat ไม่ถูกต้อง").max(90, "พิกัด lat ไม่ถูกต้อง").optional(),
   lng: z.coerce.number().min(-180, "พิกัด lng ไม่ถูกต้อง").max(180, "พิกัด lng ไม่ถูกต้อง").optional(),
-  // วันนัดต้องไม่ย้อนหลัง (เปรียบเทียบกับ "เริ่มต้นของวันนี้" ตามเวลาไทย ไม่ใช่เวลาของเครื่อง server ที่เป็น UTC)
+  // วันนัดต้องเป็นตั้งแต่พรุ่งนี้ตามเวลาไทย (กฎเดียวกับฟอร์มบนเว็บและบอท)
   preferredDate: requiredString("กรุณาเลือกวันที่ต้องการรับบริการ").refine((val) => {
     const date = new Date(val);
-    return !isNaN(date.getTime()) && date >= startOfTodayBangkokAsUtc();
-  }, "วันนัดต้องไม่เป็นวันที่ผ่านมาแล้ว"),
+    return !isNaN(date.getTime()) && date >= earliestBookingDateBangkok();
+  }, "วันนัดต้องเป็นตั้งแต่พรุ่งนี้เป็นต้นไป"),
   note: z.string().max(1000).optional(),
   customerName: requiredString("กรุณากรอกชื่อ-สกุล").min(2, "กรุณากรอกชื่อ-สกุล").max(100),
   customerPhone: thaiPhoneSchema,

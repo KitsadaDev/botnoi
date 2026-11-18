@@ -230,6 +230,16 @@ export async function createStaffMessage(
       return;
     }
 
+    // กฎเดียวกับฝั่งลูกค้า: เคสที่เสร็จสิ้น/ยกเลิกแล้วปิดแชต
+    // (ถ้าเจ้าหน้าที่ยังส่งได้ ลูกค้าจะเห็นข้อความใหม่แต่ตอบกลับไม่ได้)
+    if (ticket.status === TicketStatus.COMPLETED || ticket.status === TicketStatus.CANCELLED) {
+      res.status(400).json({
+        success: false,
+        error: "เคสนี้ปิดแล้ว ไม่สามารถส่งข้อความได้ หากต้องการคุยต่อให้เปลี่ยนสถานะเคสก่อน",
+      });
+      return;
+    }
+
     const message = await prisma.message.create({
       data: {
         ticketId: ticket.id,
