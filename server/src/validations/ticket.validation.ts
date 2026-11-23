@@ -42,6 +42,7 @@ export const createTicketSchema = z.object({
   note: z.string().max(1000).optional(),
   customerName: requiredString("กรุณากรอกชื่อ-สกุล").min(2, "กรุณากรอกชื่อ-สกุล").max(100),
   customerPhone: thaiPhoneSchema,
+  projectSlug: z.string().trim().toLowerCase().max(60).optional(),
 });
 
 // ===========================

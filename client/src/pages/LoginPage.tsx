@@ -1,18 +1,29 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { LogIn, UserPlus, Phone, User as UserIcon, AlertCircle, Loader2, KeyRound, Sparkles, ShieldCheck, UserCheck } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  LogIn,
+  UserPlus,
+  Phone,
+  User as UserIcon,
+  AlertCircle,
+  Loader2,
+  KeyRound,
+  Sparkles,
+  ShieldCheck,
+  UserCheck,
+  Building2,
+} from 'lucide-react'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import type { ApiResponse, User } from '../lib/types'
 import { sanitizePhoneInput } from '../lib/format'
 
-// ปุ่มกรอกบัญชีทดสอบอัตโนมัติ (แอดมิน / ช่าง / ลูกค้า) สำหรับเดโม: แสดงเป็นค่าเริ่มต้น
-// ถ้าจะปิดบนเว็บจริงภายหลัง ให้ตั้ง VITE_ENABLE_DEMO_LOGIN=false ใน Vercel แล้ว redeploy
 const SHOW_DEMO_PRESETS = import.meta.env.VITE_ENABLE_DEMO_LOGIN !== 'false'
 
 export const LoginPage: React.FC = () => {
-  // สลับโหมด เข้าสู่ระบบ / สมัครสมาชิก
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [searchParams] = useSearchParams()
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode)
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -23,6 +34,13 @@ export const LoginPage: React.FC = () => {
 
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const qMode = searchParams.get('mode')
+    if (qMode === 'register' || qMode === 'login') {
+      setMode(qMode)
+    }
+  }, [searchParams])
 
   const switchMode = (newMode: 'login' | 'register') => {
     setMode(newMode)
@@ -50,7 +68,8 @@ export const LoginPage: React.FC = () => {
 
         if (res.data.success) {
           login(res.data.data.token, res.data.data.user)
-          navigate('/book')
+          // ผู้ประกอบการสมัครเสร็จแล้วเข้า Workspace สร้าง Project ได้ทันที
+          navigate('/projects')
         } else {
           setError(res.data.error || 'สมัครสมาชิกไม่สำเร็จ')
         }
@@ -63,13 +82,8 @@ export const LoginPage: React.FC = () => {
         if (res.data.success) {
           const loggedInUser = res.data.data.user
           login(res.data.data.token, loggedInUser)
-
-          // แยกทางเดินอัตโนมัติ: แอดมิน/ช่างไปหลังบ้าน, ลูกค้าไปหน้าบริการ
-          if (loggedInUser.role === 'ADMIN' || loggedInUser.role === 'STAFF') {
-            navigate('/admin')
-          } else {
-            navigate('/book')
-          }
+          // ทุกบัญชีสามารถเข้าสู่หน้า Workspace โปรเจกต์ของตนเองได้ทันที
+          navigate('/projects')
         } else {
           setError(res.data.error || 'เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง')
         }
@@ -84,8 +98,8 @@ export const LoginPage: React.FC = () => {
     }
   }
 
-  // Quick Demo Fill สำหรับให้พี่โมโนกดพรีเซนต์ลูกค้า
-  const fillRole = (roleType: 'customer' | 'admin' | 'staff') => {
+  // Quick Demo Fill สำหรับพรีเซนต์แพลตฟอร์ม
+  const fillRole = (roleType: 'entrepreneur' | 'admin' | 'staff') => {
     setMode('login')
     setError(null)
     if (roleType === 'admin') {
@@ -95,38 +109,35 @@ export const LoginPage: React.FC = () => {
       setPhone('0800000002')
       setPassword('staff1234')
     } else {
-      // บัญชีลูกค้าจำลอง (หรือใส่เบอร์ที่เคยสมัครไว้)
       setPhone('0812345678')
-      setPassword('customer1234') // ต้องตรงกับ server/prisma/seed.ts
+      setPassword('customer1234')
     }
   }
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-zinc-200 shadow-xl space-y-6 relative overflow-hidden">
-        {/* แถบ Gradient ด้านบน */}
         <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-orange-400 via-amber-600 to-indigo-600" />
 
-        {/* ส่วนหัวหน้าเว็บ */}
         <div className="text-center">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-600 flex items-center justify-center text-white mx-auto mb-4 shadow-md shadow-orange-500/20">
             {mode === 'login' ? <LogIn className="w-6 h-6" /> : <UserPlus className="w-6 h-6" />}
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-700 text-xs font-bold mb-2">
             <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-            <span>AfterCare AI Platform</span>
+            <span>Plasom Central AI Platform</span>
           </div>
           <h1 className="text-2xl font-black text-zinc-900 tracking-tight">
-            {mode === 'login' ? 'เข้าสู่ระบบใช้งาน' : 'สร้างบัญชีผู้ใช้งานใหม่'}
+            {mode === 'login' ? 'เข้าสู่ระบบแพลตฟอร์ม' : 'สมัครใช้งานสร้าง Project ฟรี'}
           </h1>
           <p className="text-xs text-zinc-500 mt-1">
             {mode === 'login'
-              ? 'ระบบดูแลลูกค้าและจัดการงานบริการหลังการขายอัจฉริยะ'
-              : 'สมัครสมาชิกเพื่อรับบริการแจ้งซ่อมและติดตามสถานะงานแบบเรียลไทม์'}
+              ? 'เข้าสู่แดชบอร์ดโปรเจกต์ของคุณ เพื่อจัดการใบงาน ทีมช่าง ประวัติแชท และผลความพึงพอใจ'
+              : 'สร้างบัญชีผู้ประกอบการ เพื่อเปิด Project แดชบอร์ดแจ้งซ่อมและเชื่อมต่อ AI Chatbot ได้ทันที'}
           </p>
         </div>
 
-        {/* สลับแท็บ เข้าสู่ระบบ / สมัครสมาชิก */}
+        {/* Toggle Login / Register */}
         <div className="grid grid-cols-2 p-1 bg-zinc-100 rounded-2xl">
           <button
             type="button"
@@ -148,11 +159,10 @@ export const LoginPage: React.FC = () => {
                 : 'text-zinc-500 hover:text-zinc-800'
             }`}
           >
-            สมัครสมาชิกใหม่
+            สมัครผู้ประกอบการใหม่
           </button>
         </div>
 
-        {/* กล่อง Error */}
         {error && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
@@ -160,13 +170,12 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
-        {/* ฟอร์ม */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <div>
               <label className="block text-xs font-bold text-zinc-700 mb-1.5 flex items-center gap-1.5">
                 <UserIcon className="w-3.5 h-3.5 text-zinc-400" />
-                <span>ชื่อ - นามสกุล</span>
+                <span>ชื่อ - นามสกุล / ชื่อผู้ดูแล</span>
               </label>
               <input
                 type="text"
@@ -199,7 +208,7 @@ export const LoginPage: React.FC = () => {
           <div>
             <label className="block text-xs font-bold text-zinc-700 mb-1.5 flex items-center gap-1.5">
               <KeyRound className="w-3.5 h-3.5 text-zinc-400" />
-              <span>รหัสผ่าน</span>
+              <span>รหัสผ่าน {mode === 'register' && <span className="text-zinc-400 font-normal">(อย่างน้อย 8 ตัวอักษร + ตัวเลข)</span>}</span>
             </label>
             <input
               type="password"
@@ -241,46 +250,52 @@ export const LoginPage: React.FC = () => {
             ) : mode === 'login' ? (
               <>
                 <LogIn className="w-4 h-4 text-orange-400" />
-                <span>เข้าสู่ระบบ</span>
+                <span>เข้าสู่ Workspace ของฉัน</span>
               </>
             ) : (
               <>
                 <UserPlus className="w-4 h-4 text-orange-400" />
-                <span>ยืนยันการสมัครสมาชิก</span>
+                <span>สมัครสมาชิกและสร้าง Project</span>
               </>
             )}
           </button>
         </form>
 
-        {/* Demo Simulator สำหรับเวลาพี่โมโนเปิดเดโมโชว์ลูกค้า
-            หมายเหตุ: ปุ่มนี้กรอกรหัสผ่านแอดมินให้ทุกคนที่เปิดหน้านี้ ปิดได้ด้วย VITE_ENABLE_DEMO_LOGIN=false */}
         {SHOW_DEMO_PRESETS && (
-        <div className="pt-4 border-t border-zinc-100 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider uppercase">
-              ⚡ LIVE DEMO PRESETS
-            </span>
-            <span className="text-[10px] text-zinc-400">สำหรับนำเสนอระบบ</span>
+          <div className="pt-4 border-t border-zinc-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold text-zinc-400 tracking-wider uppercase">
+                ⚡ LIVE DEMO PRESETS
+              </span>
+              <span className="text-[10px] text-zinc-400">คลิกกรอกบัญชีทดสอบ</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => fillRole('admin')}
+                className="py-2 px-2 rounded-xl text-[11px] font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span>แอดมิน</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillRole('staff')}
+                className="py-2 px-2 rounded-xl text-[11px] font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+                <span>เจ้าหน้าที่</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillRole('entrepreneur')}
+                className="py-2 px-2 rounded-xl text-[11px] font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>ผู้ประกอบการ</span>
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => fillRole('admin')}
-              className="py-2 px-3 rounded-xl text-xs font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
-              <span>แดชบอร์ดแอดมิน</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillRole('staff')}
-              className="py-2 px-3 rounded-xl text-xs font-semibold bg-zinc-50 hover:bg-zinc-100 text-zinc-700 border border-zinc-200/80 transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-orange-600" />
-              <span>ทีมช่าง/เจ้าหน้าที่</span>
-            </button>
-          </div>
-        </div>
         )}
       </div>
     </div>

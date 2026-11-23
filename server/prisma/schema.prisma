@@ -50,29 +50,65 @@ model User {
 
   tickets  Ticket[]
   messages Message[]
+  projects Project[]
+}
+
+model Project {
+  id            String   @id @default(cuid())
+  name          String   // ชื่อโปรเจกต์ / ชื่อร้านค้า / ธุรกิจ
+  slug          String   @unique // รหัส URL เฉพาะโปรเจกต์ เช่น coolcare-bkk
+  description   String?  // รายละเอียดธุรกิจ
+  businessType  String   @default("AC_AND_IT") // ประเภทธุรกิจ เช่น AC_AND_IT, AC_SERVICE, IT_SUPPORT, GENERAL
+  phone         String?  // เบอร์ติดต่อศูนย์บริการของโปรเจกต์
+  lineOaId      String?  // LINE Official Account ID
+  botnoiBotId   String?  // Bot ID จาก Botnoi Chatbot Platform
+  webhookSecret String?  // Secret เฉพาะโปรเจกต์ (optional)
+  isActive      Boolean  @default(true)
+
+  ownerId       String
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tickets           Ticket[]
+  technicians       Technician[]
+  chatConversations ChatConversation[]
+  reviews           SatisfactionReview[]
+
+  @@index([ownerId])
 }
 
 model Technician {
-  id      String   @id @default(cuid())
-  name    String
-  phone   String
-  area    String   // พื้นที่รับผิดชอบ
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  area        String   // พื้นที่รับผิดชอบ
+  specialty   String?  // ความเชี่ยวชาญ เช่น แอร์บ้าน, แอร์โรงงาน, ซ่อมคอม/ไอที
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   tickets Ticket[]
+
+  @@index([projectId])
 }
 
 model Ticket {
-  id            String      @id @default(cuid())
-  trackingCode  String      @unique  // รหัสติดตาม รูปแบบ CC-YYYYMMDD-XXXX
+  id            String       @id @default(cuid())
+  trackingCode  String       @unique  // รหัสติดตาม รูปแบบ CC-YYYYMMDD-XXXX
   service       ServiceType
-  brand         String      // ยี่ห้อ/อุปกรณ์ (แอร์หรืออุปกรณ์ไอที)
-  symptom       String      // อาการเสีย
-  address       String      // ที่อยู่
-  lat           Float?      // พิกัด latitude (optional)
-  lng           Float?      // พิกัด longitude (optional)
-  preferredDate DateTime    // วัน-เวลาที่สะดวก
-  note          String?     // หมายเหตุ
+  brand         String       // ยี่ห้อ/อุปกรณ์ (แอร์หรืออุปกรณ์ไอที)
+  symptom       String       // อาการเสีย
+  address       String       // ที่อยู่
+  lat           Float?       // พิกัด latitude (optional)
+  lng           Float?       // พิกัด longitude (optional)
+  preferredDate DateTime     // วัน-เวลาที่สะดวก
+  note          String?      // หมายเหตุ
   status        TicketStatus @default(SUBMITTED)
+  source        String       @default("WEB") // ช่องทางที่แจ้งเข้ามา: WEB, CHATBOT, VOICEBOT, LINE
 
   // ข้อมูลผู้แจ้ง (ลูกค้าอาจไม่ได้ล็อกอิน)
   customerName  String
@@ -82,6 +118,9 @@ model Ticket {
   userId        String?
   user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  projectId     String?
+  project       Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   technicianId  String?
   technician    Technician?  @relation(fields: [technicianId], references: [id], onDelete: SetNull)
 
@@ -89,13 +128,16 @@ model Ticket {
   updatedAt     DateTime     @updatedAt
 
   // ตารางลูก
-  images        TicketImage[]
-  statusLogs    StatusLog[]
-  messages      Message[]
+  images            TicketImage[]
+  statusLogs        StatusLog[]
+  messages          Message[]
+  review            SatisfactionReview?
+  chatConversations ChatConversation[]
 
   // Index สำหรับ query ที่ใช้บ่อย
   @@index([customerPhone])
   @@index([status])
+  @@index([projectId])
 }
 
 model TicketImage {
@@ -127,4 +169,70 @@ model Message {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
+}
+
+// ===========================
+// ประเมินความพึงพอใจลูกค้า (CSAT)
+// ===========================
+model SatisfactionReview {
+  id            String   @id @default(cuid())
+  rating        Int      // คะแนนความพึงพอใจรวม 1-5 ดาว
+  speedRating   Int?     // ความรวดเร็วในการบริการ 1-5 ดาว
+  serviceRating Int?     // คุณภาพงานซ่อมและความสุภาพช่าง 1-5 ดาว
+  comment       String?  // ข้อเสนอแนะเพิ่มเติม
+  tags          String[] @default([]) // แท็กคำชม เช่น ["ช่างสุภาพ", "ตรงเวลา"]
+  customerName  String
+
+  ticketId      String   @unique
+  ticket        Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  projectId     String?
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime @default(now())
+
+  @@index([projectId])
+  @@index([rating])
+}
+
+// ===========================
+// ระบบกลางเก็บประวัติแชทลูกค้า (ซิงค์จาก Chatbot Platform / LINE / Voicebot / Web)
+// ===========================
+model ChatConversation {
+  id             String   @id @default(cuid())
+  externalUserId String?  // User ID จาก Botnoi Chatbot Platform / LINE OA
+  customerName   String
+  customerPhone  String?
+  channel        String   @default("CHATBOT") // CHATBOT, LINE, VOICEBOT, WEB
+  status         String   @default("OPEN")    // OPEN, RESOLVED
+  summary        String?  // สรุปหัวข้อที่ลูกค้าติดต่อเข้ามา
+
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  ticketId       String?
+  ticket         Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  lastMessageAt  DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  messages       ChatLogMessage[]
+
+  @@index([projectId, lastMessageAt])
+  @@index([channel])
+}
+
+model ChatLogMessage {
+  id             String           @id @default(cuid())
+  sender         String           // CUSTOMER, BOT, STAFF
+  senderName     String?
+  text           String
+
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
 }

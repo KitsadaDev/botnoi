@@ -14,6 +14,8 @@ import {
   RefreshCw,
   Sparkles,
   ArrowUpRight,
+  Star,
+  ThumbsUp,
 } from 'lucide-react'
 import api from '../lib/api'
 import type { ApiResponse, Ticket, Message, TicketStatus } from '../lib/types'
@@ -22,14 +24,31 @@ import { formatDate } from '../lib/format'
 import { SAMPLE_TRACKING_CODES } from '../lib/constants'
 
 const STEP_ORDER: TicketStatus[] = ['SUBMITTED', 'RECEIVED', 'IN_PROGRESS', 'COMPLETED']
+const REVIEW_TAGS = [
+  'ช่างสุภาพ',
+  'ตรงเวลา',
+  'แก้ปัญหาจบ',
+  'งานเรียบร้อย',
+  'ราคาโปร่งใส',
+  'สะอาดมาก',
+]
 
 export const TrackTicketPage: React.FC = () => {
-  const { code } = useParams<{ code?: string }>()
+  const { slug, code } = useParams<{ slug?: string; code?: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [searchInput, setSearchInput] = useState(code || '')
   const [messageText, setMessageText] = useState('')
   const [sendError, setSendError] = useState<string | null>(null)
+
+  // Satisfaction Survey states
+  const [rating, setRating] = useState<number>(5)
+  const [hoverRating, setHoverRating] = useState<number>(0)
+  const [speedRating, setSpeedRating] = useState<number>(5)
+  const [serviceRating, setServiceRating] = useState<number>(5)
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewError, setReviewError] = useState<string | null>(null)
 
   // ให้ช่องค้นหาตรงกับรหัสใน URL เสมอ (เช่น กด Back, คลิกรหัสตัวอย่าง, หรือกลับมาที่ /track)
   useEffect(() => {
@@ -85,10 +104,39 @@ export const TrackTicketPage: React.FC = () => {
     },
   })
 
+  const submitReviewMutation = useMutation({
+    mutationFn: async () => {
+      if (!code) return
+      const res = await api.post<ApiResponse<any>>(`/tickets/${encodeURIComponent(code)}/review`, {
+        rating,
+        speedRating,
+        serviceRating,
+        tags: selectedTags,
+        comment: reviewComment.trim() || undefined,
+      })
+      if (!res.data.success) throw new Error(res.data.error || 'ส่งแบบประเมินไม่สำเร็จ')
+      return res.data.data
+    },
+    onSuccess: () => {
+      setReviewError(null)
+      queryClient.invalidateQueries({ queryKey: ['ticket', code] })
+    },
+    onError: (err: any) => {
+      setReviewError(err.response?.data?.error || 'ไม่สามารถส่งแบบประเมินได้ กรุณาลองใหม่')
+    },
+  })
+
+  const toggleReviewTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    )
+  }
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchInput.trim()) return
-    navigate(`/track/${encodeURIComponent(searchInput.trim().toUpperCase())}`)
+    const cleaned = encodeURIComponent(searchInput.trim().toUpperCase())
+    navigate(slug ? `/p/${slug}/track/${cleaned}` : `/track/${cleaned}`)
   }
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -448,6 +496,206 @@ export const TrackTicketPage: React.FC = () => {
                   )}
                 </div>
               </div>
+
+              {/* Customer Satisfaction Review Card (แสดงเมื่อสถานะเป็น COMPLETED) */}
+              {ticket.status === 'COMPLETED' && (
+                <div className="bg-white rounded-3xl p-6 sm:p-7 border border-amber-200 shadow-sm space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
+                    <h3 className="font-extrabold text-base text-zinc-950 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
+                      <span>ประเมินความพึงพอใจการให้บริการ</span>
+                    </h3>
+                    {ticket.review && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                        <ThumbsUp className="w-3 h-3" />
+                        ประเมินเรียบร้อยแล้ว
+                      </span>
+                    )}
+                  </div>
+
+                  {ticket.review ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-1.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            className={`w-6 h-6 ${
+                              s <= ticket.review!.rating
+                                ? 'text-amber-400 fill-amber-400'
+                                : 'text-zinc-200'
+                            }`}
+                          />
+                        ))}
+                        <span className="ml-2 font-mono text-sm font-black text-zinc-900">
+                          {ticket.review.rating}.0 / 5.0
+                        </span>
+                      </div>
+                      {ticket.review.tags && ticket.review.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {ticket.review.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border border-orange-200 text-xs font-semibold"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {ticket.review.comment && (
+                        <p className="text-xs text-zinc-700 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                          &ldquo;{ticket.review.comment}&rdquo;
+                        </p>
+                      )}
+                      <p className="text-[11px] text-zinc-400">
+                        ขอบคุณสำหรับคะแนนและข้อเสนอแนะค่ะ ความคิดเห็นของคุณถูกส่งไปยังแดชบอร์ดของทีมบริการแล้ว
+                      </p>
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        submitReviewMutation.mutate()
+                      }}
+                      className="space-y-4"
+                    >
+                      {reviewError && (
+                        <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+                          {reviewError}
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="text-xs font-bold text-zinc-700 mb-2">ความพึงพอใจโดยรวม</p>
+                        <div className="flex items-center gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onMouseEnter={() => setHoverRating(star)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              onClick={() => setRating(star)}
+                              className="p-1 cursor-pointer transition-transform hover:scale-110"
+                            >
+                              <Star
+                                className={`w-8 h-8 ${
+                                  star <= (hoverRating || rating)
+                                    ? 'text-amber-400 fill-amber-400'
+                                    : 'text-zinc-200'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                          <span className="ml-2 text-xs font-bold text-amber-600">
+                            {rating === 5
+                              ? 'ประทับใจมาก!'
+                              : rating === 4
+                              ? 'ดีมาก'
+                              : rating === 3
+                              ? 'ปานกลาง'
+                              : rating === 2
+                              ? 'ควรปรับปรุง'
+                              : 'ต้องปรับปรุงด่วน'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <span className="text-[11px] font-bold text-zinc-600 block mb-1.5">
+                            ความรวดเร็วในการให้บริการ
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setSpeedRating(s)}
+                                className="cursor-pointer"
+                              >
+                                <Star
+                                  className={`w-4 h-4 ${
+                                    s <= speedRating ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <span className="text-[11px] font-bold text-zinc-600 block mb-1.5">
+                            คุณภาพงานซ่อมและความสุภาพช่าง
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setServiceRating(s)}
+                                className="cursor-pointer"
+                              >
+                                <Star
+                                  className={`w-4 h-4 ${
+                                    s <= serviceRating ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-bold text-zinc-700 mb-2">จุดที่คุณประทับใจ (เลือกได้หลายข้อ)</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {REVIEW_TAGS.map((tag) => {
+                            const active = selectedTags.includes(tag)
+                            return (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() => toggleReviewTag(tag)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                  active
+                                    ? 'bg-zinc-950 text-white border-zinc-950'
+                                    : 'bg-zinc-50 text-zinc-600 border-zinc-200 hover:border-orange-300'
+                                }`}
+                              >
+                                {active ? '✓ ' : '+ '}
+                                {tag}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-700 mb-1.5">
+                          ข้อเสนอแนะเพิ่มเติม (ถ้ามี)
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={reviewComment}
+                          onChange={(e) => setReviewComment(e.target.value)}
+                          placeholder="เล่าประสบการณ์การให้บริการของช่างและทีมงาน..."
+                          className="w-full px-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-orange-500 outline-hidden"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submitReviewMutation.isPending}
+                        className="btn-shimmer w-full py-3 rounded-2xl text-xs font-extrabold text-white shadow-md cursor-pointer disabled:opacity-50"
+                      >
+                        {submitReviewMutation.isPending
+                          ? 'กำลังส่งแบบประเมิน...'
+                          : 'ส่งแบบประเมินความพึงพอใจ'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Column: Live Chat (5 cols) */}

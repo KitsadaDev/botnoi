@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, useParams, Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -25,7 +26,7 @@ import {
   Monitor,
 } from 'lucide-react'
 import api from '../lib/api'
-import type { ApiResponse, Ticket, ServiceType } from '../lib/types'
+import type { ApiResponse, Ticket, ServiceType, PublicProject } from '../lib/types'
 import { SERVICE_TYPES, SERVICE_LABELS } from '../lib/types'
 import { formatDate, getMinBookingDate, sanitizePhoneInput } from '../lib/format'
 import { MAX_IMAGES, selectValidImages } from '../lib/images'
@@ -103,6 +104,7 @@ const QUICK_SYMPTOMS: Record<ServiceType, string[]> = {
 }
 
 export const BookServicePage: React.FC = () => {
+  const { slug } = useParams<{ slug?: string }>()
   const [searchParams] = useSearchParams()
   const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
@@ -111,6 +113,16 @@ export const BookServicePage: React.FC = () => {
   const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null)
   const [copied, setCopied] = useState(false)
   const [isGettingLocation, setIsGettingLocation] = useState(false)
+
+  const { data: projectInfo } = useQuery<PublicProject | null>({
+    queryKey: ['publicProject', slug],
+    queryFn: async () => {
+      if (!slug) return null
+      const res = await api.get<ApiResponse<PublicProject>>(`/projects/public/${encodeURIComponent(slug)}`)
+      return res.data.success ? res.data.data : null
+    },
+    enabled: Boolean(slug),
+  })
 
   const initialService = (searchParams.get('service') as ServiceType) || 'CLEANING'
 
@@ -240,6 +252,9 @@ export const BookServicePage: React.FC = () => {
       if (data.note) {
         formData.append('note', data.note)
       }
+      if (slug) {
+        formData.append('projectSlug', slug)
+      }
 
       images.forEach((file) => {
         formData.append('images', file)
@@ -288,7 +303,7 @@ export const BookServicePage: React.FC = () => {
             </span>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-950 mb-2 tracking-tight">
-              ขอบคุณที่ไว้วางใจ Plasom
+              ขอบคุณที่ไว้วางใจ {projectInfo?.name || 'Plasom'}
             </h1>
 
             <p className="text-zinc-500 text-sm max-w-md mx-auto mb-8">
@@ -352,7 +367,7 @@ export const BookServicePage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
               <Link
-                to={`/track/${createdTicket.trackingCode}`}
+                to={slug ? `/p/${slug}/track/${createdTicket.trackingCode}` : `/track/${createdTicket.trackingCode}`}
                 className="btn-shimmer w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-2xl font-bold text-sm text-white shadow-lg shadow-orange-500/20 transition-all"
               >
                 <span>ติดตามสถานะงานซ่อม</span>
@@ -379,13 +394,14 @@ export const BookServicePage: React.FC = () => {
       <ScrollReveal className="text-center mb-10">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-700 border border-orange-500/20 text-xs font-bold mb-3">
           <Sparkles className="w-3.5 h-3.5 text-orange-600" />
-          <span>INTERACTIVE BOOKING FORM</span>
+          <span>{projectInfo ? `PROJECT: ${projectInfo.name}` : 'INTERACTIVE BOOKING FORM'}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-950 tracking-tight">
-          แจ้งซ่อมและนัดหมายช่าง
+          {projectInfo ? `แจ้งซ่อมและนัดหมาย — ${projectInfo.name}` : 'แจ้งซ่อมและนัดหมายช่าง'}
         </h1>
         <p className="text-zinc-500 text-sm mt-2 max-w-lg mx-auto">
-          คลิกเลือกการ์ดประเภทบริการ หรือกดปุ่มลัดอาการเสียเพื่อให้กรอกข้อมูลได้สะดวกรวดเร็วขึ้น
+          {projectInfo?.description ||
+            'คลิกเลือกการ์ดประเภทบริการ หรือกดปุ่มลัดอาการเสียเพื่อให้กรอกข้อมูลได้สะดวกรวดเร็วขึ้น'}
         </p>
       </ScrollReveal>
 

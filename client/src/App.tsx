@@ -10,7 +10,8 @@ import { TrackTicketPage } from './pages/TrackTicketPage'
 import { LoginPage } from './pages/LoginPage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { MyTicketsPage } from './pages/MyTicketsPage'
-
+import { ProjectsPage } from './pages/ProjectsPage'
+import { ProjectDashboardPage } from './pages/ProjectDashboardPage'
 
 function ScrollToTopOnNavigate() {
   const { pathname } = useLocation()
@@ -34,8 +35,19 @@ export default function App() {
               <Route path="/book" element={<BookServicePage />} />
               <Route path="/track" element={<TrackTicketPage />} />
               <Route path="/track/:code" element={<TrackTicketPage />} />
+
+              {/* Multi-Tenant Project Public Customer Routes */}
+              <Route path="/p/:slug/book" element={<BookServicePage />} />
+              <Route path="/p/:slug/track" element={<TrackTicketPage />} />
+              <Route path="/p/:slug/track/:code" element={<TrackTicketPage />} />
+
+              {/* Multi-Tenant Entrepreneur Workspace Routes */}
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:projectId" element={<ProjectDashboardPage />} />
+
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin" element={<Navigate to="/projects" replace />} />
+              <Route path="/legacy-admin" element={<AdminDashboardPage />} />
               <Route path="/my-tickets" element={<MyTicketsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

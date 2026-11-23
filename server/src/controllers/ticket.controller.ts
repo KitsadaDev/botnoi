@@ -5,6 +5,7 @@ import {
   createMessageSchema,
   trackingCodeSchema,
 } from "../validations/ticket.validation";
+import { createReviewSchema } from "../validations/project.validation";
 import { AuthRequest } from "../middleware/auth";
 import { TicketStatus, ServiceType } from "@prisma/client";
 import crypto from "crypto";
@@ -90,6 +91,21 @@ export async function createTicket(
 
     const data = createTicketSchema.parse(rawBody);
 
+    // ถ้าส่ง projectSlug มา (เช่นจากหน้า /p/:slug/book) ให้ผูกเคสเข้าโปรเจกต์นั้น
+    let projectId: string | undefined;
+    if (data.projectSlug) {
+      const project = await prisma.project.findUnique({
+        where: { slug: data.projectSlug },
+        select: { id: true, isActive: true },
+      });
+      if (!project || !project.isActive) {
+        await removeUploadedFiles(files);
+        res.status(404).json({ success: false, error: "ไม่พบโปรเจกต์หรือร้านค้าที่ระบุ" });
+        return;
+      }
+      projectId = project.id;
+    }
+
     const imageUrls = files.map((f) => {
       if (f.buffer) {
         return `data:${f.mimetype};base64,${f.buffer.toString("base64")}`;
@@ -116,6 +132,7 @@ export async function createTicket(
           customerName: data.customerName,
           customerPhone: data.customerPhone,
           userId: req.user?.id, // แนบ userId ถ้าล็อกอินอยู่
+          ...(projectId ? { projectId } : {}),
           images: {
             create: imageUrls.map((url) => ({ url })),
           },
@@ -178,6 +195,8 @@ export async function getTicketByCode(
         images: { select: { id: true, url: true } },
         statusLogs: { orderBy: { createdAt: "asc" } },
         technician: { select: { id: true, name: true, phone: true, area: true } },
+        review: true,
+        project: { select: { id: true, name: true, slug: true, phone: true } },
       },
     });
 
@@ -737,6 +756,21 @@ export async function createTicketFromBotnoi(
       trackingCode = await generateUniqueCode();
     }
 
+    // รองรับการผูกโปรเจกต์จาก query ?project=<slug> หรือ body.projectSlug
+    const rawProjectSlug =
+      (typeof req.query?.project === "string" ? req.query.project : undefined) ||
+      (typeof req.body?.projectSlug === "string" ? req.body.projectSlug : undefined);
+    let projectId: string | undefined;
+    if (rawProjectSlug && rawProjectSlug.trim()) {
+      const proj = await prisma.project.findUnique({
+        where: { slug: rawProjectSlug.trim().toLowerCase() },
+        select: { id: true, isActive: true },
+      });
+      if (proj && proj.isActive) {
+        projectId = proj.id;
+      }
+    }
+
     const createdTicket = await prisma.$transaction(async (tx) => {
       const t = await tx.ticket.create({
         data: {
@@ -749,6 +783,8 @@ export async function createTicketFromBotnoi(
           note: `เวลานัดที่ลูกค้าแจ้งในแชท: ${cleanDateText}`,
           customerName: cleanName,
           customerPhone: cleanPhone,
+          source: "CHATBOT",
+          ...(projectId ? { projectId } : {}),
         },
       });
 
@@ -759,6 +795,35 @@ export async function createTicketFromBotnoi(
           note: "รับเรื่องอัตโนมัติผ่าน Plasom AI Agent (Botnoi.ai)",
         },
       });
+
+      // ถ้าผูกโปรเจกต์อยู่ ให้บันทึกประวัติการแจ้งซ่อมเข้าศูนย์รวมแชทกลางของโปรเจกต์ด้วย
+      if (projectId && tx.chatConversation) {
+        await tx.chatConversation.create({
+          data: {
+            projectId,
+            ticketId: t.id,
+            customerName: cleanName,
+            customerPhone: hasRealPhone ? cleanPhone : undefined,
+            channel: "CHATBOT",
+            status: "OPEN",
+            summary: `แจ้งซ่อมผ่าน AI Chatbot (${trackingCode}): ${symptom}`,
+            messages: {
+              create: [
+                {
+                  sender: "CUSTOMER",
+                  senderName: cleanName,
+                  text: cleanInfo,
+                },
+                {
+                  sender: "BOT",
+                  senderName: "Botnoi AI Agent",
+                  text: `บันทึกใบงานสำเร็จ รหัสติดตามงานซ่อมคือ ${trackingCode}`,
+                },
+              ],
+            },
+          },
+        });
+      }
 
       return t;
     });
@@ -877,6 +942,74 @@ export async function createVoicebotCallToken(
         ephemeralToken: body.ephemeral_token,
         wsUrl,
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ===========================
+// POST /api/tickets/:code/review
+// ลูกค้าส่งแบบประเมินความพึงพอใจเมื่อเคสเสร็จสิ้น (CSAT)
+// ===========================
+export async function submitTicketReview(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { code } = req.params;
+    const codeValidation = trackingCodeSchema.safeParse(code);
+    if (!codeValidation.success) {
+      res.status(400).json({ success: false, error: "รูปแบบรหัสติดตามไม่ถูกต้อง" });
+      return;
+    }
+
+    const data = createReviewSchema.parse(req.body);
+
+    const ticket = await prisma.ticket.findUnique({
+      where: { trackingCode: code.toUpperCase() },
+      include: { review: true },
+    });
+
+    if (!ticket) {
+      res.status(404).json({ success: false, error: "ไม่พบรหัสติดตามนี้ในระบบ" });
+      return;
+    }
+
+    if (ticket.status !== TicketStatus.COMPLETED) {
+      res.status(400).json({
+        success: false,
+        error: "สามารถประเมินความพึงพอใจได้เมื่อสถานะงานซ่อมเสร็จสิ้นแล้วเท่านั้น",
+      });
+      return;
+    }
+
+    if (ticket.review) {
+      res.status(409).json({
+        success: false,
+        error: "เคสนี้ได้รับการประเมินความพึงพอใจเรียบร้อยแล้ว ขอบคุณสำหรับความคิดเห็นค่ะ",
+      });
+      return;
+    }
+
+    const review = await prisma.satisfactionReview.create({
+      data: {
+        ticketId: ticket.id,
+        projectId: ticket.projectId,
+        customerName: ticket.customerName,
+        rating: data.rating,
+        speedRating: data.speedRating,
+        serviceRating: data.serviceRating,
+        comment: data.comment,
+        tags: data.tags,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "ขอบคุณสำหรับการประเมินความพึงพอใจค่ะ",
+      data: review,
     });
   } catch (err) {
     next(err);

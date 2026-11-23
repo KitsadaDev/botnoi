@@ -16,6 +16,7 @@ import type { Ticket } from '../lib/types'
 import { SERVICE_LABELS, STATUS_LABELS, STATUS_COLORS } from '../lib/types'
 
 interface AdminNotificationBellProps {
+  projectId?: string
   onNewTicketDetected?: (ticket: Ticket) => void
   onSelectTicket?: (ticket: Ticket) => void
 }
@@ -68,6 +69,7 @@ function playNotificationSound() {
 }
 
 export default function AdminNotificationBell({
+  projectId,
   onNewTicketDetected,
   onSelectTicket,
 }: AdminNotificationBellProps) {
@@ -123,9 +125,13 @@ export default function AdminNotificationBell({
   }, [])
 
   useEffect(() => {
+    knownTicketIdsRef.current = new Set()
+    isInitializedRef.current = false
+    const endpoint = projectId ? `/projects/${projectId}/tickets` : '/admin/tickets'
+
     const checkTickets = async () => {
       try {
-        const res = await api.get('/admin/tickets')
+        const res = await api.get(endpoint)
         const tickets: Ticket[] = res.data?.data || []
 
         // เรียงจากใหม่สุดไปเก่าสุด และเก็บประวัติ 15 เคสล่าสุด
@@ -183,7 +189,7 @@ export default function AdminNotificationBell({
     checkTickets()
     const interval = setInterval(checkTickets, 20000)
     return () => clearInterval(interval)
-  }, [])
+  }, [projectId])
 
   const unreadTickets = recentTickets.filter((t) => !readIds.has(t.id))
   const displayedTickets = activeTab === 'unread' ? unreadTickets : recentTickets

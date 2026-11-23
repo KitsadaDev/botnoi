@@ -9,6 +9,7 @@ import {
   createTicketFromBotnoi,
   getThaiFemaleVoice,
   createVoicebotCallToken,
+  submitTicketReview,
 } from "../controllers/ticket.controller";
 import { uploadImages } from "../middleware/upload";
 import { optionalAuth, authRequired } from "../middleware/auth";
@@ -114,5 +115,8 @@ router.get("/:code/messages", trackingLimiter, getMessages);
 
 // POST /api/tickets/:code/messages (public + rate limit; แนบ userId ถ้าล็อกอินอยู่)
 router.post("/:code/messages", messageLimiter, optionalAuth, createCustomerMessage);
+
+// POST /api/tickets/:code/review (public + rate limit; ลูกค้าส่งแบบประเมินความพึงพอใจเมื่อเคสเสร็จสิ้น)
+router.post("/:code/review", messageLimiter, submitTicketReview);
 
 export default router;

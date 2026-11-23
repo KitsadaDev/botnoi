@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   ArrowUpRight,
   ClipboardList,
+  FolderKanban,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -27,7 +28,6 @@ export const Navbar: React.FC = () => {
     navigate('/')
   }
 
-  // 1. ตรวจสอบไฮไลท์ให้แยกชัดเจนระหว่าง "หน้าแรก" กับ "โซลูชัน AI"
   const isActive = (path: string) => {
     if (path === '/#ai-showcase') {
       return location.pathname === '/' && location.hash === '#ai-showcase'
@@ -36,28 +36,25 @@ export const Navbar: React.FC = () => {
       return location.pathname === '/' && (!location.hash || location.hash === '')
     }
     if (path === '/track') return location.pathname.startsWith('/track')
+    if (path === '/projects') return location.pathname.startsWith('/projects')
     if (path === '/my-tickets') return location.pathname.startsWith('/my-tickets')
     return location.pathname === path
   }
 
-  // 2. ฟังก์ชันจัดการการคลิกและเลื่อนหน้าจอ
   const handleNavClick = (path: string, e: React.MouseEvent) => {
     if (path === '/') {
       if (location.pathname === '/') {
         e.preventDefault()
-        // ถ้าอยู่หน้าแรกอยู่แล้ว ให้ม้วนจอกลับไปบนสุด พร้อมล้าง hash
         window.scrollTo({ top: 0, behavior: 'smooth' })
         navigate('/', { replace: true })
       }
     } else if (path === '/#ai-showcase') {
       e.preventDefault()
       if (location.pathname === '/') {
-        // ถ้าอยู่หน้าแรก ให้เลื่อนลงไปหากล่อง AI และตั้ง hash เพื่อให้ปุ่มสว่าง
         const el = document.getElementById('ai-showcase')
         el?.scrollIntoView({ behavior: 'smooth' })
         navigate('/#ai-showcase', { replace: true })
       } else {
-        // ถ้าอยู่หน้าอื่น ให้พากลับไปหน้าแรกพร้อมติด hash ไปด้วย
         navigate('/#ai-showcase')
       }
     }
@@ -66,10 +63,10 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { path: '/', label: 'หน้าแรก' },
     { path: '/#ai-showcase', label: 'โซลูชัน AI', icon: Sparkles },
-    { path: '/book', label: 'แจ้งซ่อม / นัดหมาย' },
+    { path: '/book', label: 'ทดลองแจ้งซ่อม' },
     { path: '/track', label: 'ติดตามสถานะ', icon: Search },
     ...(user && !isStaff
-      ? [{ path: '/my-tickets', label: 'ประวัติการแจ้งซ่อม', icon: ClipboardList }]
+      ? [{ path: '/my-tickets', label: 'งานซ่อมของฉัน', icon: ClipboardList }]
       : []),
   ]
 
@@ -81,23 +78,23 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 font-semibold border border-orange-500/20">
               <Sparkles className="w-3 h-3 animate-spin" style={{ animationDuration: '6s' }} />
-              Carrier Standard
+              Central AI Platform
             </span>
-            <span className="text-zinc-300 font-medium">
-              ศูนย์บริการแอร์มาตรฐานสากล รับประกันงานซ่อมนาน 90 วันเต็ม
+            <span className="text-zinc-300 font-medium truncate">
+              แพลตฟอร์มกลางบริหารงานแจ้งซ่อม ทีมช่าง แชทลูกค้า และวัดความพึงพอใจสำหรับทุกธุรกิจ
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-4 text-zinc-400">
+          <div className="hidden sm:flex items-center gap-4 text-zinc-400 shrink-0">
             <a href="tel:021234567" className="flex items-center gap-1.5 hover:text-white transition-colors">
               <PhoneCall className="w-3 h-3 text-orange-400" />
               <span>
-                สายด่วน: <strong className="text-zinc-200 font-mono">02-123-4567</strong>
+                ติดต่อทีมงาน: <strong className="text-zinc-200 font-mono">02-123-4567</strong>
               </span>
             </a>
             <span className="text-zinc-700">•</span>
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              เปิดบริการทุกวัน 08:00 - 18:00 น.
+              AI 24/7 Online
             </span>
           </div>
         </div>
@@ -107,8 +104,7 @@ export const Navbar: React.FC = () => {
       <div className="bg-white/80 backdrop-blur-xl border-b border-zinc-200/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative flex justify-between items-center h-16">
-            
-            {/* ฝั่งซ้าย: Brand Logo (คลิกแล้วเลื่อนขึ้นบนสุดได้เช่นกัน) */}
+            {/* Left: Brand Logo */}
             <Link
               to="/"
               onClick={(e) => handleNavClick('/', e)}
@@ -121,17 +117,20 @@ export const Navbar: React.FC = () => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-lg tracking-tight text-zinc-950">Plasom</span>
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-orange-500/10 text-orange-600 border border-orange-500/20">
+                    HUB
+                  </span>
                 </div>
                 <p className="text-[10px] text-zinc-400 font-mono tracking-widest uppercase">
-                  SMART AC SERVICE
+                  AI AFTER-SALES PLATFORM
                 </p>
               </div>
             </Link>
 
-            {/* แคปซูลเมนูตรงกลาง */}
+            {/* Center Capsule Navigation */}
             <nav
               onMouseLeave={() => setHoveredNav(null)}
-              className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 p-1.5 rounded-full bg-zinc-100/90 border border-zinc-200/80 shadow-inner"
+              className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 p-1.5 rounded-full bg-zinc-100/90 border border-zinc-200/80 shadow-inner"
             >
               {navItems.map((item) => {
                 const active = isActive(item.path)
@@ -144,7 +143,7 @@ export const Navbar: React.FC = () => {
                     to={item.path}
                     onClick={(e) => handleNavClick(item.path, e)}
                     onMouseEnter={() => setHoveredNav(item.path)}
-                    className={`relative flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
+                    className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
                       active
                         ? 'bg-zinc-950 text-white shadow-md scale-[1.02]'
                         : isHovered
@@ -153,7 +152,7 @@ export const Navbar: React.FC = () => {
                     }`}
                   >
                     {active && (
-                      <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-orange-400 shadow-[0_0_12px_2px_rgba(251, 146, 60,0.85)]" />
+                      <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-orange-400 shadow-[0_0_12px_2px_rgba(251,146,60,0.85)]" />
                     )}
                     {Icon && <Icon className={`w-3.5 h-3.5 ${active ? 'text-orange-400' : 'text-orange-600'}`} />}
                     <span>{item.label}</span>
@@ -161,27 +160,27 @@ export const Navbar: React.FC = () => {
                 )
               })}
 
-              {isStaff && (
+              {user && (
                 <Link
-                  to="/admin"
-                  onMouseEnter={() => setHoveredNav('/admin')}
-                  className={`relative flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
-                    isActive('/admin')
+                  to="/projects"
+                  onMouseEnter={() => setHoveredNav('/projects')}
+                  className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
+                    isActive('/projects')
                       ? 'bg-zinc-950 text-white shadow-md scale-[1.02]'
-                      : 'text-amber-700 hover:text-amber-900 bg-amber-50/80 hover:bg-amber-100'
+                      : 'text-orange-700 hover:text-orange-900 bg-orange-50/90 hover:bg-orange-100'
                   }`}
                 >
-                  {isActive('/admin') && (
-                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-amber-400 shadow-[0_0_12px_2px_rgba(251,191,36,0.85)]" />
+                  {isActive('/projects') && (
+                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-7 h-1 rounded-full bg-orange-400 shadow-[0_0_12px_2px_rgba(251,146,60,0.85)]" />
                   )}
-                  <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Staff Console</span>
+                  <FolderKanban className="w-3.5 h-3.5" />
+                  <span>โปรเจกต์ของฉัน</span>
                 </Link>
               )}
             </nav>
 
-            {/* ฝั่งขวา: User Profile / Action Buttons */}
-            <div className="hidden md:flex items-center gap-2.5 shrink-0">
+            {/* Right: User Profile / Action Buttons */}
+            <div className="hidden lg:flex items-center gap-2.5 shrink-0">
               {user ? (
                 <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200/80 rounded-full pl-2 pr-1.5 py-1">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
@@ -189,7 +188,9 @@ export const Navbar: React.FC = () => {
                   </div>
                   <div className="text-left pr-1">
                     <p className="font-bold text-zinc-900 text-xs leading-none">{user.name}</p>
-                    <span className="text-[10px] font-mono text-orange-600 font-semibold">{user.role}</span>
+                    <span className="text-[10px] font-mono text-orange-600 font-semibold">
+                      {user.role === 'CUSTOMER' ? 'BUSINESS' : user.role}
+                    </span>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -209,10 +210,10 @@ export const Navbar: React.FC = () => {
                     <span>เข้าสู่ระบบ</span>
                   </Link>
                   <Link
-                    to="/book"
+                    to="/login?mode=register"
                     className="group relative inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-zinc-950 hover:bg-zinc-800 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
                   >
-                    <span className="relative z-10">แจ้งซ่อมด่วน</span>
+                    <span className="relative z-10">สร้าง Project ฟรี</span>
                     <ArrowUpRight className="w-3.5 h-3.5 text-orange-400 relative z-10 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </Link>
                 </div>
@@ -220,7 +221,7 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="flex md:hidden items-center">
+            <div className="flex lg:hidden items-center">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-xl text-zinc-600 hover:bg-zinc-100 focus:outline-hidden"
@@ -235,7 +236,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-zinc-200 bg-white/95 backdrop-blur-xl px-4 pt-3 pb-5 space-y-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="lg:hidden border-b border-zinc-200 bg-white/95 backdrop-blur-xl px-4 pt-3 pb-5 space-y-1.5 shadow-xl">
           <Link
             to="/"
             onClick={(e) => {
@@ -246,7 +247,7 @@ export const Navbar: React.FC = () => {
               isActive('/') ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
             }`}
           >
-            หน้าแรก
+            หน้าแรกแพลตฟอร์ม
           </Link>
           <Link
             to="/#ai-showcase"
@@ -258,7 +259,7 @@ export const Navbar: React.FC = () => {
               isActive('/#ai-showcase') ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
             }`}
           >
-            โซลูชัน AI
+            โซลูชัน AI (Chatbot / Voicebot / Avatar)
           </Link>
           <Link
             to="/book"
@@ -267,7 +268,7 @@ export const Navbar: React.FC = () => {
               isActive('/book') ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
             }`}
           >
-            แจ้งซ่อม / บริการ
+            ทดลองแจ้งซ่อม / จองคิว
           </Link>
           <Link
             to="/track"
@@ -279,25 +280,28 @@ export const Navbar: React.FC = () => {
             ติดตามสถานะงานซ่อม
           </Link>
 
+          {user && (
+            <Link
+              to="/projects"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
+                isActive('/projects') ? 'bg-orange-600 text-white' : 'text-orange-700 bg-orange-50'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>โปรเจกต์ของฉัน (Workspace)</span>
+            </Link>
+          )}
+
           {user && !isStaff && (
             <Link
               to="/my-tickets"
               onClick={() => setMobileMenuOpen(false)}
               className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold ${
-                isActive('/my-tickets') ? 'bg-orange-600 text-white' : 'text-orange-700 bg-orange-50'
+                isActive('/my-tickets') ? 'bg-zinc-950 text-white' : 'text-zinc-700 hover:bg-zinc-100'
               }`}
             >
               ประวัติการแจ้งซ่อมของฉัน
-            </Link>
-          )}
-
-          {isStaff && (
-            <Link
-              to="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3.5 py-2.5 rounded-xl text-sm font-semibold text-amber-700 bg-amber-50"
-            >
-              ระบบจัดการช่าง (Staff Console)
             </Link>
           )}
 
@@ -306,7 +310,9 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center justify-between px-2">
                 <div>
                   <p className="font-bold text-sm text-zinc-900">{user.name}</p>
-                  <p className="text-xs font-mono text-orange-600">{user.role}</p>
+                  <p className="text-xs font-mono text-orange-600">
+                    {user.role === 'CUSTOMER' ? 'BUSINESS ACCOUNT' : user.role}
+                  </p>
                 </div>
                 <button
                   onClick={() => {
@@ -329,11 +335,11 @@ export const Navbar: React.FC = () => {
                   เข้าสู่ระบบ
                 </Link>
                 <Link
-                  to="/book"
+                  to="/login?mode=register"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-zinc-950"
                 >
-                  แจ้งซ่อมด่วน
+                  สร้าง Project ฟรี
                 </Link>
               </div>
             )}

@@ -30,9 +30,12 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(TOKEN_KEY)
-      // redirect to login only if accessing admin or if on an admin path
+      // redirect to login only if accessing protected workspace/admin paths
       if (
-        (window.location.pathname.startsWith('/admin') || error.config?.url?.includes('/admin')) &&
+        (window.location.pathname.startsWith('/admin') ||
+          window.location.pathname.startsWith('/projects') ||
+          error.config?.url?.includes('/admin') ||
+          error.config?.url?.includes('/projects')) &&
         !window.location.pathname.includes('/login')
       ) {
         window.location.href = '/login'

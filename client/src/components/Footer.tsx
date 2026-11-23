@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Phone, Mail, MapPin, Clock, ShieldCheck, ArrowUpRight, Wrench, Award } from 'lucide-react'
+import { Phone, Mail, MapPin, Clock, ShieldCheck, ArrowUpRight, Wrench, Layers } from 'lucide-react'
 
 export const Footer: React.FC = () => {
   return (
@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 mb-14">
-          {/* Col 1: Brand & Mission (4 cols) */}
+          {/* Col 1: Brand & Mission */}
           <div className="lg:col-span-4 space-y-4">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-orange-400 shadow-inner">
@@ -19,66 +19,63 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-xl tracking-tight text-white">Plasom</span>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                  PLATFORM
+                </span>
               </div>
             </Link>
 
             <p className="text-zinc-400 text-xs leading-relaxed max-w-sm">
-              แพลตฟอร์มบริหารจัดการงานซ่อม ล้าง และติดตั้งเครื่องปรับอากาศ พร้อมซ่อมอุปกรณ์ไอทีครบวงจร
-              ด้วยทีมช่างมาตรฐานโรงงาน อะไหล่แท้ 100% พร้อมระบบติดตามสถานะแบบเรียลไทม์
+              แพลตฟอร์มศูนย์กลางบริหารงานบริการหลังการขายและระบบแจ้งซ่อมด้วย AI สำหรับผู้ประกอบการทุกธุรกิจ
+              สร้าง Project ได้ทันที พร้อมศูนย์รวมประวัติแชท ระบบจ่ายงานช่าง และแดชบอร์ดวัดผลความพึงพอใจ
             </p>
 
             <div className="inline-flex items-center gap-2 text-orange-300 text-[11px] font-medium bg-zinc-900/90 px-3 py-2 rounded-xl border border-zinc-800">
-              <Award className="w-4 h-4 shrink-0 text-orange-400" />
-              <span>Carrier & B.Grimm Certified Service Standard</span>
+              <Layers className="w-4 h-4 shrink-0 text-orange-400" />
+              <span>Multi-Tenant AI After-Sales SaaS Architecture</span>
             </div>
           </div>
 
-          {/* Col 2: Services (3 cols) */}
+          {/* Col 2: Platform Modules */}
           <div className="lg:col-span-3">
             <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-200 mb-4 font-mono">
-              บริการหลักของเรา
+              ฟีเจอร์หลักของแพลตฟอร์ม
             </h3>
             <ul className="space-y-2.5 text-xs">
               <li>
-                <Link to="/book?service=CLEANING" className="hover:text-white transition-colors flex items-center justify-between group">
-                  <span>ล้างแอร์ระบบปลอดเชื้อ</span>
+                <Link to="/projects" className="hover:text-white transition-colors flex items-center justify-between group">
+                  <span>สร้างและจัดการหลาย Project</span>
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
-                <Link to="/book?service=REPAIR" className="hover:text-white transition-colors flex items-center justify-between group">
-                  <span>ซ่อมแอร์ไม่เย็น / มีน้ำรั่ว</span>
+                <Link to="/projects" className="hover:text-white transition-colors flex items-center justify-between group">
+                  <span>ศูนย์รวมประวัติแชทลูกค้า (Chatbot Sync)</span>
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
-                <Link to="/book?service=REPAIR" className="hover:text-white transition-colors flex items-center justify-between group">
-                  <span>ตรวจเช็คระบบไฟและคอมเพรสเซอร์</span>
+                <Link to="/projects" className="hover:text-white transition-colors flex items-center justify-between group">
+                  <span>ระบบจัดการทีมช่างและ Assign งาน</span>
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
-                <Link to="/book?service=INSTALLATION" className="hover:text-white transition-colors flex items-center justify-between group">
-                  <span>ติดตั้งและย้ายตำแหน่งแอร์</span>
+                <Link to="/projects" className="hover:text-white transition-colors flex items-center justify-between group">
+                  <span>แดชบอร์ดประเมินความพึงพอใจ (CSAT)</span>
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
               <li>
-                <Link to="/book?service=CLEANING" className="hover:text-white transition-colors flex items-center justify-between group">
-                  <span>เติมน้ำยาแอร์ R32 / R410a</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
-                </Link>
-              </li>
-              <li>
-                <Link to="/book?service=IT_REPAIR" className="hover:text-white transition-colors flex items-center justify-between group">
-                  <span>ซ่อมคอมพิวเตอร์และอุปกรณ์ไอที</span>
+                <Link to="/#ai-showcase" className="hover:text-white transition-colors flex items-center justify-between group">
+                  <span>เชื่อมต่อ Botnoi Chatbot & Voicebot</span>
                   <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-orange-400 transition-opacity" />
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Quick Navigation (2 cols) */}
+          {/* Col 3: Quick Navigation */}
           <div className="lg:col-span-2">
             <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-200 mb-4 font-mono">
               เมนูลัด
@@ -86,12 +83,17 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2.5 text-xs">
               <li>
                 <Link to="/" className="hover:text-white transition-colors">
-                  หน้าหลัก
+                  หน้าหลักแพลตฟอร์ม
+                </Link>
+              </li>
+              <li>
+                <Link to="/projects" className="hover:text-white transition-colors">
+                  โปรเจกต์ของฉัน (Workspace)
                 </Link>
               </li>
               <li>
                 <Link to="/book" className="hover:text-white transition-colors">
-                  นัดหมายแจ้งซ่อม
+                  ทดลองฟอร์มแจ้งซ่อม
                 </Link>
               </li>
               <li>
@@ -101,16 +103,16 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/login" className="hover:text-white transition-colors">
-                  สำหรับเจ้าหน้าที่ (Staff)
+                  เข้าสู่ระบบ / สมัครใช้งาน
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 4: Contact Info (3 cols) */}
+          {/* Col 4: Contact Info */}
           <div className="lg:col-span-3">
             <h3 className="font-bold text-xs uppercase tracking-wider text-zinc-200 mb-4 font-mono">
-              ศูนย์บริการลูกค้า
+              ติดต่อทีมพัฒนาแพลตฟอร์ม
             </h3>
             <div className="space-y-3 text-xs">
               <div className="flex items-start gap-2.5">
@@ -127,7 +129,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center gap-2.5">
                 <Clock className="w-4 h-4 text-orange-400 shrink-0" />
-                <span>เปิดทำการทุกวัน 08:00 - 18:00 น.</span>
+                <span>ทีมซัพพอร์ตทุกวัน 08:00 - 18:00 น. • AI 24/7</span>
               </div>
             </div>
           </div>
@@ -135,11 +137,11 @@ export const Footer: React.FC = () => {
 
         {/* Bottom bar */}
         <div className="pt-8 border-t border-zinc-900 text-xs text-zinc-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© {new Date().getFullYear()} Plasom. Crafted with modern 21st.dev UI architecture.</p>
+          <p>© {new Date().getFullYear()} Plasom AI After-Sales Platform. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center gap-1.5 text-zinc-300 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full text-[11px]">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              รับประกันผลงานซ่อม 90 วัน
+              Powered by Botnoi AI Ecosystem
             </span>
           </div>
         </div>
